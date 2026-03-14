@@ -570,34 +570,118 @@ def build_metadata_table(metadata: Dict[str, dict]) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def column_glossary() -> List[Tuple[str, str]]:
+    return [
+        ("result", "The crafted item you will get."),
+        ("result_qty_per_craft", "How many of that item one recipe craft produces."),
+        ("max_crafts", "How many full times you can craft the recipe with your current inventory."),
+        ("max_total_output", "The total number of result items you can make right now."),
+        ("heal_each", "Healing value for one result item, based on your metadata file."),
+        ("stamina_each", "Stamina value for one result item."),
+        ("mana_each", "Mana value for one result item."),
+        ("sale_value_each", "Estimated sale value for one result item."),
+        ("healing_total", "Total healing if you craft every possible copy."),
+        ("stamina_total", "Total stamina value if you craft every possible copy."),
+        ("mana_total", "Total mana value if you craft every possible copy."),
+        ("sale_value_total", "Total sale value if you craft every possible copy."),
+        ("missing_slots", "How many ingredient slots are still missing for that recipe."),
+        ("missing_items", "Which ingredients or ingredient groups are still missing."),
+        ("effects", "Short buff or utility notes for the crafted item."),
+        ("station", "The crafting station required for the recipe."),
+        ("ingredients", "The ingredient list for one craft."),
+    ]
+
+
+def explain_columns(title: str, keys: List[str]) -> None:
+    glossary = dict(column_glossary())
+    lines = [f"- **{column}**: {glossary[column]}" for column in keys if column in glossary]
+    with st.expander(title):
+        st.markdown("\n".join(lines))
+
+
+def present_recipe_table(df: pd.DataFrame, columns: List[str]) -> pd.DataFrame:
+    labels = {
+        "result": "Item",
+        "result_qty_per_craft": "Qty per craft",
+        "max_crafts": "Crafts possible",
+        "max_total_output": "Total output",
+        "heal_each": "Heal each",
+        "stamina_each": "Stamina each",
+        "mana_each": "Mana each",
+        "sale_value_each": "Sale value each",
+        "healing_total": "Healing total",
+        "stamina_total": "Stamina total",
+        "mana_total": "Mana total",
+        "sale_value_total": "Sale value total",
+        "missing_slots": "Missing slots",
+        "missing_items": "Missing items",
+        "effects": "Effects / buffs",
+        "station": "Station",
+        "ingredients": "Ingredients",
+    }
+    return df[columns].rename(columns=labels)
+
+
 def inject_styles() -> None:
     st.markdown(
         """
         <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:wght@600;700&display=swap');
+        :root {
+            --bg: #120914;
+            --bg-soft: #1b1020;
+            --panel: rgba(27, 16, 32, 0.92);
+            --panel-2: rgba(37, 20, 42, 0.94);
+            --border: rgba(255, 173, 229, 0.16);
+            --text: #f8eefd;
+            --muted: #d1b4c8;
+            --pink: #ff69c8;
+            --pink-soft: #ffb5eb;
+            --pink-deep: #ff4ab8;
+            --shadow: rgba(0, 0, 0, 0.32);
+        }
         .stApp {
             background:
-                radial-gradient(circle at top left, rgba(241, 208, 151, 0.28), transparent 30%),
-                radial-gradient(circle at top right, rgba(156, 198, 176, 0.22), transparent 25%),
-                linear-gradient(180deg, #fffaf2 0%, #f7f1e5 100%);
+                radial-gradient(circle at top left, rgba(255, 105, 200, 0.22), transparent 24%),
+                radial-gradient(circle at top right, rgba(255, 181, 235, 0.18), transparent 24%),
+                radial-gradient(circle at bottom center, rgba(144, 67, 255, 0.14), transparent 28%),
+                linear-gradient(180deg, #120914 0%, #1a0d1f 50%, #140912 100%);
+            color: var(--text);
+            font-family: "DM Sans", "Segoe UI", sans-serif;
+        }
+        [data-testid="stAppViewContainer"],
+        [data-testid="stHeader"],
+        [data-testid="stToolbar"] {
+            background: transparent;
+        }
+        h1, h2, h3 {
+            font-family: "Playfair Display", Georgia, serif;
+            color: var(--text);
+            letter-spacing: 0.01em;
+        }
+        p, label, span, div {
+            color: var(--text);
         }
         .block-container {
             padding-top: 1.8rem;
             padding-bottom: 2.5rem;
+            max-width: 1500px;
         }
         .hero-card {
-            background: rgba(255, 252, 247, 0.92);
-            border: 1px solid rgba(117, 95, 66, 0.16);
+            background: linear-gradient(135deg, rgba(38, 17, 44, 0.96), rgba(27, 16, 32, 0.94));
+            border: 1px solid var(--border);
             border-radius: 22px;
-            padding: 1.2rem 1.3rem;
-            box-shadow: 0 12px 30px rgba(90, 74, 52, 0.08);
+            padding: 1.35rem 1.45rem;
+            box-shadow: 0 18px 40px var(--shadow);
             margin-bottom: 1rem;
         }
         .soft-card {
-            background: rgba(255, 255, 255, 0.78);
-            border: 1px solid rgba(117, 95, 66, 0.12);
+            background: linear-gradient(180deg, rgba(34, 18, 40, 0.92), rgba(24, 14, 29, 0.92));
+            border: 1px solid var(--border);
             border-radius: 18px;
-            padding: 0.8rem 1rem;
+            padding: 0.95rem 1rem;
             margin-bottom: 0.85rem;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
         }
         .tooltip-strip {
             display: flex;
@@ -606,16 +690,67 @@ def inject_styles() -> None:
             margin: 0.4rem 0 1rem 0;
         }
         .tooltip-chip {
-            background: #f4e7ca;
-            border: 1px solid rgba(117, 95, 66, 0.2);
-            color: #56452c;
+            background: rgba(255, 105, 200, 0.12);
+            border: 1px solid rgba(255, 173, 229, 0.24);
+            color: var(--pink-soft);
             border-radius: 999px;
             padding: 0.35rem 0.7rem;
             font-size: 0.88rem;
         }
         .section-note {
-            color: #6f614f;
+            color: var(--muted);
             font-size: 0.95rem;
+        }
+        .tab-help {
+            background: rgba(255, 105, 200, 0.08);
+            border: 1px solid rgba(255, 173, 229, 0.14);
+            border-radius: 14px;
+            padding: 0.8rem 0.95rem;
+            margin: 0.35rem 0 1rem 0;
+            color: var(--muted);
+        }
+        [data-testid="stSidebar"] {
+            background: linear-gradient(180deg, rgba(20, 10, 24, 0.98), rgba(24, 14, 29, 0.98));
+            border-right: 1px solid var(--border);
+        }
+        [data-baseweb="tab-list"] {
+            gap: 0.35rem;
+        }
+        button[kind], .stDownloadButton button, .stButton button {
+            background: linear-gradient(135deg, var(--pink), var(--pink-deep)) !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 999px !important;
+            font-weight: 700 !important;
+            box-shadow: 0 10px 20px rgba(255, 74, 184, 0.25) !important;
+        }
+        .stSelectbox div[data-baseweb="select"] > div,
+        .stTextArea textarea,
+        .stTextInput input,
+        .stMultiSelect div[data-baseweb="select"] > div,
+        .stNumberInput input,
+        .stFileUploader section {
+            background: rgba(255, 255, 255, 0.03) !important;
+            color: var(--text) !important;
+            border: 1px solid var(--border) !important;
+            border-radius: 14px !important;
+        }
+        .stSlider [data-baseweb="slider"] * {
+            color: var(--pink-soft) !important;
+        }
+        [data-testid="stMetric"] {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 0.8rem;
+        }
+        [data-testid="stDataFrame"] {
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+        [data-testid="stMarkdownContainer"] a {
+            color: var(--pink-soft);
         }
         </style>
         """,
@@ -632,6 +767,18 @@ def render_hover_guide() -> None:
             <span class="tooltip-chip" title="Shopping list estimates the smallest missing ingredient list for a whole target build.">Shopping list</span>
             <span class="tooltip-chip" title="Missing ingredients highlights recipes that are close, but not ready yet.">Missing ingredients</span>
             <span class="tooltip-chip" title="Recipe database lets you browse all recipes plus your editable item metadata.">Recipe database</span>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_tab_help(title: str, description: str) -> None:
+    st.markdown(
+        f"""
+        <div class="tab-help">
+            <strong>{title}</strong><br>
+            {description}
         </div>
         """,
         unsafe_allow_html=True,
@@ -663,7 +810,7 @@ recipe_index = build_recipe_index(recipes_df)
 st.markdown(
     """
     <div class="hero-card">
-        <h1 style="margin: 0; color: #4f3a1c;">Outward Crafting Helper</h1>
+        <h1 style="margin: 0;">Outward Crafting Helper</h1>
         <p class="section-note" style="margin: 0.35rem 0 0 0;">
             Compare recipes against your stash, rank crafts by recovery or value, and build a clean shopping list for the next run.
         </p>
@@ -699,6 +846,7 @@ input_col, summary_col = st.columns([1.05, 1.35])
 with input_col:
     st.markdown('<div class="soft-card">', unsafe_allow_html=True)
     st.subheader("Inventory input")
+    st.caption("Add what you already own. Everything else in the app updates from this stash.")
     uploaded = st.file_uploader(
         "Upload CSV or Excel",
         type=["csv", "xlsx"],
@@ -727,6 +875,7 @@ with input_col:
 with summary_col:
     st.markdown('<div class="soft-card">', unsafe_allow_html=True)
     st.subheader("Snapshot")
+    st.caption("Quick read on what your current bag can do without extra shopping or farming.")
     filtered = recipes_df[recipes_df["station"].isin(station_filter)].copy()
     results = build_direct_results(filtered, inventory, groups, item_metadata)
     craftable = results[results["max_crafts"] > 0].copy()
@@ -758,7 +907,8 @@ with summary_col:
 
     st.markdown("**Best direct options**")
     preview_cols = ["result", "max_crafts", "max_total_output", "station", "effects", "ingredients"]
-    st.dataframe(craftable[preview_cols].head(12), use_container_width=True, hide_index=True)
+    st.dataframe(present_recipe_table(craftable.head(12), preview_cols), use_container_width=True, hide_index=True)
+    explain_columns("What these snapshot columns mean", preview_cols)
     st.markdown("</div>", unsafe_allow_html=True)
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs(
@@ -767,7 +917,10 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(
 
 with tab1:
     st.subheader("What you can craft right now")
-    st.caption("Hover the sort menu and station filters for help text. Rankings can prioritize recovery, mana, or sale value.")
+    render_tab_help(
+        "Craft now",
+        "This tab answers: what can I make immediately from what I already have? Use the sorting menu to favor practical output, healing, stamina, mana, or vendor value."
+    )
     if craftable.empty:
         st.info("No direct crafts found with the current inventory.")
     else:
@@ -782,25 +935,25 @@ with tab1:
         if sort_mode == "Result A-Z":
             ascending = [True]
         ordered = craftable.sort_values(order_by, ascending=ascending)
+        craft_now_cols = [
+            "result",
+            "result_qty_per_craft",
+            "max_crafts",
+            "max_total_output",
+            "heal_each",
+            "stamina_each",
+            "mana_each",
+            "sale_value_each",
+            "effects",
+            "station",
+            "ingredients",
+        ]
         st.dataframe(
-            ordered[
-                [
-                    "result",
-                    "result_qty_per_craft",
-                    "max_crafts",
-                    "max_total_output",
-                    "heal_each",
-                    "stamina_each",
-                    "mana_each",
-                    "sale_value_each",
-                    "effects",
-                    "station",
-                    "ingredients",
-                ]
-            ],
+            present_recipe_table(ordered, craft_now_cols),
             use_container_width=True,
             hide_index=True,
         )
+        explain_columns("Column guide for Craft now", craft_now_cols)
         csv_bytes = ordered.drop(columns=["ingredient_list"]).to_csv(index=False).encode("utf-8")
         st.download_button(
             "Download craftable recipes as CSV",
@@ -812,7 +965,10 @@ with tab1:
 
 with tab2:
     st.subheader("Multi-step planner")
-    st.caption("This planner aims for one target item and uses your current inventory plus intermediate recipes up to the chosen depth.")
+    render_tab_help(
+        "Plan a target",
+        "This tab tries to build one chosen item through sub-crafts. It is useful when an item is not directly craftable but can be reached through intermediate recipes."
+    )
     target = st.selectbox(
         "Choose a target item",
         sorted(recipes_df["result"].unique().tolist()),
@@ -830,7 +986,10 @@ with tab2:
 
 with tab3:
     st.subheader("Shopping list mode")
-    st.caption("Paste the whole build you want and the app will estimate the smallest missing ingredient list it can find from your current stash.")
+    render_tab_help(
+        "Shopping list",
+        "This mode is for build prep. Paste several target items and quantities, and the app estimates the smallest missing ingredient list it can find from your current stash."
+    )
     target_text = st.text_area(
         "Target build",
         value="Great Life Potion,2\nBread,2\nTravel Ration,1",
@@ -867,31 +1026,37 @@ with tab3:
 
 with tab4:
     st.subheader("Almost craftable")
-    st.caption("These are the recipes that are close enough to be worth one quick supply run.")
+    render_tab_help(
+        "Missing ingredients",
+        "This is the near-miss tab. It shows recipes that are close enough to matter, so you can decide which quick pickups unlock the most useful crafts."
+    )
     if near.empty:
         st.info("Nothing is within one or two missing ingredient slots right now.")
     else:
+        near_cols = [
+            "result",
+            "missing_slots",
+            "missing_items",
+            "heal_each",
+            "stamina_each",
+            "mana_each",
+            "sale_value_each",
+            "station",
+            "ingredients",
+        ]
         st.dataframe(
-            near[
-                [
-                    "result",
-                    "missing_slots",
-                    "missing_items",
-                    "heal_each",
-                    "stamina_each",
-                    "mana_each",
-                    "sale_value_each",
-                    "station",
-                    "ingredients",
-                ]
-            ].sort_values(["missing_slots", "result"]),
+            present_recipe_table(near.sort_values(["missing_slots", "result"]), near_cols),
             use_container_width=True,
             hide_index=True,
         )
+        explain_columns("Column guide for Missing ingredients", near_cols)
 
 with tab5:
     st.subheader("Recipe database")
-    st.caption("Browse the full recipe set, cleaned ingredient groups, and the item stats file that powers the new ranking modes.")
+    render_tab_help(
+        "Recipe database",
+        "This is the reference tab. Browse the full recipe set, cleaned ingredient groups, and the editable item stats that power the ranking views."
+    )
     show_recipes = recipes_df.copy()
     show_recipes["ingredients"] = show_recipes["ingredient_list"].apply(lambda items: ", ".join(items))
     show_recipes["effects"] = show_recipes["result"].apply(lambda result: "; ".join(item_meta_for(result, item_metadata)["effects"]))
@@ -901,6 +1066,10 @@ with tab5:
     show_recipes["sale_value"] = show_recipes["result"].apply(lambda result: item_meta_for(result, item_metadata)["sale_value"])
     show_recipes = show_recipes.drop(columns=["ingredient_list", "result_key"])
     st.dataframe(show_recipes, use_container_width=True, hide_index=True)
+    explain_columns(
+        "Column guide for the recipe database",
+        ["result", "result_qty_per_craft", "heal_each", "stamina_each", "mana_each", "sale_value_each", "effects", "station", "ingredients"],
+    )
 
     if groups:
         st.markdown("**Ingredient groups**")
