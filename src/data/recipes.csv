@@ -1,0 +1,410 @@
+recipe_id,recipe_page,section,result,result_qty,station,ingredients
+Alchemy-1,Alchemy,Alchemy Kit recipes [ edit ],Admiral Incense,4,Alchemy Kit,Dreamer's Root|Dreamer's Root|Elemental Particle – Light
+Alchemy-2,Alchemy,Alchemy Kit recipes [ edit ],Alertness Potion,3,Alchemy Kit,Water|Nightmare Mushroom|Stingleaf
+Alchemy-3,Alchemy,Alchemy Kit recipes [ edit ],Antidote,1,Alchemy Kit,Common Mushroom|Thick Oil|Water
+Alchemy-4,Alchemy,Alchemy Kit recipes [ edit ],Apollo Incense,4,Alchemy Kit,Purifying Quartz|Tourmaline|Elemental Particle – Fire|Monarch Incense
+Alchemy-5,Alchemy,Alchemy Kit recipes [ edit ],Assassin Elixir,1,Alchemy Kit,Water|Raw Jewel Meat|Firefly Powder|Crystal Powder
+Alchemy-6,Alchemy,Alchemy Kit recipes [ edit ],Astral Potion,1,Alchemy Kit,Star Mushroom|Turmmip|Water
+Alchemy-7,Alchemy,Alchemy Kit recipes [ edit ],Astral Potion,1,Alchemy Kit,Shark Cartilage|Thick Oil
+Alchemy-8,Alchemy,Alchemy Kit recipes [ edit ],Astral Potion,1,Alchemy Kit,Mantis Granite|Gaberries
+Alchemy-9,Alchemy,Alchemy Kit recipes [ edit ],Barrier Potion,1,Alchemy Kit,Water|Peach Seeds|Crysocolla Beetle
+Alchemy-10,Alchemy,Alchemy Kit recipes [ edit ],Blazing Bomb,1,Alchemy Kit,Bomb Kit|Obsidian Shard|Oil Bomb
+Alchemy-11,Alchemy,Alchemy Kit recipes [ edit ],Blessed Potion,3,Alchemy Kit,Firefly Powder|Water
+Alchemy-12,Alchemy,Alchemy Kit recipes [ edit ],Bolt Varnish,1,Alchemy Kit,Gaberry Wine|Firefly Powder|Mana Stone
+Alchemy-13,Alchemy,Alchemy Kit recipes [ edit ],Bracing Potion,1,Alchemy Kit,Water|Ableroot|Ableroot|Peach Seeds
+Alchemy-14,Alchemy,Alchemy Kit recipes [ edit ],Cecropia Incense,4,Alchemy Kit,Dreamer's Root|Dreamer's Root|Elemental Particle – Decay
+Alchemy-15,Alchemy,Alchemy Kit recipes [ edit ],Charge – Incendiary,3,Alchemy Kit,Thick Oil|Iron Scrap|Salt
+Alchemy-16,Alchemy,Alchemy Kit recipes [ edit ],Charge – Nerve Gas,3,Alchemy Kit,Blood Mushroom|Livweedi|Salt
+Alchemy-17,Alchemy,Alchemy Kit recipes [ edit ],Charge – Toxic,3,Alchemy Kit,Grilled Crabeye Seed|Grilled Crabeye Seed|Salt
+Alchemy-18,Alchemy,Alchemy Kit recipes [ edit ],Chrysalis Incense,4,Alchemy Kit,Dreamer's Root|Dreamer's Root|Elemental Particle – Ice
+Alchemy-19,Alchemy,Alchemy Kit recipes [ edit ],Cold Stone,3,Alchemy Kit,Blue Sand|Mana Stone
+Alchemy-20,Alchemy,Alchemy Kit recipes [ edit ],Comet Incense,4,Alchemy Kit,Purifying Quartz|Tourmaline|Elemental Particle – Decay|Cecropia Incense
+Alchemy-21,Alchemy,Alchemy Kit recipes [ edit ],Cool Potion,3,Alchemy Kit,Gravel Beetle|Water
+Alchemy-22,Alchemy,Alchemy Kit recipes [ edit ],Crystal Powder,1,Alchemy Kit,Mana Stone|Mana Stone|Mana Stone|Mana Stone
+Alchemy-23,Alchemy,Alchemy Kit recipes [ edit ],Dark Varnish,1,Alchemy Kit,Gaberry Wine|Occult Remains|Mana Stone|Grilled Crabeye Seed
+Alchemy-24,Alchemy,Alchemy Kit recipes [ edit ],Discipline Potion,3,Alchemy Kit,Water|Ochre Spice Beetle|Livweedi
+Alchemy-25,Alchemy,Alchemy Kit recipes [ edit ],Elemental Immunity Potion,1,Alchemy Kit,Thick Oil|Azure Shrimp|Firefly Powder|Occult Remains
+Alchemy-26,Alchemy,Alchemy Kit recipes [ edit ],Elemental Resistance Potion,1,Alchemy Kit,Smoke Root|Occult Remains|Crystal Powder
+Alchemy-27,Alchemy,Alchemy Kit recipes [ edit ],Endurance Potion,1,Alchemy Kit,Egg|Krimp Nut|Water
+Alchemy-28,Alchemy,Alchemy Kit recipes [ edit ],Endurance Potion,1,Alchemy Kit,Occult Remains|Turmmip
+Alchemy-29,Alchemy,Alchemy Kit recipes [ edit ],Endurance Potion,1,Alchemy Kit,Assassin Tongue|Cactus Fruit
+Alchemy-30,Alchemy,Alchemy Kit recipes [ edit ],Energizing Potion,3,Alchemy Kit,Leyline Water|Crystal Powder|Stingleaf
+Alchemy-31,Alchemy,Alchemy Kit recipes [ edit ],Fire Stone,1,Alchemy Kit,Mana Stone|Thick Oil
+Alchemy-32,Alchemy,Alchemy Kit recipes [ edit ],Fire Varnish,1,Alchemy Kit,Gaberry Wine|Seared Root|Fire Stone
+Alchemy-33,Alchemy,Alchemy Kit recipes [ edit ],Flaming Arrow,5,Alchemy Kit,Arrowhead Kit|Wood|Thick Oil
+Alchemy-34,Alchemy,Alchemy Kit recipes [ edit ],Flaming Bomb,1,Alchemy Kit,Bomb Kit|Boreo Blubber|Charge – Incendiary
+Alchemy-35,Alchemy,Alchemy Kit recipes [ edit ],Fragment Bomb,1,Alchemy Kit,Sulphuric Mushroom|Iron Scrap|Iron Scrap
+Alchemy-36,Alchemy,Alchemy Kit recipes [ edit ],Frost Bomb,1,Alchemy Kit,Bomb Kit|Chalcedony|Sulphuric Mushroom
+Alchemy-37,Alchemy,Alchemy Kit recipes [ edit ],Frosted Powder,3,Alchemy Kit,Funnel Beetle|Funnel Beetle
+Alchemy-38,Alchemy,Alchemy Kit recipes [ edit ],Golem Elixir,1,Alchemy Kit,Water|Occult Remains|Blue Sand|Crystal Powder
+Alchemy-39,Alchemy,Alchemy Kit recipes [ edit ],Great Astral Potion,1,Alchemy Kit,Astral Potion|Ghost's Eye
+Alchemy-40,Alchemy,Alchemy Kit recipes [ edit ],Great Astral Potion,3,Alchemy Kit,Water|Manticore Tail|Blood Mushroom
+Alchemy-41,Alchemy,Alchemy Kit recipes [ edit ],Great Astral Potion,3,Alchemy Kit,Water|Alpha Tuanosaur Tail|Star Mushroom
+Alchemy-42,Alchemy,Alchemy Kit recipes [ edit ],Great Endurance Potion,1,Alchemy Kit,Krimp Nut|Endurance Potion
+Alchemy-43,Alchemy,Alchemy Kit recipes [ edit ],Great Endurance Potion,1,Alchemy Kit,Obsidian Shard|Common Mushroom|Water
+Alchemy-44,Alchemy,Alchemy Kit recipes [ edit ],Great Life Potion,1,Alchemy Kit,Life Potion|Greasy Fern
+Alchemy-45,Alchemy,Alchemy Kit recipes [ edit ],Great Life Potion,3,Alchemy Kit,Water|Horror Chitin|Krimp Nut
+Alchemy-46,Alchemy,Alchemy Kit recipes [ edit ],Hex Cleaner,1,Alchemy Kit,Water|Greasy Fern|Livweedi|Salt
+Alchemy-47,Alchemy,Alchemy Kit recipes [ edit ],Holy Rage Arrow,3,Alchemy Kit,Arrowhead Kit|Wood|Gold-Lich Mechanism
+Alchemy-48,Alchemy,Alchemy Kit recipes [ edit ],Horror's Potion,1,Alchemy Kit,Life Potion|Seaweed|Rancid Water|Liquid Corruption
+Alchemy-49,Alchemy,Alchemy Kit recipes [ edit ],Ice Varnish,1,Alchemy Kit,Gaberry Wine|Livweedi|Cold Stone
+Alchemy-50,Alchemy,Alchemy Kit recipes [ edit ],Illuminating Potion,1,Alchemy Kit,Leyline Water|Nightmare Mushroom|Gaberry Wine|Liquid Corruption
+Alchemy-51,Alchemy,Alchemy Kit recipes [ edit ],Innocence Potion,3,Alchemy Kit,Thick Oil|Purifying Quartz|Dark Stone|Boozu's Milk
+Alchemy-52,Alchemy,Alchemy Kit recipes [ edit ],Invigorating Potion,3,Alchemy Kit,Water|Sugar|Dreamer's Root
+Alchemy-53,Alchemy,Alchemy Kit recipes [ edit ],Life Potion,1,Alchemy Kit,Gravel Beetle|Blood Mushroom|Water
+Alchemy-54,Alchemy,Alchemy Kit recipes [ edit ],Life Potion,1,Alchemy Kit,Coralhorn Antler|Woolshroom
+Alchemy-55,Alchemy,Alchemy Kit recipes [ edit ],Life Potion,1,Alchemy Kit,Phytosaur Horn|Marshmelon
+Alchemy-56,Alchemy,Alchemy Kit recipes [ edit ],Luna Incense,4,Alchemy Kit,Purifying Quartz|Tourmaline|Elemental Particle – Light|Admiral Incense
+Alchemy-57,Alchemy,Alchemy Kit recipes [ edit ],Mana Arrow,5,Alchemy Kit,Arrowhead Kit|Wood|Ghost's Eye
+Alchemy-58,Alchemy,Alchemy Kit recipes [ edit ],Mana Belly Potion,1,Alchemy Kit,Water|Pypherfish|Funnel Beetle|Hexa Stone
+Alchemy-59,Alchemy,Alchemy Kit recipes [ edit ],Marathon Potion,1,Alchemy Kit,Water|Crysocolla Beetle
+Alchemy-60,Alchemy,Alchemy Kit recipes [ edit ],Mist Potion,3,Alchemy Kit,Water|Ghost's Eye
+Alchemy-61,Alchemy,Alchemy Kit recipes [ edit ],Monarch Incense,4,Alchemy Kit,Dreamer's Root|Dreamer's Root|Elemental Particle – Fire
+Alchemy-62,Alchemy,Alchemy Kit recipes [ edit ],Morpho Incense,4,Alchemy Kit,Purifying Quartz|Tourmaline|Elemental Particle – Ice|Chrysalis Incense
+Alchemy-63,Alchemy,Alchemy Kit recipes [ edit ],Nerve Bomb,1,Alchemy Kit,Bomb Kit|Ambraine|Charge – Nerve Gas
+Alchemy-64,Alchemy,Alchemy Kit recipes [ edit ],Oil Bomb,1,Alchemy Kit,Sulphuric Mushroom|Thick Oil|Thick Oil
+Alchemy-65,Alchemy,Alchemy Kit recipes [ edit ],Pale Beauty Incense,4,Alchemy Kit,Dreamer's Root|Dreamer's Root|Elemental Particle – Ether
+Alchemy-66,Alchemy,Alchemy Kit recipes [ edit ],Palladium Arrow,5,Alchemy Kit,Arrowhead Kit|Wood|Palladium Scrap
+Alchemy-67,Alchemy,Alchemy Kit recipes [ edit ],Panacea,1,Alchemy Kit,Water|Sulphuric Mushroom|Ableroot|Peach Seeds
+Alchemy-68,Alchemy,Alchemy Kit recipes [ edit ],Poison Arrow,5,Alchemy Kit,Arrowhead Kit|Wood|Grilled Crabeye Seed
+Alchemy-69,Alchemy,Alchemy Kit recipes [ edit ],Poison Varnish,1,Alchemy Kit,Gaberry Wine|Occult Remains|Miasmapod|Grilled Crabeye Seed
+Alchemy-70,Alchemy,Alchemy Kit recipes [ edit ],Possessed Potion,3,Alchemy Kit,Water|Occult Remains
+Alchemy-71,Alchemy,Alchemy Kit recipes [ edit ],Purity Potion,3,Alchemy Kit,Sanctifier Potion|Elemental Particle
+Alchemy-72,Alchemy,Alchemy Kit recipes [ edit ],Quartz Potion,3,Alchemy Kit,Water|Boozu's Hide|Dreamer's Root
+Alchemy-73,Alchemy,Alchemy Kit recipes [ edit ],Rage Potion,3,Alchemy Kit,Water|Smoke Root|Gravel Beetle
+Alchemy-74,Alchemy,Alchemy Kit recipes [ edit ],Sanctifier Potion,3,Alchemy Kit,Leyline Water|Purifying Quartz|Dreamer's Root|Occult Remains
+Alchemy-75,Alchemy,Alchemy Kit recipes [ edit ],Shimmer Potion,1,Alchemy Kit,Water|Peach Seeds|Peach Seeds|Crysocolla Beetle
+Alchemy-76,Alchemy,Alchemy Kit recipes [ edit ],Soul Rupture Arrow,3,Alchemy Kit,Arrowhead Kit|Wood|Hexa Stone
+Alchemy-77,Alchemy,Alchemy Kit recipes [ edit ],Spark Bomb,1,Alchemy Kit,Bomb Kit|Calygrey Hairs|Sulphuric Mushroom
+Alchemy-78,Alchemy,Alchemy Kit recipes [ edit ],Spiked Alertness Potion,1,Alchemy Kit,Alertness Potion|Stingleaf
+Alchemy-79,Alchemy,Alchemy Kit recipes [ edit ],Spiritual Varnish,1,Alchemy Kit,Gaberry Wine|Ghost's Eye|Mana Stone
+Alchemy-80,Alchemy,Alchemy Kit recipes [ edit ],Stability Potion,1,Alchemy Kit,Insect Husk|Livweedi|Water
+Alchemy-81,Alchemy,Alchemy Kit recipes [ edit ],Stealth Potion,3,Alchemy Kit,Water|Woolshroom|Ghost's Eye
+Alchemy-82,Alchemy,Alchemy Kit recipes [ edit ],Stoneflesh Elixir,1,Alchemy Kit,Water|Gravel Beetle|Insect Husk|Crystal Powder
+Alchemy-83,Alchemy,Alchemy Kit recipes [ edit ],Sulphur Potion,1,Alchemy Kit,Water|Sulphuric Mushroom|Crysocolla Beetle
+Alchemy-84,Alchemy,Alchemy Kit recipes [ edit ],Survivor Elixir,1,Alchemy Kit,Water|Ochre Spice Beetle|Crystal Powder|Livweedi
+Alchemy-85,Alchemy,Alchemy Kit recipes [ edit ],Sylphina Incense,4,Alchemy Kit,Purifying Quartz|Tourmaline|Elemental Particle – Ether|Pale Beauty Incense
+Alchemy-86,Alchemy,Alchemy Kit recipes [ edit ],Toxin Bomb,1,Alchemy Kit,Bomb Kit|Miasmapod|Charge – Toxic
+Alchemy-87,Alchemy,Alchemy Kit recipes [ edit ],Venom Arrow,5,Alchemy Kit,Arrowhead Kit|Wood|Miasmapod
+Alchemy-88,Alchemy,Alchemy Kit recipes [ edit ],Warm Potion,1,Alchemy Kit,Thick Oil|Water
+Alchemy-89,Alchemy,Alchemy Kit recipes [ edit ],Warrior Elixir,1,Alchemy Kit,Krimp Nut|Crystal Powder|Larva Egg|Water
+Alchemy-90,Alchemy,Alchemy Kit recipes [ edit ],Weather Defense Potion,1,Alchemy Kit,Water|Greasy Fern|Crystal Powder
+Cooking-1,Cooking,Any Station [ edit ],Baked Crescent,1,Campfire,Golden Crescent
+Cooking-2,Cooking,Any Station [ edit ],Boiled Azure Shrimp,1,Campfire,Azure Shrimp
+Cooking-3,Cooking,Any Station [ edit ],Boiled Cactus Fruit,1,Campfire,Cactus Fruit
+Cooking-4,Cooking,Any Station [ edit ],Boiled Crawlberry,1,Campfire,Crawlberry
+Cooking-5,Cooking,Any Station [ edit ],Boiled Dreamer's Root,1,Campfire,Dreamer's Root
+Cooking-6,Cooking,Any Station [ edit ],Boiled Gaberries,1,Campfire,Gaberries
+Cooking-7,Cooking,Any Station [ edit ],Boiled Miasmapod,1,Campfire,Miasmapod
+Cooking-8,Cooking,Any Station [ edit ],Boiled Purpkin,1,Campfire,Purpkin
+Cooking-9,Cooking,Any Station [ edit ],Boiled Turmmip,1,Campfire,Turmmip
+Cooking-10,Cooking,Any Station [ edit ],Boiled Veaber Egg,1,Campfire,Veaber's Egg
+Cooking-11,Cooking,Any Station [ edit ],Clean Water,1,Campfire,Water
+Cooking-12,Cooking,Any Station [ edit ],Cooked Alpha Meat,1,Campfire,Raw Alpha Meat
+Cooking-13,Cooking,Any Station [ edit ],Cooked Bird Egg,1,Campfire,Bird Egg
+Cooking-14,Cooking,Any Station [ edit ],Cooked Boozu's Meat,1,Campfire,Boozu's Meat
+Cooking-15,Cooking,Any Station [ edit ],Cooked Jewel Meat,1,Campfire,Raw Jewel Meat
+Cooking-16,Cooking,Any Station [ edit ],Cooked Larva Egg,1,Campfire,Larva Egg
+Cooking-17,Cooking,Any Station [ edit ],Cooked Meat,1,Campfire,Raw Meat
+Cooking-18,Cooking,Any Station [ edit ],Cooked Torcrab Egg,1,Campfire,Torcrab Egg
+Cooking-19,Cooking,Any Station [ edit ],Grilled Crabeye Seed,1,Campfire,Crabeye Seed
+Cooking-20,Cooking,Any Station [ edit ],Grilled Eel,1,Campfire,Antique Eel
+Cooking-21,Cooking,Any Station [ edit ],Grilled Manaheart Bass,1,Campfire,Manaheart Bass
+Cooking-22,Cooking,Any Station [ edit ],Grilled Marshmelon,1,Campfire,Marshmelon
+Cooking-23,Cooking,Any Station [ edit ],Grilled Mushroom,1,Campfire,Common Mushroom
+Cooking-24,Cooking,Any Station [ edit ],Grilled Nightmare Mushroom,1,Campfire,Nightmare Mushroom
+Cooking-25,Cooking,Any Station [ edit ],Grilled Pypherfish,1,Campfire,Pypherfish
+Cooking-26,Cooking,Any Station [ edit ],Grilled Rainbow Trout,1,Campfire,Raw Rainbow Trout
+Cooking-27,Cooking,Any Station [ edit ],Grilled Salmon,1,Campfire,Raw Salmon
+Cooking-28,Cooking,Any Station [ edit ],Grilled Torcrab Meat,1,Campfire,Raw Torcrab Meat
+Cooking-29,Cooking,Any Station [ edit ],Grilled Woolshroom,1,Campfire,Woolshroom
+Cooking-30,Cooking,Any Station [ edit ],Peach Seeds,1,Campfire,Rainbow Peach
+Cooking-31,Cooking,Any Station [ edit ],Popped Maize,3,Campfire,Maize
+Cooking-32,Cooking,Any Station [ edit ],Roasted Krimp Nut,1,Campfire,Krimp Nut
+Cooking-33,Cooking,Any Station [ edit ],Salt,1,Campfire,Salt Water
+Cooking-34,Cooking,Any Station [ edit ],Seared Root,1,Campfire,Smoke Root
+Cooking-35,Cooking,Any Station [ edit ],Sugar,1,Campfire,Leyline Water
+Cooking-36,Cooking,Any Station [ edit ],Toast,1,Campfire,Bread
+Cooking-37,Cooking,Any Station [ edit ],Warm Boozu's Milk,1,Campfire,Boozu's Milk
+Cooking-38,Cooking,Cooking Pot / Kitchen [ edit ],Able Tea,1,Cooking Pot,Water|Ableroot
+Cooking-39,Cooking,Cooking Pot / Kitchen [ edit ],Alpha Jerky,5,Cooking Pot,Raw Alpha Meat|Raw Alpha Meat|Salt|Salt
+Cooking-40,Cooking,Cooking Pot / Kitchen [ edit ],Alpha Sandwich,3,Cooking Pot,Raw Alpha Meat|Bread
+Cooking-41,Cooking,Cooking Pot / Kitchen [ edit ],Angel Food Cake,3,Cooking Pot,Flour|Egg|Sugar
+Cooking-42,Cooking,Cooking Pot / Kitchen [ edit ],Bagatelle,3,Cooking Pot,Crawlberry Jam|Crawlberry Jam|Sugar|Fresh Cream
+Cooking-43,Cooking,Cooking Pot / Kitchen [ edit ],Battered Maize,1,Cooking Pot,Maize|Torcrab Egg|Salt
+Cooking-44,Cooking,Cooking Pot / Kitchen [ edit ],Bitter Spicy Tea,1,Cooking Pot,Water|Ochre Spice Beetle
+Cooking-45,Cooking,Cooking Pot / Kitchen [ edit ],Bouillon du Predateur,3,Cooking Pot,Predator Bones|Predator Bones|Predator Bones|Water
+Cooking-46,Cooking,Cooking Pot / Kitchen [ edit ],Bread,3,Cooking Pot,Flour|Clean Water|Salt
+Cooking-47,Cooking,Cooking Pot / Kitchen [ edit ],Bread Of The Wild,3,Cooking Pot,Smoke Root|Raw Alpha Meat|Woolshroom|Bread
+Cooking-48,Cooking,Cooking Pot / Kitchen [ edit ],Cactus Pie,3,Cooking Pot,Cactus Fruit|Cactus Fruit|Bread
+Cooking-49,Cooking,Cooking Pot / Kitchen [ edit ],Cheese Cake,3,Cooking Pot,Fresh Cream|Fresh Cream|Egg|Sugar
+Cooking-50,Cooking,Cooking Pot / Kitchen [ edit ],Cierzo Ceviche,3,Cooking Pot,Raw Rainbow Trout|Seaweed|Salt
+Cooking-51,Cooking,Cooking Pot / Kitchen [ edit ],Cipate,1,Cooking Pot,Boozu's Meat|Salt|Egg|Flour
+Cooking-52,Cooking,Cooking Pot / Kitchen [ edit ],Cool Rainbow Jam,1,Cooking Pot,Rainbow Peach|Rainbow Peach|Frosted Powder
+Cooking-53,Cooking,Cooking Pot / Kitchen [ edit ],Crawlberry Jam,1,Cooking Pot,Crawlberry|Crawlberry|Sugar
+Cooking-54,Cooking,Cooking Pot / Kitchen [ edit ],Crawlberry Tartine,3,Cooking Pot,Bread|Crawlberry Jam
+Cooking-55,Cooking,Cooking Pot / Kitchen [ edit ],Cured Pypherfish,3,Cooking Pot,Vegetable|Pypherfish|Peach Seeds
+Cooking-56,Cooking,Cooking Pot / Kitchen [ edit ],Diadème de Gibier,3,Cooking Pot,Raw Jewel Meat|Meat|Cactus Fruit|Salt
+Cooking-57,Cooking,Cooking Pot / Kitchen [ edit ],Dry Mushroom Bar,5,Cooking Pot,Common Mushroom|Common Mushroom|Common Mushroom|Common Mushroom
+Cooking-58,Cooking,Cooking Pot / Kitchen [ edit ],Flour,1,Cooking Pot,Wheat|Wheat
+Cooking-59,Cooking,Cooking Pot / Kitchen [ edit ],Fresh Cream,3,Cooking Pot,Boozu's Milk|Boozu's Milk|Boozu's Milk|Boozu's Milk
+Cooking-60,Cooking,Cooking Pot / Kitchen [ edit ],Frosted Crescent,1,Cooking Pot,Golden Crescent|Frosted Powder
+Cooking-61,Cooking,Cooking Pot / Kitchen [ edit ],Frosted Delight,3,Cooking Pot,Golden Crescent|Cool Rainbow Jam|Frosted Powder
+Cooking-62,Cooking,Cooking Pot / Kitchen [ edit ],Frosted Maize,1,Cooking Pot,Maize|Frosted Powder
+Cooking-63,Cooking,Cooking Pot / Kitchen [ edit ],Fungal Cleanser,3,Cooking Pot,Woolshroom|Mushroom|Ochre Spice Beetle
+Cooking-64,Cooking,Cooking Pot / Kitchen [ edit ],Gaberry Jam,1,Cooking Pot,Gaberries|Gaberries|Gaberries|Gaberries
+Cooking-65,Cooking,Cooking Pot / Kitchen [ edit ],Gaberry Tartine,3,Cooking Pot,Bread|Gaberry Jam
+Cooking-66,Cooking,Cooking Pot / Kitchen [ edit ],Golden Jam,1,Cooking Pot,Golden Crescent|Golden Crescent|Golden Crescent|Golden Crescent
+Cooking-67,Cooking,Cooking Pot / Kitchen [ edit ],Golden Tartine,3,Cooking Pot,Golden Jam|Bread
+Cooking-68,Cooking,Cooking Pot / Kitchen [ edit ],Greasy Tea,1,Cooking Pot,Water|Crysocolla Beetle
+Cooking-69,Cooking,Cooking Pot / Kitchen [ edit ],Iced Tea,1,Cooking Pot,Water|Funnel Beetle
+Cooking-70,Cooking,Cooking Pot / Kitchen [ edit ],Jerky,5,Cooking Pot,Meat|Meat|Salt|Salt
+Cooking-71,Cooking,Cooking Pot / Kitchen [ edit ],Luxe Lichette,3,Cooking Pot,Larva Egg|Azure Shrimp|Raw Rainbow Trout|Seaweed
+Cooking-72,Cooking,Cooking Pot / Kitchen [ edit ],Maize Mash,3,Cooking Pot,Meat|Maize|Torcrab Egg|Torcrab Egg
+Cooking-73,Cooking,Cooking Pot / Kitchen [ edit ],Marshmelon Jelly,1,Cooking Pot,Marshmelon|Marshmelon|Marshmelon|Gaberry Jam
+Cooking-74,Cooking,Cooking Pot / Kitchen [ edit ],Marshmelon Tartine,3,Cooking Pot,Marshmelon Jelly|Bread (Any)
+Cooking-75,Cooking,Cooking Pot / Kitchen [ edit ],Meat Stew,3,Cooking Pot,Meat|Vegetable|Salt
+Cooking-76,Cooking,Cooking Pot / Kitchen [ edit ],Miner's Omelet,3,Cooking Pot,Egg|Egg|Common Mushroom
+Cooking-77,Cooking,Cooking Pot / Kitchen [ edit ],Mineral Tea,1,Cooking Pot,Water|Gravel Beetle
+Cooking-78,Cooking,Cooking Pot / Kitchen [ edit ],Needle Tea,1,Cooking Pot,Water|Cactus Fruit
+Cooking-79,Cooking,Cooking Pot / Kitchen [ edit ],Ocean Fricassee,3,Cooking Pot,Larva Egg|Fish|Seaweed
+Cooking-80,Cooking,Cooking Pot / Kitchen [ edit ],Pot-au-Feu du Pirate,3,Cooking Pot,Fish|Fish|Fish|Salt
+Cooking-81,Cooking,Cooking Pot / Kitchen [ edit ],Pouding Chomeur,3,Cooking Pot,Flour|Egg|Sugar|Boozu's Milk
+Cooking-82,Cooking,Cooking Pot / Kitchen [ edit ],Pungent Paste,1,Cooking Pot,Egg|Ochre Spice Beetle|Fish
+Cooking-83,Cooking,Cooking Pot / Kitchen [ edit ],Purpkin Pie,3,Cooking Pot,Purpkin|Flour|Veaber's Egg|Sugar
+Cooking-84,Cooking,Cooking Pot / Kitchen [ edit ],Ragoût du Marais,3,Cooking Pot,Miasmapod|Meat|Marshmelon|Salt
+Cooking-85,Cooking,Cooking Pot / Kitchen [ edit ],Rainbow Tartine,3,Cooking Pot,Cool Rainbow Jam|Bread
+Cooking-86,Cooking,Cooking Pot / Kitchen [ edit ],Savage Stew,3,Cooking Pot,Raw Alpha Meat|Marshmelon|Gravel Beetle
+Cooking-87,Cooking,Cooking Pot / Kitchen [ edit ],Soothing Tea,1,Cooking Pot,Water|Seaweed
+Cooking-88,Cooking,Cooking Pot / Kitchen [ edit ],Spiny Meringue,3,Cooking Pot,Cactus Fruit|Cactus Fruit|Egg|Larva Egg
+Cooking-89,Cooking,Cooking Pot / Kitchen [ edit ],Stringy Salad,3,Cooking Pot,Woolshroom|Woolshroom|Vegetable|Vegetable
+Cooking-90,Cooking,Cooking Pot / Kitchen [ edit ],Torcrab Jerky,3,Cooking Pot,Raw Torcrab Meat|Raw Torcrab Meat|Salt|Salt
+Cooking-91,Cooking,Cooking Pot / Kitchen [ edit ],Torcrab Sandwich,3,Cooking Pot,Salt|Bread|Raw Torcrab Meat|Raw Torcrab Meat
+Cooking-92,Cooking,Cooking Pot / Kitchen [ edit ],Travel Ration,3,Cooking Pot,Ration Ingredient|Ration Ingredient|Salt
+Cooking-93,Cooking,Cooking Pot / Kitchen [ edit ],Turmmip Potage,3,Cooking Pot,Turmmip|Turmmip|Turmmip|Salt
+Cooking-94,Cooking,Cooking Pot / Kitchen [ edit ],Vagabond's Gelatin,1,Cooking Pot,Cool Rainbow Jam|Golden Jam|Gaberry Jam|Marshmelon Jelly
+Cooking-95,Cooking,Cooking Pot / Kitchen [ edit ],Vagabond's Tartine,3,Cooking Pot,Vagabond's Gelatin|Bread
+Crafting/Survival-1,Crafting/Survival,General [ edit ],Arcane Dampener,1,None,Dreamer's Root|Crystal Powder|Boozu's Hide
+Crafting/Survival-2,Crafting/Survival,General [ edit ],Arrow,3,None,Iron Scrap|Wood
+Crafting/Survival-3,Crafting/Survival,General [ edit ],Bandages,1,None,Linen Cloth|Linen Cloth
+Crafting/Survival-4,Crafting/Survival,General [ edit ],Bolt Rag,1,None,Linen Cloth|Larva Egg
+Crafting/Survival-5,Crafting/Survival,General [ edit ],Bullet,3,None,Iron Scrap|Thick Oil
+Crafting/Survival-6,Crafting/Survival,General [ edit ],Campfire Kit,1,None,Wood|Wood|Wood
+Crafting/Survival-7,Crafting/Survival,General [ edit ],Cooking Pot,1,None,Cauldron Helm
+Crafting/Survival-8,Crafting/Survival,General [ edit ],Corruption Totemic Lodge,1,None,Advanced Tent|Miasmapod|Thorny Cartilage|Predator Bones
+Crafting/Survival-9,Crafting/Survival,General [ edit ],Enchanting Pedestal,1,None,Enchanting Table Shield
+Crafting/Survival-10,Crafting/Survival,General [ edit ],Ethereal Totemic Lodge,1,None,Advanced Tent|Hackmanite|Ghost's Eye|Predator Bones
+Crafting/Survival-11,Crafting/Survival,General [ edit ],Fire Rag,1,None,Linen Cloth|Thick Oil
+Crafting/Survival-12,Crafting/Survival,General [ edit ],Fire Totemic Lodge,1,None,Advanced Tent|Obsidian Shard|Seared Root|Predator Bones
+Crafting/Survival-13,Crafting/Survival,General [ edit ],Ice Rag,1,None,Linen Cloth|Seaweed
+Crafting/Survival-14,Crafting/Survival,General [ edit ],Ice Totemic Lodge,1,None,Advanced Tent|Chalcedony|Crystal Powder|Predator Bones
+Crafting/Survival-15,Crafting/Survival,General [ edit ],Improvised Bedroll,1,None,Hide|Hide
+Crafting/Survival-16,Crafting/Survival,General [ edit ],Lightning Totemic Lodge,1,None,Advanced Tent|Palladium Scrap|Calygrey Hairs|Predator Bones
+Crafting/Survival-17,Crafting/Survival,General [ edit ],Mana Stone,3,None,Troglodyte Staff
+Crafting/Survival-18,Crafting/Survival,General [ edit ],Manticore Egg,1,None,Vendavel's Hospitality|Scourge's Tears|Noble's Greed|Calygrey's Wisdom
+Crafting/Survival-19,Crafting/Survival,General [ edit ],Palladium Scrap,5,None,Beast Golem Scraps|Beast Golem Scraps|Beast Golem Scraps|Beast Golem Scraps
+Crafting/Survival-20,Crafting/Survival,General [ edit ],Poison Rag,1,None,Linen Cloth|Grilled Crabeye Seed
+Crafting/Survival-21,Crafting/Survival,General [ edit ],Scourge Cocoon,2,None,Occult Remains|Horror Chitin|Veaber's Egg|Veaber's Egg
+Crafting/Survival-22,Crafting/Survival,General [ edit ],Spikes – Iron,3,None,Iron Scrap|Iron Scrap|Iron Scrap|Iron Scrap
+Crafting/Survival-23,Crafting/Survival,General [ edit ],Spikes – Palladium,3,None,Palladium Scrap|Palladium Scrap|Palladium Scrap|Palladium Scrap
+Crafting/Survival-24,Crafting/Survival,General [ edit ],Spikes – Wood,3,None,Wood|Wood|Wood|Wood
+Crafting/Survival-25,Crafting/Survival,General [ edit ],Travel Ration,1,None,Ration Ingredient|Ration Ingredient|Salt
+Crafting/Survival-26,Crafting/Survival,General [ edit ],Tripwire Trap,2,None,Iron Scrap|Iron Scrap|Wood|Linen Cloth
+Crafting/Survival-27,Crafting/Survival,Weapons [ edit ],Assassin Claymore,1,None,Assassin Tongue|Assassin Tongue|Fang Greatsword|Palladium Scrap
+Crafting/Survival-28,Crafting/Survival,Weapons [ edit ],Assassin Sword,1,None,Assassin Tongue|Steel Sabre|Palladium Scrap
+Crafting/Survival-29,Crafting/Survival,Weapons [ edit ],Astral Axe,1,None,Short Handle|Flat Prism|Waning Tentacle
+Crafting/Survival-30,Crafting/Survival,Weapons [ edit ],Astral Bow,1,None,Short Handle|Short Handle|Waning Tentacle
+Crafting/Survival-31,Crafting/Survival,Weapons [ edit ],Astral Chakram,1,None,Trinket Handle|Blade Prism|Waning Tentacle
+Crafting/Survival-32,Crafting/Survival,Weapons [ edit ],Astral Claymore,1,None,Long Handle|Blade Prism|Waning Tentacle
+Crafting/Survival-33,Crafting/Survival,Weapons [ edit ],Astral Dagger,1,None,Trinket Handle|Spike Prism|Waning Tentacle
+Crafting/Survival-34,Crafting/Survival,Weapons [ edit ],Astral Greataxe,1,None,Long Handle|Flat Prism|Waning Tentacle
+Crafting/Survival-35,Crafting/Survival,Weapons [ edit ],Astral Greatmace,1,None,Long Handle|Blunt Prism|Waning Tentacle
+Crafting/Survival-36,Crafting/Survival,Weapons [ edit ],Astral Halberd,1,None,Shaft Handle|Blade Prism|Waning Tentacle
+Crafting/Survival-37,Crafting/Survival,Weapons [ edit ],Astral Knuckles,1,None,Blunt Prism|Blunt Prism|Waning Tentacle
+Crafting/Survival-38,Crafting/Survival,Weapons [ edit ],Astral Mace,1,None,Short Handle|Blunt Prism|Waning Tentacle
+Crafting/Survival-39,Crafting/Survival,Weapons [ edit ],Astral Pistol,1,None,Trinket Handle|Blunt Prism|Waning Tentacle
+Crafting/Survival-40,Crafting/Survival,Weapons [ edit ],Astral Shield,1,None,Trinket Handle|Flat Prism|Waning Tentacle
+Crafting/Survival-41,Crafting/Survival,Weapons [ edit ],Astral Spear,1,None,Shaft Handle|Spike Prism|Waning Tentacle
+Crafting/Survival-42,Crafting/Survival,Weapons [ edit ],Astral Staff,1,None,Shaft Handle|Long Handle|Waning Tentacle
+Crafting/Survival-43,Crafting/Survival,Weapons [ edit ],Astral Sword,1,None,Short Handle|Blade Prism|Waning Tentacle
+Crafting/Survival-44,Crafting/Survival,Weapons [ edit ],Beast Golem Axe,1,None,Beast Golem Scraps|Iron Axe|Spikes – Palladium
+Crafting/Survival-45,Crafting/Survival,Weapons [ edit ],Beast Golem Halberd,1,None,Beast Golem Scraps|Beast Golem Scraps|Iron Halberd|Spikes – Palladium
+Crafting/Survival-46,Crafting/Survival,Weapons [ edit ],Bone Pistol,1,None,Flintlock Pistol|Occult Remains|Occult Remains|Crystal Powder
+Crafting/Survival-47,Crafting/Survival,Weapons [ edit ],Brand,1,None,Strange Rusted Sword|Chemist's Broken Flask|Mage's Poking Stick|Blacksmith's Vintage Hammer
+Crafting/Survival-48,Crafting/Survival,Weapons [ edit ],Cage Pistol,1,None,Haunted Memory|Scourge's Tears|Flowering Corruption|Enchanted Mask
+Crafting/Survival-49,Crafting/Survival,Weapons [ edit ],Chalcedony Axe,1,None,Chalcedony|Nephrite Gemstone|Militia Axe
+Crafting/Survival-50,Crafting/Survival,Weapons [ edit ],Chalcedony Bow,1,None,Chalcedony|Chalcedony|Nephrite Gemstone|Militia Bow
+Crafting/Survival-51,Crafting/Survival,Weapons [ edit ],Chalcedony Chakram,1,None,Chalcedony|Nephrite Gemstone|Militia Chakram
+Crafting/Survival-52,Crafting/Survival,Weapons [ edit ],Chalcedony Claymore,1,None,Chalcedony|Chalcedony|Nephrite Gemstone|Militia Claymore
+Crafting/Survival-53,Crafting/Survival,Weapons [ edit ],Chalcedony Greataxe,1,None,Chalcedony|Chalcedony|Nephrite Gemstone|Militia Greataxe
+Crafting/Survival-54,Crafting/Survival,Weapons [ edit ],Chalcedony Halberd,1,None,Chalcedony|Chalcedony|Nephrite Gemstone|Militia Halberd
+Crafting/Survival-55,Crafting/Survival,Weapons [ edit ],Chalcedony Hammer,1,None,Chalcedony|Chalcedony|Militia Hammer|Nephrite Gemstone
+Crafting/Survival-56,Crafting/Survival,Weapons [ edit ],Chalcedony Knuckles,1,None,Chalcedony|Chalcedony|Nephrite Gemstone|Militia Knuckles
+Crafting/Survival-57,Crafting/Survival,Weapons [ edit ],Chalcedony Mace,1,None,Chalcedony|Chalcedony|Militia Mace|Nephrite Gemstone
+Crafting/Survival-58,Crafting/Survival,Weapons [ edit ],Chalcedony Pistol,1,None,Chalcedony|Palladium Scrap|Flintlock Pistol
+Crafting/Survival-59,Crafting/Survival,Weapons [ edit ],Chalcedony Spear,1,None,Chalcedony|Chalcedony|Nephrite Gemstone|Militia Spear
+Crafting/Survival-60,Crafting/Survival,Weapons [ edit ],Chalcedony Sword,1,None,Chalcedony|Nephrite Gemstone|Militia Sword
+Crafting/Survival-61,Crafting/Survival,Weapons [ edit ],Challenger Greathammer,1,None,Gep's Generosity|Pearlbird's Courage|Haunted Memory|Calixa's Relic
+Crafting/Survival-62,Crafting/Survival,Weapons [ edit ],Cloth Knuckles,1,None,Linen Cloth|Linen Cloth|Linen Cloth
+Crafting/Survival-63,Crafting/Survival,Weapons [ edit ],Coralhorn Bow,1,None,Coralhorn Antler|Coralhorn Antler|Recurve Bow|Crystal Powder
+Crafting/Survival-64,Crafting/Survival,Weapons [ edit ],Crescent Greataxe,1,None,Shark Cartilage|Shark Cartilage|Palladium Scrap|Felling Greataxe
+Crafting/Survival-65,Crafting/Survival,Weapons [ edit ],Crescent Scythe,1,None,Shark Cartilage|Shark Cartilage|Palladium Scrap|Pitchfork
+Crafting/Survival-66,Crafting/Survival,Weapons [ edit ],Enchanting Table Shield,1,None,Enchanting Pedestal
+Crafting/Survival-67,Crafting/Survival,Weapons [ edit ],Fang Axe,1,None,Iron Axe|Predator Bones|Linen Cloth
+Crafting/Survival-68,Crafting/Survival,Weapons [ edit ],Fang Club,1,None,Iron Mace|Predator Bones|Linen Cloth
+Crafting/Survival-69,Crafting/Survival,Weapons [ edit ],Fang Greataxe,1,None,Iron Greataxe|Predator Bones|Predator Bones|Linen Cloth
+Crafting/Survival-70,Crafting/Survival,Weapons [ edit ],Fang Greatclub,1,None,Iron Greathammer|Predator Bones|Predator Bones|Linen Cloth
+Crafting/Survival-71,Crafting/Survival,Weapons [ edit ],Fang Greatsword,1,None,Iron Claymore|Predator Bones|Predator Bones|Linen Cloth
+Crafting/Survival-72,Crafting/Survival,Weapons [ edit ],Fang Halberd,1,None,Iron Halberd|Predator Bones|Predator Bones|Linen Cloth
+Crafting/Survival-73,Crafting/Survival,Weapons [ edit ],Fang Knuckles,1,None,Iron Wristband|Iron Wristband|Iron Knuckles|Predator Bones
+Crafting/Survival-74,Crafting/Survival,Weapons [ edit ],Fang Shield,1,None,Round Shield|Predator Bones|Linen Cloth
+Crafting/Survival-75,Crafting/Survival,Weapons [ edit ],Fang Sword,1,None,Iron Sword|Predator Bones|Linen Cloth
+Crafting/Survival-76,Crafting/Survival,Weapons [ edit ],Fang Trident,1,None,Iron Spear|Predator Bones|Predator Bones|Linen Cloth
+Crafting/Survival-77,Crafting/Survival,Weapons [ edit ],Frostburn Staff,1,None,Leyline Figment|Scarlet Whisper|Noble's Greed|Calygrey's Wisdom
+Crafting/Survival-78,Crafting/Survival,Weapons [ edit ],Galvanic Axe,1,None,Iron Axe|Shield Golem Scraps|Crystal Powder|Palladium Scrap
+Crafting/Survival-79,Crafting/Survival,Weapons [ edit ],Galvanic Bow,1,None,Simple Bow|Shield Golem Scraps|Crystal Powder|Palladium Scrap
+Crafting/Survival-80,Crafting/Survival,Weapons [ edit ],Galvanic Dagger,1,None,Shiv Dagger|Shield Golem Scraps|Crystal Powder|Palladium Scrap
+Crafting/Survival-81,Crafting/Survival,Weapons [ edit ],Galvanic Fists,1,None,Beast Golem Scraps|Shield Golem Scraps|Palladium Wristband|Palladium Wristband
+Crafting/Survival-82,Crafting/Survival,Weapons [ edit ],Galvanic Greataxe,1,None,Iron Greataxe|Shield Golem Scraps|Crystal Powder|Palladium Scrap
+Crafting/Survival-83,Crafting/Survival,Weapons [ edit ],Galvanic Greatmace,1,None,Iron Greathammer|Shield Golem Scraps|Crystal Powder|Palladium Scrap
+Crafting/Survival-84,Crafting/Survival,Weapons [ edit ],Galvanic Halberd,1,None,Iron Halberd|Shield Golem Scraps|Crystal Powder|Palladium Scrap
+Crafting/Survival-85,Crafting/Survival,Weapons [ edit ],Galvanic Mace,1,None,Iron Mace|Shield Golem Scraps|Crystal Powder|Palladium Scrap
+Crafting/Survival-86,Crafting/Survival,Weapons [ edit ],Galvanic Pistol,1,None,Flintlock Pistol|Shield Golem Scraps|Crystal Powder|Palladium Scrap
+Crafting/Survival-87,Crafting/Survival,Weapons [ edit ],Galvanic Shield,1,None,Round Shield|Shield Golem Scraps|Crystal Powder|Palladium Scrap
+Crafting/Survival-88,Crafting/Survival,Weapons [ edit ],Galvanic Spear,1,None,Iron Spear|Shield Golem Scraps|Crystal Powder|Palladium Scrap
+Crafting/Survival-89,Crafting/Survival,Weapons [ edit ],Gep's Blade,1,None,Mysterious Blade|Gep's Drink|Gep's Drink|Gep's Drink
+Crafting/Survival-90,Crafting/Survival,Weapons [ edit ],Gep's Blade,1,None,Gep's Longblade|Gep's Generosity
+Crafting/Survival-91,Crafting/Survival,Weapons [ edit ],Gep's Longblade,1,None,Mysterious Long Blade|Gep's Drink|Gep's Drink|Gep's Drink
+Crafting/Survival-92,Crafting/Survival,Weapons [ edit ],Gep's Longblade,1,None,Gep's Blade|Gep's Generosity
+Crafting/Survival-93,Crafting/Survival,Weapons [ edit ],Ghost Parallel,1,None,De-powered Bludgeon|Ectoplasm|Digested Mana Stone
+Crafting/Survival-94,Crafting/Survival,Weapons [ edit ],Ghost Reaper,1,None,Scourge's Tears|Haunted Memory|Leyline Figment|Vendavel's Hospitality
+Crafting/Survival-95,Crafting/Survival,Weapons [ edit ],Gilded Shiver of Tramontane,1,None,Scarred Dagger|Diamond Dust|Flash Moss
+Crafting/Survival-96,Crafting/Survival,Weapons [ edit ],Gold-Lich Claymore,1,None,Iron Claymore|Gold-Lich Mechanism|Gold-Lich Mechanism|Firefly Powder
+Crafting/Survival-97,Crafting/Survival,Weapons [ edit ],Gold-Lich Knuckles,1,None,Gold-Lich Mechanism|Gold-Lich Mechanism|Iron Knuckles|Firefly Powder
+Crafting/Survival-98,Crafting/Survival,Weapons [ edit ],Gold-Lich Mace,1,None,Gold-Lich Mechanism|Iron Mace|Firefly Powder
+Crafting/Survival-99,Crafting/Survival,Weapons [ edit ],Gold-Lich Shield,1,None,Round Shield|Gold-Lich Mechanism|Firefly Powder
+Crafting/Survival-100,Crafting/Survival,Weapons [ edit ],Gold-Lich Spear,1,None,Iron Spear|Gold-Lich Mechanism|Gold-Lich Mechanism|Firefly Powder
+Crafting/Survival-101,Crafting/Survival,Weapons [ edit ],Gold-Lich Sword,1,None,Gold-Lich Mechanism|Iron Sword|Firefly Powder
+Crafting/Survival-102,Crafting/Survival,Weapons [ edit ],Golem Rapier,1,None,Broken Golem Rapier|Broken Golem Rapier|Palladium Scrap|Crystal Powder
+Crafting/Survival-103,Crafting/Survival,Weapons [ edit ],Griigmerk kÄramerk,1,None,Gep's Generosity|Scourge's Tears|Haunted Memory|Calixa's Relic
+Crafting/Survival-104,Crafting/Survival,Weapons [ edit ],Hailfrost Axe,1,None,Hailfrost Axe|Cold Stone
+Crafting/Survival-105,Crafting/Survival,Weapons [ edit ],Hailfrost Claymore,1,None,Hailfrost Claymore|Cold Stone
+Crafting/Survival-106,Crafting/Survival,Weapons [ edit ],Hailfrost Dagger,1,None,Hailfrost Dagger|Cold Stone
+Crafting/Survival-107,Crafting/Survival,Weapons [ edit ],Hailfrost Greataxe,1,None,Hailfrost Greataxe|Cold Stone
+Crafting/Survival-108,Crafting/Survival,Weapons [ edit ],Hailfrost Halberd,1,None,Hailfrost Halberd|Cold Stone
+Crafting/Survival-109,Crafting/Survival,Weapons [ edit ],Hailfrost Hammer,1,None,Hailfrost Hammer|Cold Stone
+Crafting/Survival-110,Crafting/Survival,Weapons [ edit ],Hailfrost Knuckles,1,None,Hailfrost Knuckles|Cold Stone
+Crafting/Survival-111,Crafting/Survival,Weapons [ edit ],Hailfrost Mace,1,None,Hailfrost Mace|Cold Stone
+Crafting/Survival-112,Crafting/Survival,Weapons [ edit ],Hailfrost Pistol,1,None,Hailfrost Pistol|Cold Stone
+Crafting/Survival-113,Crafting/Survival,Weapons [ edit ],Hailfrost Spear,1,None,Hailfrost Spear|Cold Stone
+Crafting/Survival-114,Crafting/Survival,Weapons [ edit ],Hailfrost Sword,1,None,Hailfrost Sword|Cold Stone
+Crafting/Survival-115,Crafting/Survival,Weapons [ edit ],Horror Axe,1,None,Fang Axe|Horror Chitin|Palladium Scrap|Occult Remains
+Crafting/Survival-116,Crafting/Survival,Weapons [ edit ],Horror Bow,1,None,Horror Chitin|Horror Chitin|War Bow|Occult Remains
+Crafting/Survival-117,Crafting/Survival,Weapons [ edit ],Horror Chakram,1,None,Thorn Chakram|Horror Chitin|Occult Remains|Palladium Scrap
+Crafting/Survival-118,Crafting/Survival,Weapons [ edit ],Horror Fists,1,None,Horror Chitin|Horror Chitin|Palladium Wristband|Palladium Wristband
+Crafting/Survival-119,Crafting/Survival,Weapons [ edit ],Horror Greataxe,1,None,Fang Greataxe|Horror Chitin|Occult Remains|Palladium Scrap
+Crafting/Survival-120,Crafting/Survival,Weapons [ edit ],Horror Greatmace,1,None,Fang Greatclub|Horror Chitin|Occult Remains|Palladium Scrap
+Crafting/Survival-121,Crafting/Survival,Weapons [ edit ],Horror Greatsword,1,None,Fang Greatsword|Horror Chitin|Occult Remains|Palladium Scrap
+Crafting/Survival-122,Crafting/Survival,Weapons [ edit ],Horror Halberd,1,None,Fang Halberd|Horror Chitin|Occult Remains|Palladium Scrap
+Crafting/Survival-123,Crafting/Survival,Weapons [ edit ],Horror Mace,1,None,Fang Club|Horror Chitin|Occult Remains|Palladium Scrap
+Crafting/Survival-124,Crafting/Survival,Weapons [ edit ],Horror Pistol,1,None,Cannon Pistol|Horror Chitin|Occult Remains|Palladium Scrap
+Crafting/Survival-125,Crafting/Survival,Weapons [ edit ],Horror Shield,1,None,Fang Shield|Horror Chitin|Palladium Scrap|Occult Remains
+Crafting/Survival-126,Crafting/Survival,Weapons [ edit ],Horror Spear,1,None,Fang Trident|Horror Chitin|Occult Remains|Palladium Scrap
+Crafting/Survival-127,Crafting/Survival,Weapons [ edit ],Horror Sword,1,None,Fang Sword|Horror Chitin|Occult Remains|Palladium Scrap
+Crafting/Survival-128,Crafting/Survival,Weapons [ edit ],Iron Knuckles,1,None,Iron Wristband|Iron Wristband|Iron Scrap|Hide
+Crafting/Survival-129,Crafting/Survival,Weapons [ edit ],Kelvin's Greataxe,1,None,Gep's Generosity|Elatt's Relic|Scourge's Tears|Leyline Figment
+Crafting/Survival-130,Crafting/Survival,Weapons [ edit ],Mace of Seasons,1,None,Gep's Generosity|Pearlbird's Courage|Elatt's Relic|Leyline Figment
+Crafting/Survival-131,Crafting/Survival,Weapons [ edit ],Maelstrom Blade,1,None,Pearlbird's Courage|Elatt's Relic|Calixa's Relic|Vendavel's Hospitality
+Crafting/Survival-132,Crafting/Survival,Weapons [ edit ],Manticore Dagger,1,None,Manticore Tail|Palladium Scrap|Ammolite
+Crafting/Survival-133,Crafting/Survival,Weapons [ edit ],Manticore Greatmace,1,None,Mantis Greatpick|Manticore Tail|Manticore Tail|Palladium Scrap
+Crafting/Survival-134,Crafting/Survival,Weapons [ edit ],Mantis Greatpick,1,None,Mantis Granite|Mantis Granite|Palladium Scrap|Mining Pick
+Crafting/Survival-135,Crafting/Survival,Weapons [ edit ],Murmure,1,None,Ceremonial Bow|Pearlbird Mask
+Crafting/Survival-136,Crafting/Survival,Weapons [ edit ],Mysterious Blade,1,None,Mysterious Long Blade
+Crafting/Survival-137,Crafting/Survival,Weapons [ edit ],Mysterious Long Blade,1,None,Mysterious Blade
+Crafting/Survival-138,Crafting/Survival,Weapons [ edit ],Obsidian Axe,1,None,Obsidian Shard|Palladium Scrap|Iron Axe
+Crafting/Survival-139,Crafting/Survival,Weapons [ edit ],Obsidian Bow,1,None,Simple Bow|Obsidian Shard|Obsidian Shard|Palladium Scrap
+Crafting/Survival-140,Crafting/Survival,Weapons [ edit ],Obsidian Chakram,1,None,Obsidian Shard|Palladium Scrap|Chakram
+Crafting/Survival-141,Crafting/Survival,Weapons [ edit ],Obsidian Claymore,1,None,Obsidian Shard|Obsidian Shard|Palladium Scrap|Iron Claymore
+Crafting/Survival-142,Crafting/Survival,Weapons [ edit ],Obsidian Greataxe,1,None,Obsidian Shard|Obsidian Shard|Palladium Scrap|Iron Greataxe
+Crafting/Survival-143,Crafting/Survival,Weapons [ edit ],Obsidian Greatmace,1,None,Obsidian Shard|Obsidian Shard|Palladium Scrap|Palladium Scrap
+Crafting/Survival-144,Crafting/Survival,Weapons [ edit ],Obsidian Halberd,1,None,Obsidian Shard|Obsidian Shard|Palladium Scrap|Iron Halberd
+Crafting/Survival-145,Crafting/Survival,Weapons [ edit ],Obsidian Knuckles,1,None,Obsidian Shard|Obsidian Shard|Palladium Scrap|Iron Knuckles
+Crafting/Survival-146,Crafting/Survival,Weapons [ edit ],Obsidian Mace,1,None,Obsidian Shard|Obsidian Shard|Palladium Scrap
+Crafting/Survival-147,Crafting/Survival,Weapons [ edit ],Obsidian Pistol,1,None,Flintlock Pistol|Obsidian Shard|Palladium Scrap|Crystal Powder
+Crafting/Survival-148,Crafting/Survival,Weapons [ edit ],Obsidian Spear,1,None,Obsidian Shard|Obsidian Shard|Palladium Scrap|Iron Spear
+Crafting/Survival-149,Crafting/Survival,Weapons [ edit ],Obsidian Sword,1,None,Obsidian Shard|Palladium Scrap|Iron Sword
+Crafting/Survival-150,Crafting/Survival,Weapons [ edit ],Pain in the Axe,1,None,Elatt's Relic|Scourge's Tears|Calixa's Relic|Vendavel's Hospitality
+Crafting/Survival-151,Crafting/Survival,Weapons [ edit ],Phytosaur Spear,1,None,Phytosaur Horn|Fishing Harpoon|Miasmapod
+Crafting/Survival-152,Crafting/Survival,Weapons [ edit ],Plank Shield,1,None,Wood|Linen Cloth|Linen Cloth
+Crafting/Survival-153,Crafting/Survival,Weapons [ edit ],Primitive Club,1,None,Wood|Wood
+Crafting/Survival-154,Crafting/Survival,Weapons [ edit ],Quarterstaff,1,None,Wood|Wood|Linen Cloth
+Crafting/Survival-155,Crafting/Survival,Weapons [ edit ],Revenant Moon,1,None,Cracked Red Moon|Scarlet Gem
+Crafting/Survival-156,Crafting/Survival,Weapons [ edit ],Rotwood Staff,1,None,Compasswood Staff|Blue Sand|Crystal Powder
+Crafting/Survival-157,Crafting/Survival,Weapons [ edit ],Shiv Dagger,1,None,Linen Cloth|Iron Scrap
+Crafting/Survival-158,Crafting/Survival,Weapons [ edit ],Thermal Claymore,1,None,Pearlbird's Courage|Haunted Memory|Leyline Figment|Vendavel's Hospitality
+Crafting/Survival-159,Crafting/Survival,Weapons [ edit ],Thorny Claymore,1,None,Thorny Cartilage|Thorny Cartilage|Iron Claymore|Palladium Scrap
+Crafting/Survival-160,Crafting/Survival,Weapons [ edit ],Thorny Spear,1,None,Thorny Cartilage|Thorny Cartilage|Iron Spear|Palladium Scrap
+Crafting/Survival-161,Crafting/Survival,Weapons [ edit ],Tokebakicit,1,None,Unusual Knuckles|Chromium Shards|Bloodroot
+Crafting/Survival-162,Crafting/Survival,Weapons [ edit ],Tuanosaur Axe,1,None,Palladium Scrap|Brutal Axe|Alpha Tuanosaur Tail
+Crafting/Survival-163,Crafting/Survival,Weapons [ edit ],Tuanosaur Greataxe,1,None,Brutal Greataxe|Alpha Tuanosaur Tail|Alpha Tuanosaur Tail|Palladium Scrap
+Crafting/Survival-164,Crafting/Survival,Weapons [ edit ],Virgin Axe,1,None,Gold Hatchet|Palladium Scrap|Palladium Scrap|Pure Chitin
+Crafting/Survival-165,Crafting/Survival,Weapons [ edit ],Virgin Greataxe,1,None,Gold Greataxe|Palladium Scrap|Palladium Scrap|Pure Chitin
+Crafting/Survival-166,Crafting/Survival,Weapons [ edit ],Virgin Greatmace,1,None,Brutal Greatmace|Palladium Scrap|Palladium Scrap|Pure Chitin
+Crafting/Survival-167,Crafting/Survival,Weapons [ edit ],Virgin Greatsword,1,None,Prayer Claymore|Palladium Scrap|Palladium Scrap|Pure Chitin
+Crafting/Survival-168,Crafting/Survival,Weapons [ edit ],Virgin Halberd,1,None,Gold Guisarme|Palladium Scrap|Palladium Scrap|Pure Chitin
+Crafting/Survival-169,Crafting/Survival,Weapons [ edit ],Virgin Mace,1,None,Gold Club|Palladium Scrap|Palladium Scrap|Pure Chitin
+Crafting/Survival-170,Crafting/Survival,Weapons [ edit ],Virgin Spear,1,None,Gold Harpoon|Palladium Scrap|Palladium Scrap|Pure Chitin
+Crafting/Survival-171,Crafting/Survival,Weapons [ edit ],Virgin Sword,1,None,Gold Machete|Pure Chitin|Palladium Scrap|Palladium Scrap
+Crafting/Survival-172,Crafting/Survival,Equipment [ edit ],Ammolite Armor,1,None,Ammolite|Padded Armor|Palladium Scrap
+Crafting/Survival-173,Crafting/Survival,Equipment [ edit ],Ammolite Boots,1,None,Ammolite|Padded Boots|Palladium Scrap
+Crafting/Survival-174,Crafting/Survival,Equipment [ edit ],Ammolite Helm,1,None,Ammolite|Padded Helm|Palladium Scrap
+Crafting/Survival-175,Crafting/Survival,Equipment [ edit ],Boozu Hide Backpack,1,None,Scaled Satchel|Boozu's Hide|Boozu's Hide|Boozu's Hide
+Crafting/Survival-176,Crafting/Survival,Equipment [ edit ],Caged Armor Boots,1,None,Gep's Generosity|Elatt's Relic|Calixa's Relic|Flowering Corruption
+Crafting/Survival-177,Crafting/Survival,Equipment [ edit ],Caged Armor Chestplate,1,None,Gep's Generosity|Pearlbird's Courage|Vendavel's Hospitality|Metalized Bones
+Crafting/Survival-178,Crafting/Survival,Equipment [ edit ],Caged Armor Helm,1,None,Pearlbird's Courage|Leyline Figment|Vendavel's Hospitality|Enchanted Mask
+Crafting/Survival-179,Crafting/Survival,Equipment [ edit ],Cauldron Helm,1,None,Cooking Pot
+Crafting/Survival-180,Crafting/Survival,Equipment [ edit ],Chitin Desert Tunic,1,None,Desert Tunic|Insect Husk
+Crafting/Survival-181,Crafting/Survival,Equipment [ edit ],Coil Lantern,1,None,Coil Lantern|Power Coil
+Crafting/Survival-182,Crafting/Survival,Equipment [ edit ],Ergagr'Uk!,1,None,Basic Armor|Star Mushroom
+Crafting/Survival-183,Crafting/Survival,Equipment [ edit ],Explorer Lantern,1,None,Explorer Lantern|Thick Oil
+Crafting/Survival-184,Crafting/Survival,Equipment [ edit ],Gar'Ga'Nak,1,None,Basic Armor|Sulphuric Mushroom
+Crafting/Survival-185,Crafting/Survival,Equipment [ edit ],Gargargar!,1,None,Basic Armor|Woolshroom
+Crafting/Survival-186,Crafting/Survival,Equipment [ edit ],Go'gO,1,None,Basic Armor|Nightmare Mushroom
+Crafting/Survival-187,Crafting/Survival,Equipment [ edit ],GorkKrog!,1,None,Basic Armor|Blood Mushroom
+Crafting/Survival-188,Crafting/Survival,Equipment [ edit ],GoulgGalog!,1,None,Basic Armor|Grilled Mushroom
+Crafting/Survival-189,Crafting/Survival,Equipment [ edit ],Horror Armor,1,None,Halfplate Armor|Pure Chitin|Horror Chitin|Palladium Scrap
+Crafting/Survival-190,Crafting/Survival,Equipment [ edit ],Horror Greaves,1,None,Halfplate Boots|Pure Chitin|Horror Chitin|Palladium Scrap
+Crafting/Survival-191,Crafting/Survival,Equipment [ edit ],Horror Helm,1,None,Halfplate Helm|Pure Chitin|Horror Chitin|Palladium Scrap
+Crafting/Survival-192,Crafting/Survival,Equipment [ edit ],Ice-Flame Torch,1,None,Makeshift Torch|Cold Stone|Iron Scrap
+Crafting/Survival-193,Crafting/Survival,Equipment [ edit ],Ice-Flame Torch,1,None,Ice-Flame Torch|Cold Stone
+Crafting/Survival-194,Crafting/Survival,Equipment [ edit ],Kazite Light Armor,1,None,Light Kazite Shirt|Linen Cloth
+Crafting/Survival-195,Crafting/Survival,Equipment [ edit ],Krypteia Armor,1,None,Elatt's Relic|Leyline Figment|Vendavel's Hospitality|Noble's Greed
+Crafting/Survival-196,Crafting/Survival,Equipment [ edit ],Krypteia Boots,1,None,Scourge's Tears|Pearlbird's Courage|Calixa's Relic|Calygrey's Wisdom
+Crafting/Survival-197,Crafting/Survival,Equipment [ edit ],Krypteia Mask,1,None,Pearlbird's Courage|Haunted Memory|Gep's Generosity|Scarlet Whisper
+Crafting/Survival-198,Crafting/Survival,Equipment [ edit ],Makeshift Leather Attire,1,None,Basic Armor|Hide|Hide
+Crafting/Survival-199,Crafting/Survival,Equipment [ edit ],Makeshift Leather Boots,1,None,Basic Boots|Hide
+Crafting/Survival-200,Crafting/Survival,Equipment [ edit ],Makeshift Leather Hat,1,None,Basic Helm|Hide
+Crafting/Survival-201,Crafting/Survival,Equipment [ edit ],Makeshift Torch,1,None,Wood|Linen Cloth
+Crafting/Survival-202,Crafting/Survival,Equipment [ edit ],Old Lantern,1,None,Iron Scrap|Iron Scrap|Thick Oil|Linen Cloth
+Crafting/Survival-203,Crafting/Survival,Equipment [ edit ],Old Lantern,1,None,Old Lantern|Thick Oil
+Crafting/Survival-204,Crafting/Survival,Equipment [ edit ],Pilgrim Armor,1,None,Pearlbird's Courage|Scourge's Tears|Leyline Figment|Vendavel's Hospitality
+Crafting/Survival-205,Crafting/Survival,Equipment [ edit ],Pilgrim Boots,1,None,Elatt's Relic|Haunted Memory|Calixa's Relic|Vendavel's Hospitality
+Crafting/Survival-206,Crafting/Survival,Equipment [ edit ],Pilgrim Helmet,1,None,Gep's Generosity|Pearlbird's Courage|Elatt's Relic|Haunted Memory
+Crafting/Survival-207,Crafting/Survival,Equipment [ edit ],Primitive Satchel,1,None,Hide|Hide|Linen Cloth
+Crafting/Survival-208,Crafting/Survival,Equipment [ edit ],Scaled Leather Attire,1,None,Basic Armor|Scaled Leather|Scaled Leather|Predator Bones
+Crafting/Survival-209,Crafting/Survival,Equipment [ edit ],Scaled Leather Boots,1,None,Basic Boots|Scaled Leather|Scaled Leather|Predator Bones
+Crafting/Survival-210,Crafting/Survival,Equipment [ edit ],Scaled Leather Hat,1,None,Basic Helm|Predator Bones|Scaled Leather|Scaled Leather
+Crafting/Survival-211,Crafting/Survival,Equipment [ edit ],Scaled Satchel,1,None,Primitive Satchel|Scaled Leather|Scaled Leather|Scaled Leather
+Crafting/Survival-212,Crafting/Survival,Equipment [ edit ],Scavenger Mask,1,None,Scavenger Hood|Scavenger Scarf
+Crafting/Survival-213,Crafting/Survival,Equipment [ edit ],Shadow Kazite Light Armor,1,None,Shadow Light Kazite Shirt|Linen Cloth
+Crafting/Survival-214,Crafting/Survival,Equipment [ edit ],Shadow Light Kazite Shirt,1,None,Shadow Kazite Light Armor
+Crafting/Survival-215,Crafting/Survival,Equipment [ edit ],Shock Armor,1,None,Pearlbird's Courage|Scourge's Tears|Calixa's Relic|Vendavel's Hospitality
+Crafting/Survival-216,Crafting/Survival,Equipment [ edit ],Shock Boots,1,None,Gep's Generosity|Calixa's Relic|Leyline Figment|Vendavel's Hospitality
+Crafting/Survival-217,Crafting/Survival,Equipment [ edit ],Shock Helmet,1,None,Gep's Generosity|Scourge's Tears|Leyline Figment|Vendavel's Hospitality
+Crafting/Survival-218,Crafting/Survival,Equipment [ edit ],Slayer's Armor,1,None,Myrm Tongue|Gargoyle Urn Shard|Palladium Scrap|Palladium Scrap
+Crafting/Survival-219,Crafting/Survival,Equipment [ edit ],Slayer's Boots,1,None,Gargoyle Urn Shard|Calygrey Hairs|Palladium Scrap
+Crafting/Survival-220,Crafting/Survival,Equipment [ edit ],Slayer's Helmet,1,None,Dweller's Brain|Myrm Tongue|Palladium Scrap
+Crafting/Survival-221,Crafting/Survival,Equipment [ edit ],Squire Attire,1,None,Pearlbird's Courage|Elatt's Relic|Calixa's Relic|Haunted Memory
+Crafting/Survival-222,Crafting/Survival,Equipment [ edit ],Squire Boots,1,None,Gep's Generosity|Elatt's Relic|Haunted Memory|Leyline Figment
+Crafting/Survival-223,Crafting/Survival,Equipment [ edit ],Squire Headband,1,None,Gep's Generosity|Elatt's Relic|Scourge's Tears|Haunted Memory
+Crafting/Survival-224,Crafting/Survival,Equipment [ edit ],Virgin Lantern,1,None,Virgin Lantern|Crystal Powder

@@ -1,0 +1,254 @@
+{
+  "Life Potion": {
+    "category": "Potion",
+    "heal": 50,
+    "sale_value": 30,
+    "effects": ["Strong health restoration"]
+  },
+  "Great Life Potion": {
+    "category": "Potion",
+    "heal": 75,
+    "sale_value": 45,
+    "effects": ["Very strong health restoration"]
+  },
+  "Endurance Potion": {
+    "category": "Potion",
+    "stamina": 45,
+    "sale_value": 26,
+    "effects": ["Restores stamina"]
+  },
+  "Great Endurance Potion": {
+    "category": "Potion",
+    "stamina": 70,
+    "sale_value": 40,
+    "effects": ["Strong stamina restoration"]
+  },
+  "Astral Potion": {
+    "category": "Potion",
+    "mana": 40,
+    "sale_value": 30,
+    "effects": ["Restores mana"]
+  },
+  "Great Astral Potion": {
+    "category": "Potion",
+    "mana": 70,
+    "sale_value": 48,
+    "effects": ["Strong mana restoration"]
+  },
+  "Energizing Potion": {
+    "category": "Potion",
+    "mana": 30,
+    "stamina": 20,
+    "sale_value": 35,
+    "effects": ["Mana recovery with a little stamina support"]
+  },
+  "Mana Belly Potion": {
+    "category": "Potion",
+    "mana": 50,
+    "sale_value": 40,
+    "effects": ["Heavy mana restoration"]
+  },
+  "Mineral Tea": {
+    "category": "Tea",
+    "stamina": 15,
+    "sale_value": 8,
+    "effects": ["Comfort drink and light stamina help"]
+  },
+  "Soothing Tea": {
+    "category": "Tea",
+    "heal": 12,
+    "sale_value": 8,
+    "effects": ["Gentle healing support"]
+  },
+  "Needle Tea": {
+    "category": "Tea",
+    "stamina": 18,
+    "sale_value": 8,
+    "effects": ["Stamina-friendly travel tea"]
+  },
+  "Greasy Tea": {
+    "category": "Tea",
+    "heal": 10,
+    "sale_value": 8,
+    "effects": ["Small recovery and utility drink"]
+  },
+  "Bitter Spicy Tea": {
+    "category": "Tea",
+    "stamina": 18,
+    "sale_value": 8,
+    "effects": ["Warming drink with light stamina support"]
+  },
+  "Invigorating Potion": {
+    "category": "Potion",
+    "stamina": 30,
+    "sale_value": 24,
+    "effects": ["Stamina-focused utility potion"]
+  },
+  "Rage Potion": {
+    "category": "Potion",
+    "sale_value": 24,
+    "effects": ["Applies Rage boon"]
+  },
+  "Discipline Potion": {
+    "category": "Potion",
+    "sale_value": 24,
+    "effects": ["Applies Discipline boon"]
+  },
+  "Blessed Potion": {
+    "category": "Potion",
+    "sale_value": 18,
+    "effects": ["Applies Blessed boon"]
+  },
+  "Possessed Potion": {
+    "category": "Potion",
+    "sale_value": 20,
+    "effects": ["Applies Possessed boon"]
+  },
+  "Alertness Potion": {
+    "category": "Potion",
+    "sale_value": 22,
+    "effects": ["Alertness buff"]
+  },
+  "Stealth Potion": {
+    "category": "Potion",
+    "sale_value": 22,
+    "effects": ["Stealth buff"]
+  },
+  "Weather Defense Potion": {
+    "category": "Potion",
+    "sale_value": 22,
+    "effects": ["Weather resistance support"]
+  },
+  "Gaberry Tartine": {
+    "category": "Food",
+    "heal": 20,
+    "sale_value": 10,
+    "effects": ["Steady food healing"]
+  },
+  "Crawlberry Tartine": {
+    "category": "Food",
+    "heal": 18,
+    "sale_value": 10,
+    "effects": ["Comfort food with light healing"]
+  },
+  "Golden Tartine": {
+    "category": "Food",
+    "heal": 18,
+    "stamina": 12,
+    "sale_value": 12,
+    "effects": ["Balanced recovery food"]
+  },
+  "Rainbow Tartine": {
+    "category": "Food",
+    "mana": 16,
+    "sale_value": 14,
+    "effects": ["Light mana-support snack"]
+  },
+  "Marshmelon Tartine": {
+    "category": "Food",
+    "mana": 14,
+    "sale_value": 14,
+    "effects": ["Gentle mana restoration"]
+  },
+  "Meat Stew": {
+    "category": "Food",
+    "heal": 24,
+    "stamina": 18,
+    "sale_value": 12,
+    "effects": ["Hearty meal for health and stamina"]
+  },
+  "Savage Stew": {
+    "category": "Food",
+    "heal": 26,
+    "stamina": 22,
+    "sale_value": 14,
+    "effects": ["Heavier recovery meal"]
+  },
+  "Bread Of The Wild": {
+    "category": "Food",
+    "heal": 22,
+    "stamina": 12,
+    "sale_value": 16,
+    "effects": ["Comfort food with steady recovery"]
+  },
+  "Bread": {
+    "category": "Food",
+    "heal": 8,
+    "sale_value": 4,
+    "effects": ["Simple staple food"]
+  },
+  "Travel Ration": {
+    "category": "Food",
+    "heal": 10,
+    "stamina": 10,
+    "sale_value": 8,
+    "effects": ["Portable travel food"]
+  },
+  "Alpha Sandwich": {
+    "category": "Food",
+    "heal": 20,
+    "stamina": 18,
+    "sale_value": 14,
+    "effects": ["Quick combat meal"]
+  },
+  "Torcrab Sandwich": {
+    "category": "Food",
+    "heal": 20,
+    "stamina": 16,
+    "sale_value": 14,
+    "effects": ["Solid melee snack"]
+  },
+  "Cactus Pie": {
+    "category": "Food",
+    "stamina": 20,
+    "sale_value": 12,
+    "effects": ["Desert pie with stamina support"]
+  },
+  "Purpkin Pie": {
+    "category": "Food",
+    "heal": 18,
+    "stamina": 10,
+    "sale_value": 14,
+    "effects": ["Comfort pie with mixed recovery"]
+  },
+  "Miner's Omelet": {
+    "category": "Food",
+    "heal": 16,
+    "stamina": 18,
+    "sale_value": 12,
+    "effects": ["Stamina-friendly breakfast"]
+  },
+  "Stringy Salad": {
+    "category": "Food",
+    "stamina": 16,
+    "sale_value": 10,
+    "effects": ["Light stamina snack"]
+  },
+  "Ocean Fricassee": {
+    "category": "Food",
+    "mana": 18,
+    "heal": 14,
+    "sale_value": 14,
+    "effects": ["Seafood dish with mixed recovery"]
+  },
+  "Luxe Lichette": {
+    "category": "Food",
+    "mana": 24,
+    "heal": 14,
+    "sale_value": 20,
+    "effects": ["Premium meal with mana support"]
+  },
+  "Turmmip Potage": {
+    "category": "Food",
+    "mana": 20,
+    "sale_value": 12,
+    "effects": ["Vegetable soup with mana support"]
+  },
+  "Pouding Chomeur": {
+    "category": "Food",
+    "heal": 18,
+    "mana": 10,
+    "sale_value": 16,
+    "effects": ["Dessert with mixed recovery"]
+  }
+}

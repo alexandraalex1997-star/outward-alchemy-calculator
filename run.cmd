@@ -1,0 +1,1 @@
+C:/Users/Alexandra/AppData/Local/Programs/Python/Python310/python.exe -m streamlit run app.py
