@@ -609,15 +609,8 @@ def inventory_picker_state(catalog: List[str]) -> Dict[str, int]:
     return picker_inventory
 
 
-def inventory_filter_state() -> bool:
-    if "inventory_owned_only" not in st.session_state:
-        st.session_state["inventory_owned_only"] = False
-    return bool(st.session_state["inventory_owned_only"])
-
-
 def render_inventory_picker(catalog: List[str], catalog_by_category: Dict[str, List[str]]) -> Counter:
     picker_inventory = inventory_picker_state(catalog)
-    show_owned_only = inventory_filter_state()
 
     search = st.selectbox(
         "Search items",
@@ -633,10 +626,11 @@ def render_inventory_picker(catalog: List[str], catalog_by_category: Dict[str, L
         help="Filter the inventory list to the categories you want to see.",
     )
     action_cols = st.columns([1, 1, 2.2])
-    owned_label = "Owned only: On" if show_owned_only else "Owned only: Off"
-    if action_cols[0].button(owned_label, help="Toggle between all items and only items you currently own.", use_container_width=True):
-        st.session_state["inventory_owned_only"] = not show_owned_only
-        st.rerun()
+    show_owned_only = action_cols[0].checkbox(
+        "Owned only",
+        value=False,
+        help="Show only the items currently in your inventory.",
+    )
     if action_cols[1].button("Clear", help="Remove every selected item from the inventory builder.", use_container_width=True):
         st.session_state["picker_inventory"] = {}
         picker_inventory = {}
@@ -1008,6 +1002,15 @@ def inject_styles() -> None:
         }
         div[role="radiogroup"] {
             gap: 0.5rem;
+        }
+        .stCheckbox {
+            display: flex;
+            align-items: center;
+            min-height: 2.5rem;
+            padding-top: 0.35rem;
+        }
+        .stCheckbox label {
+            margin-bottom: 0 !important;
         }
         </style>
         """,
