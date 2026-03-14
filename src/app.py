@@ -625,7 +625,7 @@ def render_inventory_picker(catalog: List[str], catalog_by_category: Dict[str, L
         default=list(catalog_by_category.keys()),
         help="Filter the inventory list to the categories you want to see.",
     )
-    action_cols = st.columns([1, 1, 2.2])
+    action_cols = st.columns([1.35, 0.85, 2.0])
     show_owned_only = action_cols[0].checkbox(
         "Owned only",
         value=False,
@@ -1008,9 +1008,11 @@ def inject_styles() -> None:
             align-items: center;
             min-height: 2.5rem;
             padding-top: 0.35rem;
+            min-width: 9rem;
         }
         .stCheckbox label {
             margin-bottom: 0 !important;
+            white-space: nowrap !important;
         }
         </style>
         """,
