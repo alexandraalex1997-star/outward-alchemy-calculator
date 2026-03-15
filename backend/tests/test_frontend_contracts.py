@@ -79,10 +79,12 @@ def test_direct_result_sections_are_clearly_distinguished() -> None:
     app_source = read_frontend("App.tsx")
 
     assert 'title="Best direct options"' in results_source
+    assert 'title="Full craftable list"' in results_source
     assert 'title="Almost craftable"' in results_source
-    assert 'title="Full craftable list"' not in results_source
-    assert 'title="Full craftable list"' in app_source
-    assert results_source.index('title="Best direct options"') < results_source.index('title="Almost craftable"')
+    assert results_source.index('title="Best direct options"') < results_source.index('title="Full craftable list"')
+    assert results_source.index('title="Full craftable list"') < results_source.index('title="Almost craftable"')
+    assert 'activeSection === "Craft now"' in results_source
+    assert 'title="Full craftable list"' not in app_source
 
 
 def test_near_craft_views_use_missing_summary_without_slots_column() -> None:
@@ -215,11 +217,24 @@ def test_pills_and_buttons_keep_text_on_one_line_in_css() -> None:
 
 
 def test_craft_now_main_view_contains_the_full_craftable_table_and_sort_control() -> None:
-    app_source = read_frontend("App.tsx")
+    results_source = read_frontend("components/ResultsRail.tsx")
 
-    assert "<CraftResultsTable" in app_source
-    assert 'title="Full craftable list"' in app_source
-    assert '<span>Sort</span>' in app_source
+    assert "<CraftResultsTable" in results_source
+    assert 'title="Full craftable list"' in results_source
+    assert '<span>Sort</span>' in results_source
+
+
+def test_long_result_lists_use_internal_scroll_containers_without_changing_column_contract() -> None:
+    css = read_frontend("styles/app.css")
+    theme = read_frontend("styles/theme.css")
+
+    assert ".results-preview {" in css
+    assert "max-height: clamp(17rem, 34vh, 27rem);" in css
+    assert "overflow: auto;" in css
+    assert "scrollbar-gutter: stable both-edges;" in css
+    assert ".results-rail .craft-table-shell {" in css
+    assert "grid-template-columns: var(--rail-width) minmax(0, 1fr) var(--results-width);" in css
+    assert "--results-width: 24.75rem;" in theme
 
 
 def test_banner_is_full_width_and_centered_in_css() -> None:

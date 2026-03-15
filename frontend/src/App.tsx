@@ -7,7 +7,6 @@ import { ResultsRail } from "./components/ResultsRail";
 import { SupportRail } from "./components/SupportRail";
 import { TopBanner } from "./components/TopBanner";
 import {
-  CraftResultsTable,
   DatabaseTable,
   IngredientGroupsTable,
   InventoryList,
@@ -502,28 +501,6 @@ export default function App() {
                 onRemoveInventoryItem={(item) => void removeInventoryItem(item)}
                 onDownloadInventoryCsv={() => downloadCsv("outward_inventory.csv", inventoryRows(inventory?.items))}
               />
-
-              <Panel
-                title="Full craftable list"
-                description="Every direct craft from the current inventory, sorted by the live ranking."
-                headerAside={
-                  <label className="panel-select panel-select-compact">
-                    <span>Sort</span>
-                    <select value={sortMode} onChange={(event) => setSortMode(event.target.value)}>
-                      {SORT_MODES.map((mode) => (
-                        <option key={mode} value={mode}>
-                          {mode}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                }
-              >
-                <div className="info-strip">
-                  {craftNow?.count ?? 0} craftable recipe{craftNow?.count === 1 ? "" : "s"} with the current station filters.
-                </div>
-                <CraftResultsTable rows={craftNow?.items ?? []} />
-              </Panel>
             </>
           ) : null}
 
@@ -709,8 +686,13 @@ export default function App() {
         </section>
 
         <ResultsRail
+          activeSection={activeSection}
           bestDirect={bestDirect}
+          craftNow={craftNow}
           near={near}
+          sortMode={sortMode}
+          sortModes={SORT_MODES}
+          onSortModeChange={setSortMode}
         />
       </div>
     </main>

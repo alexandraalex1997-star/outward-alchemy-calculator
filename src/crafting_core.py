@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from collections import Counter
-from functools import lru_cache
+from collections import Counter, deque
 from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
@@ -337,23 +336,6 @@ def self_group_slots_supported(
     return True
 
 
-def consumption_patterns(
-    recipe_ingredients: List[str],
-    groups: Dict[str, List[str]],
-    result: str,
-    result_qty: int,
-) -> Tuple[List[str], List[Tuple[int, ...]]]:
-    _, assignments = valid_slot_assignments(recipe_ingredients, groups, result, result_qty)
-    universe = sorted({item_name for assignment in assignments for item_name in assignment})
-    if not universe:
-        return [], []
-    patterns = {
-        tuple(Counter(assignment).get(item_name, 0) for item_name in universe)
-        for assignment in assignments
-    }
-    return universe, sorted(patterns)
-
-
 def max_crafts_for_recipe(
     recipe_ingredients: List[str],
     inventory: Counter,
@@ -361,28 +343,119 @@ def max_crafts_for_recipe(
     result: str,
     result_qty: int,
 ) -> int:
-    universe, patterns = consumption_patterns(recipe_ingredients, groups, result, result_qty)
-    if not universe:
+    slots = recipe_slot_options(recipe_ingredients, groups)
+    if not slots:
+        return 0
+    result_name = normalize(result)
+    relevant_items = sorted(
+        {
+            normalize(item_name)
+            for _, options in slots
+            for item_name in options
+            if inventory.get(normalize(item_name), 0) > 0
+        }
+    )
+    if not relevant_items:
         return 0
 
-    start_state = tuple(int(inventory.get(item_name, 0)) for item_name in universe)
+    slot_caps = [sum(int(inventory.get(normalize(item_name), 0)) for item_name in options) for _, options in slots]
+    upper_bound = min(slot_caps, default=0)
+    if upper_bound <= 0:
+        return 0
 
-    @lru_cache(maxsize=None)
-    def dp(state: Tuple[int, ...]) -> int:
-        best = 0
-        for pattern in patterns:
-            next_state = []
-            ok = True
-            for have, need in zip(state, pattern):
-                if have < need:
-                    ok = False
-                    break
-                next_state.append(have - need)
-            if ok:
-                best = max(best, 1 + dp(tuple(next_state)))
-        return best
+    slot_options = [[normalize(item_name) for item_name in options] for _, options in slots]
+    result_only_noop = len(slots) == int(result_qty) and all(result_name in options for options in slot_options)
 
-    return dp(start_state)
+    def can_craft_times(target_crafts: int) -> bool:
+        if target_crafts <= 0:
+            return True
+
+        slot_demand = len(slot_options) * target_crafts
+        item_caps = {item_name: int(inventory.get(item_name, 0)) for item_name in relevant_items}
+        if result_only_noop and result_name in item_caps:
+            # Each craft needs at least one non-result input when the only invalid pattern is a no-op self craft.
+            item_caps[result_name] = min(item_caps[result_name], slot_demand - target_crafts)
+
+        if sum(item_caps.values()) < slot_demand:
+            return False
+        for options in slot_options:
+            if sum(item_caps.get(item_name, 0) for item_name in options) < target_crafts:
+                return False
+
+        item_nodes = [item_name for item_name in relevant_items if item_caps.get(item_name, 0) > 0]
+        if not item_nodes:
+            return False
+
+        source = 0
+        slot_start = 1
+        item_start = slot_start + len(slot_options)
+        sink = item_start + len(item_nodes)
+        graph_size = sink + 1
+        graph: List[List[int]] = [[] for _ in range(graph_size)]
+        capacity = [[0] * graph_size for _ in range(graph_size)]
+        item_index = {item_name: item_start + index for index, item_name in enumerate(item_nodes)}
+
+        def add_edge(start: int, end: int, cap: int) -> None:
+            if cap <= 0:
+                return
+            graph[start].append(end)
+            graph[end].append(start)
+            capacity[start][end] = cap
+
+        for slot_index, options in enumerate(slot_options):
+            slot_node = slot_start + slot_index
+            add_edge(source, slot_node, target_crafts)
+            for item_name in options:
+                item_node = item_index.get(item_name)
+                if item_node is not None:
+                    add_edge(slot_node, item_node, target_crafts)
+
+        for item_name, item_node in item_index.items():
+            add_edge(item_node, sink, item_caps[item_name])
+
+        flow = 0
+        while flow < slot_demand:
+            parent = [-1] * graph_size
+            parent[source] = source
+            queue = deque([source])
+            while queue and parent[sink] == -1:
+                node = queue.popleft()
+                for nxt in graph[node]:
+                    if parent[nxt] != -1 or capacity[node][nxt] <= 0:
+                        continue
+                    parent[nxt] = node
+                    if nxt == sink:
+                        break
+                    queue.append(nxt)
+            if parent[sink] == -1:
+                break
+
+            augment = slot_demand - flow
+            node = sink
+            while node != source:
+                prev = parent[node]
+                augment = min(augment, capacity[prev][node])
+                node = prev
+
+            node = sink
+            while node != source:
+                prev = parent[node]
+                capacity[prev][node] -= augment
+                capacity[node][prev] += augment
+                node = prev
+            flow += augment
+
+        return flow == slot_demand
+
+    low = 0
+    high = upper_bound
+    while low < high:
+        mid = (low + high + 1) // 2
+        if can_craft_times(mid):
+            low = mid
+        else:
+            high = mid - 1
+    return low
 
 
 def _missing_label(token: str, groups: Dict[str, List[str]]) -> str:

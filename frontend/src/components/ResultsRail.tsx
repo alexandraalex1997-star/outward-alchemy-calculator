@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 
 import type { DirectResponse, NearResponse } from "../types";
-import { BestDirectCards, NearCraftTable } from "./data-views";
+import { BestDirectCards, CraftResultsTable, NearCraftTable } from "./data-views";
 import { Panel, StatCard, classNames } from "./ui";
 
 const BEST_DIRECT_PREVIEW = 5;
@@ -13,11 +13,21 @@ function previewLabel(total: number, shown: number) {
 }
 
 export function ResultsRail({
+  activeSection,
   bestDirect,
+  craftNow,
   near,
+  sortMode,
+  sortModes,
+  onSortModeChange,
 }: {
+  activeSection: string;
   bestDirect: DirectResponse | null;
+  craftNow: DirectResponse | null;
   near: NearResponse | null;
+  sortMode: string;
+  sortModes: readonly string[];
+  onSortModeChange: (value: string) => void;
 }) {
   const [bestExpanded, setBestExpanded] = useState(false);
   const [nearExpanded, setNearExpanded] = useState(false);
@@ -48,6 +58,30 @@ export function ResultsRail({
           </button>
         ) : null}
       </Panel>
+
+      {activeSection === "Craft now" ? (
+        <Panel
+          title="Full craftable list"
+          description="Every direct craft from the current inventory, sorted by the live ranking."
+          headerAside={
+            <label className="panel-select panel-select-compact">
+              <span>Sort</span>
+              <select value={sortMode} onChange={(event) => onSortModeChange(event.target.value)}>
+                {sortModes.map((mode) => (
+                  <option key={mode} value={mode}>
+                    {mode}
+                  </option>
+                ))}
+              </select>
+            </label>
+          }
+        >
+          <div className="info-strip">
+            {craftNow?.count ?? 0} craftable recipe{craftNow?.count === 1 ? "" : "s"} with the current station filters.
+          </div>
+          <CraftResultsTable rows={craftNow?.items ?? []} />
+        </Panel>
+      ) : null}
 
       <Panel title="Almost craftable" description="Closest valid recipes under the current threshold.">
         <div className="stat-grid two-up compact-grid">

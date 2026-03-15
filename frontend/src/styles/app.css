@@ -118,6 +118,7 @@
 .results-rail {
   display: grid;
   gap: 0.95rem;
+  grid-auto-rows: minmax(0, min-content);
 }
 
 .rail-toggle {
@@ -653,6 +654,7 @@
   border: 1px solid rgba(255, 173, 229, 0.12);
   border-radius: var(--radius-sm);
   background: rgba(31, 18, 37, 0.86);
+  scrollbar-gutter: stable both-edges;
 }
 
 .ingredient-table-shell {
@@ -661,6 +663,10 @@
 
 .craft-table-shell {
   max-height: 34rem;
+}
+
+.near-table-shell {
+  max-height: 32rem;
 }
 
 .recipe-database-shell {
@@ -819,6 +825,7 @@
 .near-card-list {
   display: grid;
   gap: 0.7rem;
+  min-width: 0;
 }
 
 .result-card,
@@ -914,6 +921,22 @@
 .results-preview {
   display: grid;
   gap: 0.7rem;
+  max-height: clamp(17rem, 34vh, 27rem);
+  overflow: auto;
+  scrollbar-gutter: stable both-edges;
+  padding-right: 0.1rem;
+}
+
+.results-preview.expanded {
+  max-height: clamp(22rem, 46vh, 36rem);
+}
+
+.results-rail .craft-table-shell {
+  max-height: clamp(20rem, 40vh, 30rem);
+}
+
+.results-rail .panel {
+  min-width: 0;
 }
 
 .results-toggle {

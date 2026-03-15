@@ -114,6 +114,24 @@ def test_max_crafts_counts_only_complete_crafts() -> None:
     assert core.max_crafts_for_recipe(["Resin", "Resin"], Counter({"Resin": 5}), {}, "Resin Paste", 2) == 2
 
 
+def test_max_crafts_handles_large_repeated_group_tokens_without_solver_blowups() -> None:
+    groups = {
+        "ration ingredient": [f"Ration Item {index}" for index in range(1, 33)],
+    }
+    inventory = Counter({f"Ration Item {index}": 1 for index in range(1, 25)})
+    inventory["Salt"] = 20
+
+    max_crafts = core.max_crafts_for_recipe(
+        ["Ration Ingredient", "Ration Ingredient", "Salt"],
+        inventory,
+        groups,
+        "Travel Ration",
+        1,
+    )
+
+    assert max_crafts == 12
+
+
 def test_near_craft_missing_slots_are_slot_based_not_set_based() -> None:
     groups = {"fish": core.CANONICAL_GROUPS["fish"]}
     missing_slots, missing = core.count_missing_slots(

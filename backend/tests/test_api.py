@@ -336,6 +336,55 @@ def test_dashboard_endpoint_returns_shared_panel_payload() -> None:
     assert dashboard["near"]["items"]
 
 
+def test_startup_routes_do_not_raise_500_on_normal_render() -> None:
+    client = make_client()
+
+    metadata = client.get("/api/metadata")
+    dashboard = client.get("/api/results/dashboard?max_missing_slots=2")
+    direct = client.get("/api/results/direct?sort_mode=Smart%20score&max_missing_slots=2")
+
+    assert metadata.status_code == 200
+    assert dashboard.status_code == 200
+    assert direct.status_code == 200
+
+
+def test_exported_csv_round_trip_with_realistic_inventory_mix_keeps_results_routes_alive() -> None:
+    client = make_client()
+
+    ration_items = client.app.state.service.data.groups["ration ingredient"][:24]
+    exported_rows = [{"item": item_name, "qty": 1} for item_name in ration_items]
+    exported_rows.extend(
+        [
+            {"item": "Salt", "qty": 20},
+            {"item": "Clean Water", "qty": 4},
+            {"item": "Gravel Beetle", "qty": 2},
+            {"item": "Turmmip", "qty": 2},
+        ]
+    )
+
+    response = client.post(
+        "/api/inventory/import/csv",
+        files={
+            "file": (
+                "outward_inventory.csv",
+                exported_csv_bytes(exported_rows),
+                "text/csv",
+            )
+        },
+    )
+    response.raise_for_status()
+
+    dashboard = client.get("/api/results/dashboard?stations=Cooking+Pot&stations=Alchemy+Kit&stations=Manual+Crafting&max_missing_slots=2")
+    direct = client.get("/api/results/direct?stations=Cooking+Pot&stations=Alchemy+Kit&stations=Manual+Crafting&sort_mode=Smart%20score")
+    near = client.get("/api/results/near?stations=Cooking+Pot&stations=Alchemy+Kit&stations=Manual+Crafting&max_missing_slots=2")
+
+    assert dashboard.status_code == 200
+    assert direct.status_code == 200
+    assert near.status_code == 200
+    assert dashboard.json()["inventory"]["unique_items"] == len(exported_rows)
+    assert any(row["result"] == "Travel Ration" for row in direct.json()["items"])
+
+
 def test_near_results_include_missing_summary_fields() -> None:
     client = make_client()
 
