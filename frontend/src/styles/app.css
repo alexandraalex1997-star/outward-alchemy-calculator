@@ -8,6 +8,21 @@
   gap: 0.56rem;
 }
 
+.page-shell {
+  min-height: 100vh;
+  height: 100vh;
+}
+
+.page-hero {
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+.page-main {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .app-banner {
   position: relative;
   overflow: hidden;
@@ -85,67 +100,95 @@
 .app-shell {
   width: 100%;
   display: grid;
-  grid-template-columns: var(--rail-width) minmax(0, 1fr) clamp(19.5rem, 24vw, var(--results-width));
-  gap: var(--shell-gap);
+  grid-template-columns:
+    clamp(250px, 18vw, 290px)
+    minmax(680px, 1.35fr)
+    minmax(360px, 1.05fr);
+  gap: 1rem;
   align-items: stretch;
-  height: clamp(40rem, calc(100vh - 10rem), 60rem);
+  height: 100%;
+  min-height: 0;
   transition: grid-template-columns 180ms ease, gap 180ms ease;
 }
 
 .app-shell.left-collapsed {
-  grid-template-columns: var(--rail-collapsed-width) minmax(0, 1fr) clamp(19.5rem, 24vw, var(--results-width));
+  grid-template-columns: var(--rail-collapsed-width) minmax(680px, 1.35fr) minmax(360px, 1.05fr);
 }
 
-.utility-rail,
-.main-column,
-.results-rail {
+.left-column,
+.center-column,
+.right-column {
   min-width: 0;
   min-height: 0;
   height: 100%;
+}
+
+.utility-rail {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  align-self: start;
+}
+
+.utility-rail__header {
+  flex: 0 0 auto;
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.utility-rail__scroll {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.utility-rail__scroll--collapsed {
+  padding-right: 0;
+}
+
+.main-column,
+.results-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+  min-height: 0;
 }
 
 .main-column {
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 0.18rem;
-  scrollbar-gutter: stable both-edges;
+  scrollbar-gutter: stable;
 }
 
-.utility-rail,
-.results-rail {
-  position: sticky;
-  top: 0;
-  align-self: stretch;
-}
-
-.utility-rail {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
-  gap: 0.5rem;
-  overflow: hidden;
-  align-self: start;
-}
-
-.rail-scroll,
-.main-column,
-.results-rail {
-  display: grid;
-  gap: 0.68rem;
-  grid-auto-rows: minmax(0, min-content);
-}
-
-.rail-scroll,
 .results-rail {
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 0.12rem;
-  scrollbar-gutter: stable both-edges;
+  scrollbar-gutter: stable;
 }
 
-.rail-scroll {
-  min-height: 0;
-  height: 100%;
-  align-content: start;
+.utility-rail .accordion-item,
+.utility-rail .rail-card,
+.utility-rail .panel-section,
+.results-rail .accordion-item,
+.results-rail .rail-card {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  flex: 0 0 auto;
 }
 
 .rail-toggle {
@@ -273,6 +316,66 @@
 }
 
 .panel-toggle-icon.open {
+  transform: rotate(180deg);
+}
+
+.panel-body,
+.accordion-panel {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.utility-rail .accordion-panel {
+  overflow: visible;
+}
+
+.accordion-trigger {
+  width: 100%;
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.72rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.accordion-trigger-copy {
+  display: grid;
+  gap: 0.14rem;
+  min-width: 0;
+}
+
+.accordion-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  line-height: 1.08;
+}
+
+.accordion-description {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.accordion-icon {
+  width: 1.8rem;
+  height: 1.8rem;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--accent);
+  flex: 0 0 auto;
+  transition: transform 180ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+.accordion-icon.open {
   transform: rotate(180deg);
 }
 
@@ -1032,6 +1135,35 @@
   min-width: 0;
 }
 
+.rail-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.rail-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.58rem;
+  min-width: 0;
+  min-height: 0;
+  padding-top: 0.58rem;
+}
+
+.right-column .accordion-panel {
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: visible;
+}
+
+.right-column .results-preview,
+.right-column .craft-table-shell {
+  min-height: 11.5rem;
+  max-height: 18rem;
+}
+
 .result-panel-stack {
   display: grid;
   gap: 0.46rem;
@@ -1089,7 +1221,7 @@
   .utility-rail,
   .main-column,
   .results-rail,
-  .rail-scroll {
+  .utility-rail__scroll {
     position: static;
     height: auto;
     overflow: visible;

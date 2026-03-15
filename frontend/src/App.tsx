@@ -407,20 +407,22 @@ export default function App() {
 
   if (isLoading) {
     return (
-      <main className="app-page">
+      <main className="app-page page-shell">
         <div className="loading-shell">Loading the crafting calculator...</div>
       </main>
     );
   }
 
   return (
-    <main className="app-page">
-      <TopBanner
-        title="Alie's Outward Crafting"
-        subtitle="Craft, plan, shop, and browse recipes from one live inventory."
-      />
+    <main className="app-page page-shell">
+      <div className="page-hero">
+        <TopBanner
+          title="Alie's Outward Crafting"
+          subtitle="Craft, plan, shop, and browse recipes from one live inventory."
+        />
+      </div>
 
-      <div className={classNames("app-shell", leftCollapsed && "left-collapsed")}>
+      <div className={classNames("app-shell", "page-main", leftCollapsed && "left-collapsed")}>
         <SupportRail
           leftCollapsed={leftCollapsed}
           onToggleRail={() => setLeftCollapsed((value) => !value)}
@@ -441,7 +443,7 @@ export default function App() {
           onBulkFile={(file) => void handleBulkFile(file)}
         />
 
-        <section className="main-column">
+        <section className="main-column center-column">
           <section className="mode-shell">
             <nav className="mode-nav">
               {NAV_ITEMS.map((item) => (

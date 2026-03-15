@@ -227,17 +227,24 @@ def test_craft_now_main_view_contains_the_full_craftable_table_and_sort_control(
 
 def test_long_result_lists_use_internal_scroll_containers_without_changing_column_contract() -> None:
     css = read_frontend("styles/app.css")
-    theme_css = read_frontend("styles/theme.css")
+    app_source = read_frontend("App.tsx")
+    support_rail_source = read_frontend("components/SupportRail.tsx")
+    results_source = read_frontend("components/ResultsRail.tsx")
 
     assert ".results-preview {" in css
     assert "max-height: clamp(14rem, 28vh, 20rem);" in css
     assert "overflow: auto;" in css
-    assert "scrollbar-gutter: stable both-edges;" in css
     assert ".results-rail .craft-table-shell {" in css
-    assert "grid-template-columns: var(--rail-width) minmax(0, 1fr) clamp(19.5rem, 24vw, var(--results-width));" in css
-    assert "height: clamp(40rem, calc(100vh - 10rem), 60rem);" in css
-    assert "--rail-width: 13.25rem;" in theme_css
-    assert "--results-width: 21.5rem;" in theme_css
+    assert "min-height: 11.5rem;" in css
+    assert "display: grid;" not in css[css.index(".utility-rail__scroll {"):css.index(".main-column,")]
+    assert "grid-template-columns:" in css
+    assert "clamp(250px, 18vw, 290px)" in css
+    assert "minmax(680px, 1.35fr)" in css
+    assert "minmax(360px, 1.05fr)" in css
+    assert 'className="app-page page-shell"' in app_source
+    assert 'className={classNames("app-shell", "page-main", leftCollapsed && "left-collapsed")}' in app_source
+    assert 'className="utility-rail__scroll"' in support_rail_source
+    assert 'className="results-rail right-column"' in results_source
 
 
 def test_category_chips_stay_on_one_line_with_scroll_instead_of_wrapping() -> None:
@@ -252,15 +259,35 @@ def test_category_chips_stay_on_one_line_with_scroll_instead_of_wrapping() -> No
 
 def test_left_rail_uses_a_scroll_region_so_expanding_one_section_does_not_hide_others() -> None:
     css = read_frontend("styles/app.css")
+    support_rail_source = read_frontend("components/SupportRail.tsx")
 
     assert ".utility-rail {" in css
-    assert "grid-template-rows: auto minmax(0, 1fr);" in css
+    assert "display: flex;" in css
+    assert "flex-direction: column;" in css
     assert "position: sticky;" in css
     assert "top: 0;" in css
-    assert ".rail-scroll {" in css
+    assert ".utility-rail__header {" in css
+    assert ".utility-rail__scroll {" in css
     assert "min-height: 0;" in css
-    assert "height: 100%;" in css
+    assert "flex: 1 1 auto;" in css
     assert "overflow-y: auto;" in css
+    assert "display: contents" not in css
+    assert 'className="utility-rail__header"' in support_rail_source
+    assert 'className="utility-rail__scroll"' in support_rail_source
+
+
+def test_right_rail_cards_are_collapsible_and_can_stay_open_independently() -> None:
+    css = read_frontend("styles/app.css")
+    results_source = read_frontend("components/ResultsRail.tsx")
+
+    assert "type RightRailSectionId = " in results_source
+    assert "openSections" in results_source
+    assert "accordion-trigger" in results_source
+    assert "accordion-panel" in results_source
+    assert "rail-card__body" in results_source
+    assert ".accordion-trigger {" in css
+    assert ".right-column .accordion-panel {" in css
+    assert ".rail-card {" in css
 
 
 def test_banner_is_full_width_and_centered_in_css() -> None:

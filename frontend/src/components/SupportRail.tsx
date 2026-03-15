@@ -43,22 +43,25 @@ export function SupportRail({
   onBulkFile: (file: File | null) => void;
 }) {
   return (
-    <aside className="utility-rail">
-      <button
-        className="rail-toggle"
-        type="button"
-        onClick={onToggleRail}
-        aria-label={leftCollapsed ? "Expand utility rail" : "Collapse utility rail"}
-        title={leftCollapsed ? "Expand support rail" : "Collapse support rail"}
-      >
-        {leftCollapsed ? ">" : "<"}
-      </button>
+    <aside className="utility-rail left-column">
+      <div className="utility-rail__header">
+        <button
+          className="rail-toggle"
+          type="button"
+          onClick={onToggleRail}
+          aria-label={leftCollapsed ? "Expand utility rail" : "Collapse utility rail"}
+          title={leftCollapsed ? "Expand support rail" : "Collapse support rail"}
+        >
+          {leftCollapsed ? ">" : "<"}
+        </button>
+      </div>
 
       {!leftCollapsed ? (
-        <div className="rail-scroll">
+        <div className="utility-rail__scroll">
           <Panel
             title="Snapshot"
             description="Live status summary."
+            className="panel-section accordion-item"
             collapsible
             collapsed={!railSections.snapshot}
             onToggle={() => onToggleSection("snapshot")}
@@ -91,6 +94,7 @@ export function SupportRail({
           <Panel
             title="Planning tools"
             description="What changes your results."
+            className="panel-section accordion-item"
             collapsible
             collapsed={!railSections.planning}
             onToggle={() => onToggleSection("planning")}
@@ -148,6 +152,7 @@ export function SupportRail({
           <Panel
             title="Bulk add inventory"
             description="Paste text or upload CSV / Excel."
+            className="panel-section accordion-item"
             collapsible
             collapsed={!railSections.bulk}
             onToggle={() => onToggleSection("bulk")}
@@ -173,7 +178,13 @@ export function SupportRail({
             </div>
           </Panel>
 
-          <Panel title="Data details" collapsible collapsed={!railSections.data} onToggle={() => onToggleSection("data")}>
+          <Panel
+            title="Data details"
+            className="panel-section accordion-item"
+            collapsible
+            collapsed={!railSections.data}
+            onToggle={() => onToggleSection("data")}
+          >
             <div className="rail-data-grid">
               <SnapshotMetric label="Recipes" value={metadata?.recipe_count ?? 0} />
               <SnapshotMetric label="Categories" value={metadata?.categories.length ?? 0} />
@@ -183,8 +194,10 @@ export function SupportRail({
           </Panel>
         </div>
       ) : (
-        <div className="rail-peek" aria-hidden="true">
-          <span>Tools</span>
+        <div className="utility-rail__scroll utility-rail__scroll--collapsed">
+          <div className="rail-peek" aria-hidden="true">
+            <span>Tools</span>
+          </div>
         </div>
       )}
     </aside>

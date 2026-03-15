@@ -28,7 +28,14 @@ export function Panel({
   headerAside?: ReactNode;
 }) {
   return (
-    <section className={classNames("panel", collapsible && "collapsible-panel", collapsed && "collapsed", className)}>
+    <section
+      className={classNames(
+        "panel",
+        collapsible && "collapsible-panel accordion-item",
+        collapsed && "collapsed",
+        className,
+      )}
+    >
       <div className="panel-header-row">
         <header className="panel-header">
           <h2>{title}</h2>
@@ -50,7 +57,7 @@ export function Panel({
           ) : null}
         </div>
       </div>
-      {!collapsed ? children : null}
+      {!collapsed ? <div className={classNames("panel-body", collapsible && "accordion-panel")}>{children}</div> : null}
     </section>
   );
 }
