@@ -115,8 +115,8 @@ def test_ingredient_lists_render_with_commas() -> None:
     assert 'orderedTokens.join(", ")' in views_source
     assert "ingredientSummary(row.ingredient_list, row.ingredients)" in views_source
     assert "ingredientSummary(recipe.ingredient_list, recipe.ingredients)" in views_source
-    assert "<strong>Recipe:</strong>" in views_source
-    assert 'className="result-card-recipe"' in views_source
+    assert 'className="result-card-detail-label">Recipe<' in views_source
+    assert 'className="result-card-detail-value"' in views_source
 
 
 def test_frontend_uses_dashboard_refresh_and_keeps_metadata_static() -> None:
@@ -252,11 +252,21 @@ def test_pills_and_buttons_keep_text_on_one_line_in_css() -> None:
 
 def test_craft_now_main_view_contains_the_full_craftable_table_and_sort_control() -> None:
     results_source = read_frontend("components/ResultsRail.tsx")
+    views_source = read_frontend("components/data-views.tsx")
 
     assert "<CraftResultsTable" in results_source
     assert 'title="Full craftable list"' in results_source
     assert '<span>Sort full list</span>' in results_source
     assert 'className="result-panel-stack"' in results_source
+    assert "<th className=\"cell-result\">Result</th>" in views_source
+    assert "<th className=\"cell-recipe\">Recipe</th>" in views_source
+    assert "<th className=\"cell-buffs\">Buffs</th>" in views_source
+    assert "<th className=\"cell-score\">Smart score</th>" in views_source
+    assert "<th className=\"cell-station\">Station</th>" in views_source
+    assert "Optional columns" in results_source
+    assert "Crafts possible" in results_source
+    assert "Total made" in results_source
+    assert "Per craft" in results_source
 
 
 def test_long_result_lists_use_internal_scroll_containers_without_changing_column_contract() -> None:
@@ -313,6 +323,7 @@ def test_left_rail_uses_a_scroll_region_so_expanding_one_section_does_not_hide_o
 def test_right_rail_cards_are_collapsible_and_can_stay_open_independently() -> None:
     css = read_frontend("styles/app.css")
     results_source = read_frontend("components/ResultsRail.tsx")
+    views_source = read_frontend("components/data-views.tsx")
 
     assert "type RightRailSectionId = " in results_source
     assert "openSections" in results_source
@@ -324,6 +335,11 @@ def test_right_rail_cards_are_collapsible_and_can_stay_open_independently() -> N
     assert ".right-column .accordion-panel {" in css
     assert ".rail-card {" in css
     assert "Show more" not in results_source
+    assert 'className="result-card-topline"' in views_source
+    assert 'className="result-card-side"' in views_source
+    assert 'className="near-card-topline"' in views_source
+    assert ".craft-table-controls {" in css
+    assert ".table-option-chip {" in css
 
 
 def test_bulk_add_card_keeps_only_the_upload_action() -> None:

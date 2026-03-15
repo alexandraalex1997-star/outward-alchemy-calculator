@@ -7,6 +7,10 @@ import type {
 } from "../types";
 import { Panel, classNames, formatScore } from "./ui";
 
+export type CraftResultsOptionalColumnId = "perCraft" | "craftsPossible" | "totalMade";
+
+export type CraftResultsColumnVisibility = Record<CraftResultsOptionalColumnId, boolean>;
+
 function displayGroupName(group: string) {
   return group
     .split(" ")
@@ -28,10 +32,8 @@ function recipeSummary(row: RecipeResult) {
   return ingredientSummary(row.ingredient_list, row.ingredients);
 }
 
-function utilityNote(row: RecipeResult) {
-  if (row.effects) return row.effects;
-  if (row.category) return row.category;
-  return "";
+function effectSummary(row: RecipeResult) {
+  return row.effects?.trim() || "";
 }
 
 export function BestDirectCards({
@@ -50,25 +52,36 @@ export function BestDirectCards({
       {rows.map((row) => (
         <article key={`${row.result}-${row.station}-${row.ingredients}`} className="result-card">
           <div className="result-card-grid">
-            <div className="result-card-main">
-              <div className="result-card-header">
+            <div className="result-card-content">
+              <div className="result-card-topline">
                 <div className="result-card-title-block">
                   <h3>{row.result}</h3>
                   <p>{row.station}</p>
                 </div>
-                <div className="score-badge" title="Real smart-score ranking">
-                  {formatScore(row.smart_score)}
+                <div className="result-card-side">
+                  <div className="score-badge" title="Real smart-score ranking">
+                    {formatScore(row.smart_score)}
+                  </div>
                 </div>
               </div>
               <div className="result-card-meta">
                 <span>Crafts possible {row.max_crafts}</span>
                 <span>Total made {row.max_total_output}</span>
               </div>
-              <div className="result-card-recipe">
-                <span>Recipe</span>
-                <strong>{recipeSummary(row)}</strong>
+              <div className="result-card-detail">
+                <span className="result-card-detail-label">Recipe</span>
+                <strong className="result-card-detail-value" title={recipeSummary(row)}>
+                  {recipeSummary(row)}
+                </strong>
               </div>
-              {utilityNote(row) ? <p className="result-card-note">{utilityNote(row)}</p> : null}
+              {effectSummary(row) ? (
+                <div className="result-card-detail">
+                  <span className="result-card-detail-label">Buffs</span>
+                  <span className="result-card-detail-value result-card-detail-note" title={effectSummary(row)}>
+                    {effectSummary(row)}
+                  </span>
+                </div>
+              ) : null}
             </div>
           </div>
         </article>
@@ -79,9 +92,11 @@ export function BestDirectCards({
 
 export function CraftResultsTable({
   rows,
+  columnVisibility,
   emptyMessage = "You can't craft anything directly with the current inventory and station filters.",
 }: {
   rows: RecipeResult[];
+  columnVisibility: CraftResultsColumnVisibility;
   emptyMessage?: string;
 }) {
   if (!rows.length) {
@@ -93,27 +108,37 @@ export function CraftResultsTable({
       <table className="data-table craft-table">
         <thead>
           <tr>
-            <th>Result</th>
-            <th>Smart score</th>
-            <th>Crafts possible</th>
-            <th>Total made</th>
-            <th>Station</th>
+            <th className="cell-result">Result</th>
+            <th className="cell-recipe">Recipe</th>
+            <th className="cell-buffs">Buffs</th>
+            <th className="cell-score">Smart score</th>
+            <th className="cell-station">Station</th>
+            {columnVisibility.perCraft ? <th className="cell-numeric">Per craft</th> : null}
+            {columnVisibility.craftsPossible ? <th className="cell-numeric">Crafts possible</th> : null}
+            {columnVisibility.totalMade ? <th className="cell-numeric">Total made</th> : null}
           </tr>
         </thead>
         <tbody>
           {rows.map((row) => (
             <tr key={`${row.result}-${row.station}-${row.ingredients}`}>
-              <td>
+              <td className="cell-result">
                 <div className="table-result-name">{row.result}</div>
-                <div className="table-note">
-                  <strong>Recipe:</strong> {recipeSummary(row)}
-                </div>
-                {utilityNote(row) ? <div className="table-note">{utilityNote(row)}</div> : null}
               </td>
-              <td>{formatScore(row.smart_score)}</td>
-              <td>{row.max_crafts}</td>
-              <td>{row.max_total_output}</td>
-              <td>{row.station}</td>
+              <td className="cell-recipe">
+                <span className="table-clamp" title={recipeSummary(row)}>
+                  {recipeSummary(row)}
+                </span>
+              </td>
+              <td className="cell-buffs">
+                <span className="table-clamp" title={effectSummary(row) || "None"}>
+                  {effectSummary(row) || "None"}
+                </span>
+              </td>
+              <td className="cell-score">{formatScore(row.smart_score)}</td>
+              <td className="cell-station">{row.station}</td>
+              {columnVisibility.perCraft ? <td className="cell-numeric">{row.result_qty_per_craft}</td> : null}
+              {columnVisibility.craftsPossible ? <td className="cell-numeric">{row.max_crafts}</td> : null}
+              {columnVisibility.totalMade ? <td className="cell-numeric">{row.max_total_output}</td> : null}
             </tr>
           ))}
         </tbody>
@@ -141,16 +166,20 @@ export function NearCraftTable({
         {rows.map((row) => (
           <article key={`${row.result}-${row.station}-${row.ingredients}`} className="near-card">
             <div className="near-card-grid">
-              <div className="near-card-main">
-                <div className="near-card-header">
+              <div className="near-card-content">
+                <div className="near-card-topline">
                   <div className="near-card-title-block">
                     <h3>{row.result}</h3>
                     <p>{row.station}</p>
                   </div>
-                  <span className="near-pill">{slotLabel(row.missing_slots)}</span>
+                  <div className="near-card-side">
+                    <span className="near-pill">{slotLabel(row.missing_slots)}</span>
+                  </div>
                 </div>
-                <div className="near-card-blocker-label">Still missing</div>
-                <div className="missing-summary">{row.missing_items || "Nothing listed"}</div>
+                <div className="near-card-detail">
+                  <span className="near-card-detail-label">Still missing</span>
+                  <div className="missing-summary">{row.missing_items || "Nothing listed"}</div>
+                </div>
               </div>
             </div>
           </article>

@@ -2,9 +2,21 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 
 import type { DirectResponse, NearResponse } from "../types";
-import { BestDirectCards, CraftResultsTable, NearCraftTable } from "./data-views";
+import {
+  BestDirectCards,
+  CraftResultsTable,
+  type CraftResultsColumnVisibility,
+  type CraftResultsOptionalColumnId,
+  NearCraftTable,
+} from "./data-views";
 import { StatCard, classNames } from "./ui";
 type RightRailSectionId = "best" | "full" | "near";
+
+const CRAFT_RESULTS_OPTIONAL_COLUMNS: { id: CraftResultsOptionalColumnId; label: string }[] = [
+  { id: "perCraft", label: "Per craft" },
+  { id: "craftsPossible", label: "Crafts possible" },
+  { id: "totalMade", label: "Total made" },
+];
 
 function ResultsAccordionCard({
   title,
@@ -67,11 +79,23 @@ export function ResultsRail({
     full: true,
     near: false,
   });
+  const [craftTableColumns, setCraftTableColumns] = useState<CraftResultsColumnVisibility>({
+    perCraft: false,
+    craftsPossible: false,
+    totalMade: false,
+  });
 
   const toggleSection = (sectionId: RightRailSectionId) => {
     setOpenSections((current) => ({
       ...current,
       [sectionId]: !current[sectionId],
+    }));
+  };
+
+  const toggleCraftTableColumn = (columnId: CraftResultsOptionalColumnId) => {
+    setCraftTableColumns((current) => ({
+      ...current,
+      [columnId]: !current[columnId],
     }));
   };
 
@@ -103,18 +127,35 @@ export function ResultsRail({
             <div className="info-strip compact-info-strip">
               {craftNow?.count ?? 0} recipe{craftNow?.count === 1 ? "" : "s"} ready to craft right now.
             </div>
-            <label className="panel-select panel-select-compact">
-              <span>Sort full list</span>
-              <select value={sortMode} onChange={(event) => onSortModeChange(event.target.value)}>
-                {sortModes.map((mode) => (
-                  <option key={mode} value={mode}>
-                    {mode}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className="craft-table-controls">
+              <label className="panel-select panel-select-compact">
+                <span>Sort full list</span>
+                <select value={sortMode} onChange={(event) => onSortModeChange(event.target.value)}>
+                  {sortModes.map((mode) => (
+                    <option key={mode} value={mode}>
+                      {mode}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div className="craft-column-picker">
+                <span className="toolbar-label">Optional columns</span>
+                <div className="chip-group compact-chip-group">
+                  {CRAFT_RESULTS_OPTIONAL_COLUMNS.map((column) => (
+                    <button
+                      key={column.id}
+                      type="button"
+                      className={classNames("chip", "table-option-chip", craftTableColumns[column.id] && "active")}
+                      onClick={() => toggleCraftTableColumn(column.id)}
+                    >
+                      {column.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
-          <CraftResultsTable rows={craftNow?.items ?? []} />
+          <CraftResultsTable rows={craftNow?.items ?? []} columnVisibility={craftTableColumns} />
         </ResultsAccordionCard>
       ) : null}
 
