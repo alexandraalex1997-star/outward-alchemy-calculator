@@ -1212,11 +1212,15 @@ def inject_styles() -> None:
             margin: 0.16rem 0 0.35rem 0;
         }
         [data-baseweb="tag"] {
-            transform: scale(0.58);
+            transform: scale(0.48);
             transform-origin: left center;
         }
         [data-baseweb="tag"] span {
-            font-size: 0.68rem !important;
+            font-size: 0.6rem !important;
+        }
+        [data-baseweb="tag"] > span {
+            padding-top: 0.02rem !important;
+            padding-bottom: 0.02rem !important;
         }
         [data-testid="stSidebar"] {
             background: linear-gradient(180deg, rgba(18, 10, 22, 0.96), rgba(24, 14, 29, 0.96));
@@ -1417,6 +1421,30 @@ with overview_col:
 
 with overview_col:
     with st.container(border=True):
+        st.subheader("Snapshot")
+        st.caption("Compact summary of your current stash, direct options, and recipe coverage.")
+        render_compact_stats(
+            [
+                ("Inventory lines", len(inventory_df)),
+                ("Known recipes", len(filtered)),
+                ("Direct crafts", len(craftable)),
+                ("Near crafts", len(near)),
+            ],
+            columns=2,
+            variant="sidebar tight",
+        )
+        render_compact_stats(
+            [
+                ("Best heal", top_heal.iloc[0]["result"] if not top_heal.empty and top_heal.iloc[0]["healing_total"] > 0 else "None"),
+                ("Best stamina", top_stamina.iloc[0]["result"] if not top_stamina.empty and top_stamina.iloc[0]["stamina_total"] > 0 else "None"),
+                ("Best mana", top_mana.iloc[0]["result"] if not top_mana.empty and top_mana.iloc[0]["mana_total"] > 0 else "None"),
+            ],
+            columns=3,
+            variant="sidebar tight",
+        )
+
+with overview_col:
+    with st.container(border=True):
         with st.expander("What you can craft right now", expanded=active_section == "Craft now"):
             render_tab_help(
                 "Craft now",
@@ -1463,6 +1491,8 @@ with overview_col:
                     type="secondary",
                 )
 
+with overview_col:
+    with st.container(border=True):
         with st.expander("How to read this sidebar", expanded=False):
             st.markdown(
                 """
@@ -1472,29 +1502,6 @@ with overview_col:
                 - **What you can craft right now** expands into the full ranked craftable table.
                 """
             )
-
-with st.container(border=True):
-    st.subheader("Snapshot")
-    st.caption("Compact summary of your current stash, direct options, and recipe coverage.")
-    render_compact_stats(
-        [
-            ("Inventory lines", len(inventory_df)),
-            ("Known recipes", len(filtered)),
-            ("Direct crafts", len(craftable)),
-            ("Near crafts", len(near)),
-        ],
-        columns=4,
-        variant="sidebar tight",
-    )
-    render_compact_stats(
-        [
-            ("Best heal", top_heal.iloc[0]["result"] if not top_heal.empty and top_heal.iloc[0]["healing_total"] > 0 else "None"),
-            ("Best stamina", top_stamina.iloc[0]["result"] if not top_stamina.empty and top_stamina.iloc[0]["stamina_total"] > 0 else "None"),
-            ("Best mana", top_mana.iloc[0]["result"] if not top_mana.empty and top_mana.iloc[0]["mana_total"] > 0 else "None"),
-        ],
-        columns=3,
-        variant="sidebar tight",
-    )
 
 if active_section == "Plan a target":
     with st.expander("Plan a target", expanded=True):
