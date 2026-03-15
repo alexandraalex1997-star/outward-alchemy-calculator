@@ -202,7 +202,7 @@ def test_near_results_include_missing_summary_fields() -> None:
     near = client.get("/api/results/near?stations=Alchemy+Kit&max_missing_slots=1&limit=20").json()
     cool_potion = result_map(near["items"])["Cool Potion"]
 
-    assert cool_potion["missing_items"] == "Water (Clean Water, Salt Water, Rancid Water, Leyline Water)"
+    assert cool_potion["missing_items"] == "Any Water"
     assert cool_potion["station"] == "Alchemy Kit"
 
 

@@ -82,10 +82,6 @@
   color: var(--text-soft);
 }
 
-.rail-header {
-  padding: 0.05rem 0.15rem 0;
-}
-
 .eyebrow {
   display: inline-block;
   margin-bottom: 0.25rem;
@@ -95,14 +91,12 @@
   color: var(--text-soft);
 }
 
-.rail-header h2,
 .panel-header h2,
 .app-banner h1 {
   margin: 0;
   font-family: var(--font-display);
 }
 
-.rail-header p,
 .panel-header p,
 .app-banner p,
 .info-strip,
@@ -117,6 +111,8 @@
   overflow: hidden;
   display: grid;
   gap: 0.28rem;
+  justify-items: center;
+  text-align: center;
   align-content: end;
   min-height: 10.4rem;
   padding: 1.65rem 1.55rem 1.28rem;
@@ -135,6 +131,7 @@
 
 .app-banner p:last-child {
   max-width: 52rem;
+  margin-inline: auto;
 }
 
 .mode-shell {
@@ -247,18 +244,6 @@
   margin-bottom: 0.48rem;
 }
 
-.utility-rail .stat-grid {
-  gap: 0.42rem;
-}
-
-.utility-rail .stat-card {
-  padding: 0.52rem 0.58rem;
-}
-
-.utility-rail .stat-value {
-  font-size: 0.98rem;
-}
-
 .utility-rail .info-strip,
 .utility-rail .helper-list,
 .utility-rail .mini-table {
@@ -289,22 +274,36 @@
 
 .inventory-panel {
   display: grid;
-  gap: 0.7rem;
+  gap: 0.62rem;
 }
 
 .inventory-overview-panel {
   display: grid;
   gap: 0.45rem;
-  background: rgba(255, 255, 255, 0.025);
+  padding: 0.72rem 0.78rem;
+  border: 1px solid rgba(169, 86, 255, 0.12);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .inventory-editor {
   display: grid;
-  gap: 0.58rem;
-  padding: 0.68rem;
+  gap: 0.52rem;
+  padding: 0.62rem;
   border: 1px solid rgba(169, 86, 255, 0.12);
   border-radius: var(--radius-md);
-  background: rgba(18, 11, 23, 0.32);
+  background: rgba(18, 11, 23, 0.22);
+}
+
+.inventory-overview-header {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.inventory-overview-header h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1rem;
 }
 
 .quick-add-row {
@@ -333,6 +332,19 @@
 .field {
   display: grid;
   gap: 0.24rem;
+}
+
+.field-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.55rem;
+  align-items: baseline;
+}
+
+.field-head small,
+.field-note {
+  font-size: 0.74rem;
+  color: var(--text-soft);
 }
 
 .field.grow {
@@ -413,14 +425,14 @@
 }
 
 .control-strip {
-  padding: 0.72rem 0.78rem;
+  padding: 0.64rem 0.72rem;
   border: 1px solid rgba(169, 86, 255, 0.14);
   border-radius: var(--radius-sm);
   background: rgba(255, 255, 255, 0.025);
 }
 
 .toolbar-strip {
-  margin-bottom: 0.7rem;
+  margin-bottom: 0.48rem;
 }
 
 .table-shell {
@@ -576,7 +588,41 @@
 }
 
 .inventory-table-note {
-  margin-bottom: 0.45rem;
+  margin-bottom: 0.28rem;
+}
+
+.snapshot-block {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.snapshot-block-secondary {
+  margin-top: 0.25rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid rgba(169, 86, 255, 0.12);
+}
+
+.snapshot-metric {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.2rem 0;
+  border-bottom: 1px solid rgba(169, 86, 255, 0.08);
+}
+
+.snapshot-metric:last-child {
+  border-bottom: 0;
+}
+
+.snapshot-metric span {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.snapshot-metric strong {
+  font-size: 0.95rem;
+  color: var(--text);
 }
 
 .near-result-name {

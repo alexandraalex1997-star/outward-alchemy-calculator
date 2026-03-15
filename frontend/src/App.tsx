@@ -1,7 +1,6 @@
 import { startTransition, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 
 import { api } from "./api";
-import rawPlanningControls from "./planning-controls.json";
 import rawViewConfig from "./view-config.json";
 import type {
   DashboardResponse,
@@ -40,17 +39,9 @@ type ViewConfigEntry = {
   viewState?: string[];
 };
 
-type PlanningControlEntry = {
-  id: string;
-  label: string;
-  summary: string;
-  affects: string[];
-};
-
 type RailSectionId = "snapshot" | "planning" | "how" | "bulk" | "data";
 
 const VIEW_CONFIG = rawViewConfig as ViewConfigEntry[];
-const PLANNING_CONTROLS = rawPlanningControls as PlanningControlEntry[];
 const VIEW_SUMMARIES = VIEW_CONFIG.reduce<Record<string, string>>((accumulator, entry) => {
   accumulator[entry.id] = entry.summary;
   return accumulator;
@@ -112,6 +103,15 @@ function StatCard({ label, value }: { label: string; value: string | number | nu
     <div className="stat-card">
       <span className="stat-label">{label}</span>
       <strong className="stat-value">{value ?? "None"}</strong>
+    </div>
+  );
+}
+
+function SnapshotMetric({ label, value }: { label: string; value: string | number | null }) {
+  return (
+    <div className="snapshot-metric">
+      <span>{label}</span>
+      <strong>{value ?? "None"}</strong>
     </div>
   );
 }
@@ -708,46 +708,68 @@ export default function App() {
         </button>
         {!leftCollapsed ? (
           <div className="rail-scroll">
-            <header className="rail-header">
-              <span className="eyebrow">Support rail</span>
-              <h2>Quick tools</h2>
-              <p>Live totals, filters, and imports.</p>
-            </header>
-
             <Panel
               title="Snapshot"
-              description="Live totals from your inventory."
+              description="Live inventory and crafting totals."
               collapsible
               collapsed={!railSections.snapshot}
               onToggle={() => toggleRailSection("snapshot")}
             >
-              <div className="stat-grid two-up">
-                <StatCard label="Inventory lines" value={snapshot?.inventory_lines ?? 0} />
-                <StatCard label="Known recipes" value={snapshot?.known_recipes ?? 0} />
-                <StatCard label="Direct crafts" value={snapshot?.direct_crafts ?? 0} />
-                <StatCard label="Near crafts" value={snapshot?.near_crafts ?? 0} />
+              <div className="snapshot-block">
+                <SnapshotMetric label="Inventory lines" value={snapshot?.inventory_lines ?? 0} />
+                <SnapshotMetric label="Known recipes" value={snapshot?.known_recipes ?? 0} />
+                <SnapshotMetric label="Direct crafts" value={snapshot?.direct_crafts ?? 0} />
+                <SnapshotMetric label="Near crafts" value={snapshot?.near_crafts ?? 0} />
               </div>
-              <div className="stat-grid one-up compact-grid">
-                <StatCard label="Best heal" value={snapshot?.best_heal ?? null} />
-                <StatCard label="Best stamina" value={snapshot?.best_stamina ?? null} />
-                <StatCard label="Best mana" value={snapshot?.best_mana ?? null} />
+              <div className="snapshot-block snapshot-block-secondary">
+                <SnapshotMetric label="Best heal" value={snapshot?.best_heal ?? null} />
+                <SnapshotMetric label="Best stamina" value={snapshot?.best_stamina ?? null} />
+                <SnapshotMetric label="Best mana" value={snapshot?.best_mana ?? null} />
               </div>
             </Panel>
 
             <Panel
               title="Planning tools"
-              description="These settings shape crafting, near-craft, and planning views."
+              description="Choose recipe scope and planning depth."
               collapsible
               collapsed={!railSections.planning}
               onToggle={() => toggleRailSection("planning")}
             >
               <label className="field">
-                <span>Planner depth</span>
+                <div className="field-head">
+                  <span>Stations</span>
+                  <small>Craft, Near, Plan, Shop</small>
+                </div>
+                <div className="chip-group">
+                  {metadata?.stations.map((station) => {
+                    const active = selectedStations.includes(station);
+                    return (
+                      <button
+                        key={station}
+                        type="button"
+                        className={classNames("chip", active && "active")}
+                        onClick={() => setSelectedStations((current) => toggleSelection(current, station))}
+                      >
+                        {station}
+                      </button>
+                    );
+                  })}
+                </div>
+                <small className="field-note">{stationFilterNote}</small>
+              </label>
+              <label className="field">
+                <div className="field-head">
+                  <span>Planner depth</span>
+                  <small>Planner recursion</small>
+                </div>
                 <input type="range" min={1} max={8} value={plannerDepth} onChange={(event) => setPlannerDepth(Number(event.target.value))} />
                 <strong>{plannerDepth}</strong>
               </label>
               <label className="field">
-                <span>Near-craft threshold</span>
+                <div className="field-head">
+                  <span>Near-craft threshold</span>
+                  <small>Almost craftable only</small>
+                </div>
                 <input
                   type="range"
                   min={1}
@@ -757,29 +779,6 @@ export default function App() {
                 />
                 <strong>{nearThreshold} missing slot{nearThreshold === 1 ? "" : "s"}</strong>
               </label>
-              <div className="chip-group">
-                {metadata?.stations.map((station) => {
-                  const active = selectedStations.includes(station);
-                  return (
-                    <button
-                      key={station}
-                      type="button"
-                      className={classNames("chip", active && "active")}
-                      onClick={() => setSelectedStations((current) => toggleSelection(current, station))}
-                    >
-                      {station}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="info-strip">{stationFilterNote}</div>
-              <div className="helper-list compact-list">
-                {PLANNING_CONTROLS.map((control) => (
-                  <div key={control.id}>
-                    <strong>{control.label}:</strong> {control.summary}
-                  </div>
-                ))}
-              </div>
             </Panel>
 
             <Panel title="How this works" collapsible collapsed={!railSections.how} onToggle={() => toggleRailSection("how")}>
@@ -862,7 +861,11 @@ export default function App() {
         {error ? <div className="error-banner">{error}</div> : null}
 
         <Panel title="Inventory input" className="inventory-panel" description="Add, filter, and edit your live inventory.">
-          <Panel title="Inventory overview" className="inline-overview inventory-overview-panel" description="Current totals.">
+          <div className="inline-overview inventory-overview-panel">
+            <div className="inventory-overview-header">
+              <h3>Inventory overview</h3>
+              <p>Current totals.</p>
+            </div>
             <div className="inventory-overview-row">
               <StatCard label="Unique items" value={inventory?.unique_items ?? 0} />
               <StatCard label="Total quantity" value={inventory?.total_quantity ?? 0} />
@@ -879,7 +882,7 @@ export default function App() {
                 ? "This inventory powers every panel."
                 : "Add items below or use bulk import."}
             </div>
-          </Panel>
+          </div>
 
           <div className="inventory-editor">
             <form className="quick-add-row control-strip" onSubmit={(event) => void handleQuickAdd(event)}>
@@ -1020,7 +1023,7 @@ export default function App() {
         </Panel>
 
         {activeSection === "Craft now" ? (
-          <Panel title="Full craftable list" description="All direct crafts for the current filters.">
+          <Panel title="Craft now" description="Set the ranking for the full craftable results in the right rail.">
             <div className="inline-actions">
               <label className="field inline-field grow">
                 <span>Sort results by</span>
@@ -1033,18 +1036,11 @@ export default function App() {
                 </select>
               </label>
             </div>
-            <div className="info-strip">Sort by overall utility, output, or a single stat.</div>
-            <RecipeTable
-              rows={craftNow?.items ?? []}
-              columns={[
-                { key: "result", label: "Item" },
-                { key: "max_crafts", label: "Crafts" },
-                { key: "max_total_output", label: "Total output" },
-                { key: "station", label: "Station" },
-                { key: "effects", label: "Effects" },
-              ]}
-              emptyMessage="No recipes are directly craftable with the current inventory and station filters."
-            />
+            <div className="stat-grid two-up">
+              <StatCard label="Craftable recipes" value={craftNow?.count ?? 0} />
+              <StatCard label="Top pick" value={bestDirect?.items?.[0]?.result ?? null} />
+            </div>
+            <div className="info-strip">Right rail order: shortlist, full craftables, then almost craftable.</div>
           </Panel>
         ) : null}
 
@@ -1240,6 +1236,21 @@ export default function App() {
             emptyMessage="No direct recommendations are available for the current filters."
           />
         </Panel>
+
+        {activeSection === "Craft now" ? (
+          <Panel title="All craftable results" description="The full direct-craft list for the current ranking.">
+            <RecipeTable
+              rows={craftNow?.items ?? []}
+              columns={[
+                { key: "result", label: "Item" },
+                { key: "max_crafts", label: "Crafts" },
+                { key: "max_total_output", label: "Output" },
+                { key: "station", label: "Station" },
+              ]}
+              emptyMessage="No recipes are directly craftable with the current inventory and station filters."
+            />
+          </Panel>
+        ) : null}
 
         <Panel title="Almost craftable recipes" description="Closest valid recipes under the current threshold.">
           <div className="stat-grid two-up">

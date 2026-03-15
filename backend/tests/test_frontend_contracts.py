@@ -46,7 +46,8 @@ def test_direct_result_sections_are_clearly_distinguished() -> None:
     app_source = (BASE_DIR / "frontend" / "src" / "App.tsx").read_text(encoding="utf-8")
 
     assert "Best direct options" in app_source
-    assert "Full craftable list" in app_source
+    assert "All craftable results" in app_source
+    assert 'title="Craft now"' in app_source
     assert "What you can craft right now" not in app_source
 
 
@@ -60,6 +61,8 @@ def test_left_rail_sections_are_individually_collapsible() -> None:
     assert 'toggleRailSection("bulk")' in app_source
     assert 'toggleRailSection("data")' in app_source
     assert "className=\"panel-toggle\"" in app_source
+    assert "Support rail" not in app_source
+    assert "Quick tools" not in app_source
 
 
 def test_near_craft_table_uses_missing_summary_without_slots_column() -> None:
@@ -79,3 +82,11 @@ def test_frontend_uses_dashboard_refresh_and_keeps_metadata_static() -> None:
     assert "api.getOverview(" not in app_source
     assert "api.getInventory(" not in app_source
     assert 'if (!metadata || activeSection !== "Craft now") return;' in app_source
+
+
+def test_banner_is_full_width_and_centered_in_css() -> None:
+    css = (BASE_DIR / "frontend" / "src" / "styles" / "app.css").read_text(encoding="utf-8")
+
+    assert ".app-banner" in css
+    assert "text-align: center" in css
+    assert "justify-items: center" in css

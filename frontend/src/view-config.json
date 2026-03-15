@@ -2,7 +2,7 @@
   {
     "id": "Craft now",
     "logic": "direct",
-    "summary": "Direct crafts from your live inventory.",
+    "summary": "Rank direct crafts and review the shortlist, full list, and near-craft results.",
     "apis": ["GET /api/results/direct"],
     "viewState": ["sortMode", "selectedStations"]
   },

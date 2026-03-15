@@ -364,9 +364,37 @@ def _missing_label(token: str, groups: Dict[str, List[str]]) -> str:
     token_key = key(token)
     if token_key not in groups:
         return token
-    options_preview = ", ".join(groups[token_key][:4])
-    suffix = "..." if len(groups[token_key]) > 4 else ""
-    return f"{token} ({options_preview}{suffix})"
+    friendly_names = {
+        "water": "Any Water",
+        "fish": "Any Fish",
+        "meat": "Any Meat",
+        "egg": "Any Egg",
+        "vegetable": "Any Vegetable",
+        "mushroom": "Any Mushroom",
+        "bread (any)": "Any Bread",
+        "ration ingredient": "Any Ration Ingredient",
+        "basic armor": "Any Basic Armor",
+        "basic boots": "Any Basic Boots",
+        "basic helm": "Any Basic Helm",
+    }
+    return friendly_names.get(token_key, f"Any {token}")
+
+
+def _effect_utility(effects: List[str]) -> float:
+    utility = 0.0
+    for effect in effects:
+        effect_key = key(effect)
+        if "burnt" in effect_key:
+            utility += 6.2
+        if any(token in effect_key for token in ["weather", "resistance", "resist", "protection", "defense", "survival"]):
+            utility += 4.8
+        if any(token in effect_key for token in ["boon", "buff"]):
+            utility += 3.9
+        if any(token in effect_key for token in ["travel", "comfort", "utility", "stealth", "alertness"]):
+            utility += 2.5
+        if any(token in effect_key for token in ["restore", "recovery", "healing", "stamina", "mana"]):
+            utility += 1.3
+    return utility
 
 
 def missing_slot_details(
@@ -465,7 +493,8 @@ def smart_score(row: pd.Series) -> float:
         + row["stamina_each"] * 0.5
         + row["mana_each"] * 0.62
         + row["sale_value_each"] * 0.16
-        + len(effects) * 2.6
+        + len(effects) * 2.2
+        + _effect_utility(effects)
         + _category_utility(category)
         + _name_utility_bonus(row["result"], row["effects"])
     )

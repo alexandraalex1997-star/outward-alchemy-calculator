@@ -124,7 +124,7 @@ def test_near_craft_missing_slots_are_slot_based_not_set_based() -> None:
 
     assert missing_slots == 1
     assert len(missing) == 1
-    assert missing[0].startswith("Fish")
+    assert missing[0] == "Any Fish"
 
 
 def test_clean_water_recipe_blocks_noop_self_craft_but_accepts_dirty_water_inputs() -> None:
@@ -238,6 +238,43 @@ def test_smart_score_degrades_gracefully_when_metadata_is_missing() -> None:
 
     assert [row["result"] for row in ranked[:2]] == ["Trail Mix", "Slug Pile"]
     assert ranked[0]["smart_score"] > ranked[1]["smart_score"]
+
+
+def test_smart_score_rewards_buffs_and_survival_utility() -> None:
+    service = make_service(
+        [
+            {
+                "recipe_id": "weather",
+                "recipe_page": "Unit",
+                "section": "Ranking",
+                "result": "Weather Defense Potion",
+                "result_qty": 1,
+                "station": "Alchemy Kit",
+                "ingredients": "Leaf|Water",
+            },
+            {
+                "recipe_id": "filler",
+                "recipe_page": "Unit",
+                "section": "Ranking",
+                "result": "Camp Slush",
+                "result_qty": 3,
+                "station": "Campfire",
+                "ingredients": "Leaf",
+            },
+        ],
+        item_metadata={
+            "Weather Defense Potion": {
+                "sale_value": 14,
+                "effects": ["Weather resistance support", "Applies defensive buff"],
+                "category": "Potion",
+            }
+        },
+    )
+    service.replace_inventory([{"item": "Leaf", "qty": 2}, {"item": "Clean Water", "qty": 1}])
+
+    ranked = service.direct_crafts(sort_mode="Smart score", stations=["Alchemy Kit", "Campfire"])["items"]
+
+    assert [row["result"] for row in ranked[:2]] == ["Weather Defense Potion", "Camp Slush"]
 
 
 def test_planner_success_path_crafts_intermediates() -> None:
