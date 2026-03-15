@@ -1013,7 +1013,7 @@ st.markdown('<div class="thin-divider"></div>', unsafe_allow_html=True)
 
 with named_block("content-shell"):
     # Manual edit point: main workflow width vs right results sidebar width.
-    inventory_col, overview_col = st.columns([1.6, 0.76], gap="medium")
+    inventory_col, overview_col = st.columns([1.7, 0.84], gap="medium")
     with inventory_col:
         render_hook("main-column")
         render_hook("inventory-section")
@@ -1025,7 +1025,7 @@ with named_block("content-shell"):
         inventory.update(extra_inventory)
 
     inventory_df = render_inventory_table(inventory)
-    inventory_overview_height = table_height_for_rows(len(inventory_df), min_height=102, max_height=184, row_px=22)
+    inventory_overview_height = table_height_for_rows(len(inventory_df), min_height=96, max_height=172, row_px=22)
 
     with inventory_overview_placeholder.container():
         with named_panel("inventory-overview-card", border=True):

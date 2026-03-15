@@ -189,7 +189,7 @@ section[data-testid="stSidebar"] {
 }
 
 section[data-testid="stSidebar"] div[data-testid="stVerticalBlock"]:has(.utility-rail-hook) {
-    gap: 0.05rem;
+    gap: 0.035rem;
 }
 
 section[data-testid="stSidebar"] details {
@@ -197,19 +197,19 @@ section[data-testid="stSidebar"] details {
 }
 
 section[data-testid="stSidebar"] details > div {
-    padding-top: 0.04rem !important;
+    padding-top: 0.02rem !important;
 }
 
 section[data-testid="stSidebar"] details summary {
-    padding-top: 0.1rem !important;
-    padding-bottom: 0.1rem !important;
+    padding-top: 0.08rem !important;
+    padding-bottom: 0.08rem !important;
 }
 
 @media (min-width: 1180px) {
     section[data-testid="stSidebar"] {
-        width: 21.5rem !important;
-        min-width: 21.5rem !important;
-        max-width: 21.5rem !important;
+        width: 19rem !important;
+        min-width: 19rem !important;
+        max-width: 19rem !important;
     }
 }
 
@@ -241,7 +241,7 @@ section[data-testid="stSidebar"] div[data-testid="stVerticalBlockBorderWrapper"]
 }
 
 section[data-testid="stSidebar"] div[data-testid="stVerticalBlockBorderWrapper"]:has(.snapshot-card-hook) {
-    padding: 0.22rem 0.3rem !important;
+    padding: 0.18rem 0.26rem !important;
     border-radius: 10px !important;
 }
 
@@ -274,7 +274,7 @@ section[data-testid="stSidebar"] details summary {
 
 section[data-testid="stSidebar"] .section-header {
     gap: 0.06rem;
-    margin-bottom: 0.08rem;
+    margin-bottom: 0.06rem;
 }
 
 section[data-testid="stSidebar"] .section-title {
@@ -382,7 +382,7 @@ div[data-testid="stVerticalBlock"]:has(.inventory-stats-block-hook) {
 div[data-testid="stVerticalBlock"]:has(.categories-toolbar-hook) [data-baseweb="tag"],
 section[data-testid="stSidebar"] div[data-testid="stVerticalBlock"]:has(.stations-filter-hook) [data-baseweb="tag"] {
     transform: none !important;
-    min-height: 1.54rem !important;
+    min-height: 1.38rem !important;
     border-radius: 999px !important;
 }
 
@@ -390,7 +390,7 @@ div[data-testid="stVerticalBlock"]:has(.categories-toolbar-hook) [data-baseweb="
 div[data-testid="stVerticalBlock"]:has(.categories-toolbar-hook) [data-baseweb="tag"] > span > span,
 section[data-testid="stSidebar"] div[data-testid="stVerticalBlock"]:has(.stations-filter-hook) [data-baseweb="tag"] > span,
 section[data-testid="stSidebar"] div[data-testid="stVerticalBlock"]:has(.stations-filter-hook) [data-baseweb="tag"] > span > span {
-    font-size: 0.95rem !important;
+    font-size: 0.94rem !important;
     line-height: 1.18 !important;
     font-weight: 600 !important;
     display: inline-flex !important;
@@ -399,39 +399,39 @@ section[data-testid="stSidebar"] div[data-testid="stVerticalBlock"]:has(.station
 
 div[data-testid="stVerticalBlock"]:has(.categories-toolbar-hook) [data-baseweb="tag"] > span,
 section[data-testid="stSidebar"] div[data-testid="stVerticalBlock"]:has(.stations-filter-hook) [data-baseweb="tag"] > span {
-    min-height: 1.54rem !important;
-    padding-top: 0.08rem !important;
-    padding-bottom: 0.08rem !important;
-    padding-left: 0.38rem !important;
-    padding-right: 0.38rem !important;
+    min-height: 1.38rem !important;
+    padding-top: 0.05rem !important;
+    padding-bottom: 0.05rem !important;
+    padding-left: 0.28rem !important;
+    padding-right: 0.28rem !important;
     display: inline-flex !important;
     align-items: center !important;
 }
 
 div[data-testid="stVerticalBlock"]:has(.inventory-overview-top-row-hook) {
-    gap: 0.05rem;
+    gap: 0.04rem;
 }
 
 div[data-testid="stVerticalBlock"]:has(.inventory-overview-top-row-hook) > div[data-testid="stHorizontalBlock"] {
-    gap: 0.22rem;
+    gap: 0.18rem;
     align-items: stretch;
 }
 
 div[data-testid="stVerticalBlock"]:has(.inventory-overview-top-row-hook) > div[data-testid="stHorizontalBlock"] > div[data-testid="column"] > div[data-testid="stVerticalBlock"] {
-    gap: 0.04rem;
+    gap: 0.02rem;
 }
 
 section[data-testid="stSidebar"] div[data-testid="stVerticalBlock"]:has(.snapshot-primary-stats-hook),
 section[data-testid="stSidebar"] div[data-testid="stVerticalBlock"]:has(.snapshot-best-stats-hook) {
-    gap: 0.03rem;
+    gap: 0.02rem;
 }
 
 div[data-testid="stVerticalBlock"]:has(.inventory-overview-body-hook) {
-    gap: 0.05rem;
+    gap: 0.04rem;
 }
 
 .inventory-overview-button-spacer {
-    height: 0.06rem;
+    height: 0.02rem;
 }
 
 /* Metrics / Stat Cards */
@@ -478,8 +478,8 @@ section[data-testid="stSidebar"] div[data-testid="stVerticalBlockBorderWrapper"]
 }
 
 section[data-testid="stSidebar"] div[data-testid="stVerticalBlockBorderWrapper"]:has(.snapshot-card-hook) [data-testid="stMetric"] {
-    min-height: 1.78rem;
-    padding: 0.06rem 0.1rem;
+    min-height: 1.66rem;
+    padding: 0.05rem 0.09rem;
     border-radius: 9px;
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
 }
@@ -499,14 +499,14 @@ div[data-testid="stVerticalBlockBorderWrapper"]:has(.almost-craftable-card-hook)
 }
 
 div[data-testid="stVerticalBlockBorderWrapper"]:has(.inventory-overview-card-hook) [data-testid="stMetric"] {
-    min-height: 2.42rem;
-    padding: 0.14rem 0.22rem;
+    min-height: 2.28rem;
+    padding: 0.12rem 0.18rem;
 }
 
 div[data-testid="stVerticalBlockBorderWrapper"]:has(.inventory-overview-card-hook) .empty-state.inline {
     margin-top: 0;
-    padding: 0.14rem 0.3rem;
-    font-size: 0.68rem;
+    padding: 0.12rem 0.24rem;
+    font-size: 0.66rem;
 }
 
 /* Tables */
