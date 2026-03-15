@@ -209,11 +209,6 @@ export default function App() {
     });
   }, [activeSection, metadata, nearThreshold, refreshCraftNow, selectedStations, sortMode]);
 
-  const inventorySignature = useMemo(
-    () => (inventory?.items ?? []).map((item) => `${item.item}:${item.qty}`).join("|"),
-    [inventory],
-  );
-
   const inventoryMap = useMemo(() => {
     const map = new Map<string, number>();
     inventory?.items.forEach((item) => map.set(item.item, item.qty));
@@ -314,15 +309,40 @@ export default function App() {
     }
   }, [plannerDepth, selectedStations, shoppingText]);
 
+  const refreshInventoryDrivenViews = useCallback(async () => {
+    const refreshes: Promise<unknown>[] = [
+      refreshSharedPanels(selectedStations, nearThreshold),
+      refreshCraftNow(selectedStations, sortMode, nearThreshold),
+    ];
+    if (plannerRequested && planTarget) {
+      refreshes.push(executePlanner());
+    }
+    if (shoppingRequested) {
+      refreshes.push(executeShoppingList());
+    }
+    await Promise.all(refreshes);
+  }, [
+    executePlanner,
+    executeShoppingList,
+    nearThreshold,
+    planTarget,
+    plannerRequested,
+    refreshCraftNow,
+    refreshSharedPanels,
+    selectedStations,
+    shoppingRequested,
+    sortMode,
+  ]);
+
   useEffect(() => {
     if (!plannerRequested) return;
     void executePlanner();
-  }, [executePlanner, inventorySignature, plannerRequested]);
+  }, [executePlanner, plannerRequested]);
 
   useEffect(() => {
     if (!shoppingRequested) return;
     void executeShoppingList();
-  }, [executeShoppingList, inventorySignature, shoppingRequested]);
+  }, [executeShoppingList, shoppingRequested]);
 
   const handleInventoryMutation = useCallback(
     async (operation: Promise<InventoryResponse>) => {
@@ -331,16 +351,15 @@ export default function App() {
         const nextInventory = await operation;
         startTransition(() => {
           setInventory(nextInventory);
+          if (plannerRequested) setPlannerResult(null);
+          if (shoppingRequested) setShoppingResult(null);
         });
-        await Promise.all([
-          refreshSharedPanels(selectedStations, nearThreshold),
-          activeSection === "Craft now" ? refreshCraftNow(selectedStations, sortMode, nearThreshold) : Promise.resolve(),
-        ]);
+        await refreshInventoryDrivenViews();
       } catch (err) {
         setError(err instanceof Error ? err.message : "Inventory update failed.");
       }
     },
-    [activeSection, nearThreshold, refreshCraftNow, refreshSharedPanels, selectedStations, sortMode],
+    [plannerRequested, refreshInventoryDrivenViews, shoppingRequested],
   );
 
   const handleQuickAdd = async (event: FormEvent) => {

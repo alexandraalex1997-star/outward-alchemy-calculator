@@ -127,6 +127,29 @@ def test_frontend_uses_dashboard_refresh_and_keeps_metadata_static() -> None:
     assert 'if (!metadata || activeSection !== "Craft now") return;' in app_source
 
 
+def test_inventory_mutations_share_one_refresh_contract_including_imports() -> None:
+    app_source = read_frontend("App.tsx")
+
+    assert "const refreshInventoryDrivenViews = useCallback(async () => {" in app_source
+    assert "refreshSharedPanels(selectedStations, nearThreshold)" in app_source
+    assert "refreshCraftNow(selectedStations, sortMode, nearThreshold)" in app_source
+    assert "if (plannerRequested && planTarget)" in app_source
+    assert "refreshes.push(executePlanner())" in app_source
+    assert "if (shoppingRequested)" in app_source
+    assert "refreshes.push(executeShoppingList())" in app_source
+    assert "await refreshInventoryDrivenViews();" in app_source
+    assert "handleInventoryMutation(api.importText(bulkText))" in app_source
+    assert "handleInventoryMutation(api.importCsv(file))" in app_source
+    assert "handleInventoryMutation(api.importExcel(file))" in app_source
+
+
+def test_inventory_mutations_invalidate_stale_planner_and_shopping_output_before_rerun() -> None:
+    app_source = read_frontend("App.tsx")
+
+    assert "if (plannerRequested) setPlannerResult(null);" in app_source
+    assert "if (shoppingRequested) setShoppingResult(null);" in app_source
+
+
 def test_craft_now_main_view_contains_the_full_craftable_table_and_sort_control() -> None:
     app_source = read_frontend("App.tsx")
 

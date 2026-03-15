@@ -31,6 +31,39 @@ def item_stat_map(items: list[dict]) -> dict[str, dict]:
     return {row["item"]: row for row in items}
 
 
+def assert_import_propagation(client: TestClient) -> None:
+    inventory = client.get("/api/inventory").json()
+    dashboard = client.get("/api/results/dashboard?stations=Alchemy+Kit&max_missing_slots=1").json()
+    direct = client.get("/api/results/direct?stations=Alchemy+Kit&limit=50&max_missing_slots=1").json()
+    near = client.get("/api/results/near?stations=Alchemy+Kit&limit=50&max_missing_slots=1").json()
+    planner = client.post(
+        "/api/results/planner",
+        json={"target": "Cool Potion", "max_depth": 5, "stations": ["Alchemy Kit"]},
+    ).json()
+    shopping = client.post(
+        "/api/results/shopping-list",
+        json={"targets": [{"item": "Cool Potion", "qty": 1}], "max_depth": 5, "stations": ["Alchemy Kit"]},
+    ).json()
+
+    assert inventory["items"] == [
+        {"item": "Clean Water", "qty": 1},
+        {"item": "Gravel Beetle", "qty": 1},
+        {"item": "Turmmip", "qty": 1},
+    ]
+    assert inventory["unique_items"] == 3
+    assert inventory["total_quantity"] == 3
+    assert dashboard["inventory"] == inventory
+    assert dashboard["snapshot"]["inventory_lines"] == 3
+    assert dashboard["snapshot"]["direct_crafts"] >= 1
+    assert dashboard["snapshot"]["near_crafts"] >= 1
+    assert "Cool Potion" == dashboard["best_direct"]["items"][0]["result"]
+    assert "Cool Potion" in result_map(direct["items"])
+    assert near["count"] >= 1
+    assert planner["found"] is True
+    assert planner["missing"] == []
+    assert shopping["missing"] == []
+
+
 def test_recipe_loading_uses_canonical_groups_and_manual_station_label() -> None:
     data = load_calculator_data()
 
@@ -111,6 +144,66 @@ def test_excel_import_updates_canonical_inventory_and_results() -> None:
 
     assert inventory["items"] == [{"item": "Clean Water", "qty": 2}, {"item": "Gravel Beetle", "qty": 2}]
     assert result_map(direct["items"])["Cool Potion"]["max_crafts"] == 2
+
+
+def test_csv_import_propagates_to_dashboard_direct_near_planner_and_shopping() -> None:
+    client = make_client()
+
+    response = client.post(
+        "/api/inventory/import/csv",
+        files={
+            "file": (
+                "inventory.csv",
+                csv_bytes(
+                    [
+                        {"item": "Clean Water", "qty": 1},
+                        {"item": "Gravel Beetle", "qty": 1},
+                        {"item": "Turmmip", "qty": 1},
+                    ]
+                ),
+                "text/csv",
+            )
+        },
+    )
+    response.raise_for_status()
+
+    assert_import_propagation(client)
+
+
+def test_text_import_propagates_to_dashboard_direct_near_planner_and_shopping() -> None:
+    client = make_client()
+
+    response = client.post(
+        "/api/inventory/import/text",
+        json={"text": "Clean Water,1\nGravel Beetle,1\nTurmmip,1"},
+    )
+    response.raise_for_status()
+
+    assert_import_propagation(client)
+
+
+def test_excel_import_propagates_to_dashboard_direct_near_planner_and_shopping() -> None:
+    client = make_client()
+
+    response = client.post(
+        "/api/inventory/import/excel",
+        files={
+            "file": (
+                "inventory.xlsx",
+                excel_bytes(
+                    [
+                        {"item": "Clean Water", "qty": 1},
+                        {"item": "Gravel Beetle", "qty": 1},
+                        {"item": "Turmmip", "qty": 1},
+                    ]
+                ),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
+        },
+    )
+    response.raise_for_status()
+
+    assert_import_propagation(client)
 
 
 def test_edits_and_removals_update_planner_and_shopping_against_same_inventory() -> None:
