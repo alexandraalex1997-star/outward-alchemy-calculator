@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from collections import Counter
 from functools import lru_cache
+from html import escape
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -637,27 +638,31 @@ def render_inventory_picker(catalog: List[str], catalog_by_category: Dict[str, L
         help="Start typing to filter ingredient suggestions in the dropdown, then pick one to add it.",
     )
 
-    filter_cols = st.columns([2.9, 0.8, 0.7])
+    filter_cols = st.columns([3.2, 0.95, 0.75], gap="small")
     selected_categories = filter_cols[0].multiselect(
         "Categories",
         options=list(catalog_by_category.keys()),
         default=list(catalog_by_category.keys()),
         help="Filter the ingredient list to the categories you want to see.",
     )
-    show_owned_only = filter_cols[1].checkbox(
-        "Owned only",
-        value=False,
-        help="Show only the items currently in your inventory.",
-    )
-    if filter_cols[2].button(
-        "Clear",
-        help="Remove every selected item from the inventory builder.",
-        use_container_width=True,
-        type="secondary",
-    ):
-        st.session_state["picker_inventory"] = {}
-        picker_inventory = {}
-        st.rerun()
+    with filter_cols[1]:
+        st.markdown('<div class="filter-toolbar-spacer"></div>', unsafe_allow_html=True)
+        show_owned_only = st.checkbox(
+            "Owned only",
+            value=False,
+            help="Show only the items currently in your inventory.",
+        )
+    with filter_cols[2]:
+        st.markdown('<div class="filter-toolbar-spacer"></div>', unsafe_allow_html=True)
+        if st.button(
+            "Clear",
+            help="Remove every selected item from the inventory builder.",
+            use_container_width=True,
+            type="secondary",
+        ):
+            st.session_state["picker_inventory"] = {}
+            picker_inventory = {}
+            st.rerun()
 
     active_categories = set(selected_categories or list(catalog_by_category.keys()))
     rows = []
@@ -834,9 +839,21 @@ def render_table_header(title: str, help_text: str) -> None:
 
 
 def render_compact_stats(stats: List[Tuple[str, object]], columns: int = 4, variant: str = "") -> None:
-    stat_columns = st.columns(columns, gap="small")
-    for idx, (label, value) in enumerate(stats):
-        stat_columns[idx % columns].metric(str(label), str(value))
+    variant_class = " ".join(part for part in variant.split() if part)
+    cards = []
+    for label, value in stats:
+        cards.append(
+            """
+            <div class="mini-stat-card">
+                <div class="mini-stat-label">{label}</div>
+                <div class="mini-stat-value">{value}</div>
+            </div>
+            """.format(label=escape(str(label)), value=escape(str(value)))
+        )
+    st.markdown(
+        f'<div class="mini-stat-grid {variant_class}" style="grid-template-columns: repeat({columns}, minmax(0, 1fr));">{"".join(cards)}</div>',
+        unsafe_allow_html=True,
+    )
 
 
 def render_quiet_empty(message: str, tone: str = "soft") -> None:
@@ -1154,44 +1171,56 @@ def inject_styles() -> None:
         div[data-testid="stVerticalBlockBorderWrapper"] > div {
             background: transparent !important;
         }
-        .compact-stats {
+        .mini-stat-grid {
             display: grid;
-            gap: 0.32rem;
-            margin: 0.22rem 0 0.18rem 0;
+            gap: 0.3rem;
+            margin: 0.18rem 0 0.14rem 0;
         }
-        .compact-stats.tight {
-            margin-top: 0.14rem;
+        .mini-stat-grid.tight {
+            gap: 0.24rem;
+            margin-top: 0.12rem;
         }
-        .stat-pill {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(157, 74, 255, 0.12);
-            border-radius: 8px;
-            padding: 0.28rem 0.38rem;
+        .mini-stat-card {
+            background: linear-gradient(180deg, rgba(42, 22, 50, 0.92), rgba(28, 17, 36, 0.94));
+            border: 1px solid rgba(157, 74, 255, 0.2);
+            border-radius: 10px;
+            padding: 0.28rem 0.4rem;
             min-width: 0;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
         }
-        .compact-stats.compact .stat-pill,
-        .compact-stats.sidebar .stat-pill {
-            padding: 0.24rem 0.34rem;
+        .mini-stat-grid.compact .mini-stat-card {
+            padding: 0.32rem 0.42rem;
         }
-        .stat-pill-label {
+        .mini-stat-grid.sidebar .mini-stat-card {
+            padding: 0.22rem 0.32rem;
+            border-radius: 9px;
+        }
+        .mini-stat-label {
             display: block;
-            color: rgba(248, 238, 253, 0.58);
-            font-size: 0.58rem;
+            color: rgba(248, 238, 253, 0.62);
+            font-size: 0.62rem;
             font-weight: 600;
-            letter-spacing: 0.08em;
+            letter-spacing: 0.06em;
             text-transform: uppercase;
-            line-height: 1.1;
+            line-height: 1.04;
         }
-        .stat-pill-value {
+        .mini-stat-grid.sidebar .mini-stat-label {
+            font-size: 0.58rem;
+        }
+        .mini-stat-value {
             display: block;
             color: var(--text);
-            font-size: 0.96rem;
+            font-size: 0.92rem;
             font-weight: 700;
-            line-height: 1.05;
-            margin-top: 0.12rem;
+            line-height: 1;
+            margin-top: 0.08rem;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+        }
+        .mini-stat-grid.sidebar .mini-stat-value {
+            font-size: 0.86rem;
+            margin-top: 0.04rem;
         }
         [data-testid="stDataFrame"] {
             border-radius: 10px;
@@ -1270,15 +1299,18 @@ def inject_styles() -> None:
             margin: 0.16rem 0 0.35rem 0;
         }
         [data-baseweb="tag"] {
-            transform: scale(0.6);
+            transform: scale(0.56);
             transform-origin: left center;
         }
         [data-baseweb="tag"] span {
-            font-size: 0.8rem !important;
+            font-size: 0.66rem !important;
         }
         [data-baseweb="tag"] > span {
             padding-top: 0.04rem !important;
             padding-bottom: 0.04rem !important;
+        }
+        .filter-toolbar-spacer {
+            height: 1.55rem;
         }
         [data-testid="stSidebar"] {
             background: linear-gradient(180deg, rgba(18, 10, 22, 0.96), rgba(24, 14, 29, 0.96));
