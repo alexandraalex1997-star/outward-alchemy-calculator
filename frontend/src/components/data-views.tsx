@@ -49,24 +49,28 @@ export function BestDirectCards({
     <div className="result-card-list">
       {rows.map((row) => (
         <article key={`${row.result}-${row.station}-${row.ingredients}`} className="result-card">
-          <div className="result-card-header">
-            <div>
-              <h3>{row.result}</h3>
-              <p>{row.station}</p>
+          <div className="result-card-grid">
+            <div className="result-card-main">
+              <div className="result-card-header">
+                <div className="result-card-title-block">
+                  <h3>{row.result}</h3>
+                  <p>{row.station}</p>
+                </div>
+                <div className="score-badge" title="Real smart-score ranking">
+                  {formatScore(row.smart_score)}
+                </div>
+              </div>
+              <div className="result-card-meta">
+                <span>Crafts possible {row.max_crafts}</span>
+                <span>Total made {row.max_total_output}</span>
+              </div>
+              <div className="result-card-recipe">
+                <span>Recipe</span>
+                <strong>{recipeSummary(row)}</strong>
+              </div>
+              {utilityNote(row) ? <p className="result-card-note">{utilityNote(row)}</p> : null}
             </div>
-            <div className="score-badge" title="Real smart-score ranking">
-              {formatScore(row.smart_score)}
-            </div>
           </div>
-          <div className="result-card-meta">
-            <span>Crafts possible {row.max_crafts}</span>
-            <span>Total made {row.max_total_output}</span>
-          </div>
-          <div className="result-card-recipe">
-            <span>Recipe</span>
-            <strong>{recipeSummary(row)}</strong>
-          </div>
-          {utilityNote(row) ? <p className="result-card-note">{utilityNote(row)}</p> : null}
         </article>
       ))}
     </div>
@@ -136,15 +140,19 @@ export function NearCraftTable({
       <div className="near-card-list">
         {rows.map((row) => (
           <article key={`${row.result}-${row.station}-${row.ingredients}`} className="near-card">
-            <div className="near-card-header">
-              <div>
-                <h3>{row.result}</h3>
-                <p>{row.station}</p>
+            <div className="near-card-grid">
+              <div className="near-card-main">
+                <div className="near-card-header">
+                  <div className="near-card-title-block">
+                    <h3>{row.result}</h3>
+                    <p>{row.station}</p>
+                  </div>
+                  <span className="near-pill">{slotLabel(row.missing_slots)}</span>
+                </div>
+                <div className="near-card-blocker-label">Still missing</div>
+                <div className="missing-summary">{row.missing_items || "Nothing listed"}</div>
               </div>
-              <span className="near-pill">{slotLabel(row.missing_slots)}</span>
             </div>
-            <div className="near-card-blocker-label">Still missing</div>
-            <div className="missing-summary">{row.missing_items || "Nothing listed"}</div>
           </article>
         ))}
       </div>

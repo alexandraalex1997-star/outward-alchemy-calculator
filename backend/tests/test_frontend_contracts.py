@@ -201,7 +201,39 @@ def test_inventory_editor_reads_overview_and_table_from_live_inventory_state() -
     assert "inventoryMap.get(row.item) ?? 0" in editor_source
     assert "filteredCatalogRows.length" in editor_source
     assert "<th>Buffs</th>" in editor_source
-    assert 'row.effects || "—"' in editor_source
+    assert 'row.effects || "None"' in editor_source
+    assert 'className="inventory-summary-head"' in editor_source
+    assert 'className="inventory-table-tools"' in editor_source
+    assert 'className="button subtle table-utility-button"' in editor_source
+    assert 'className="data-table ingredient-table"' in editor_source
+
+
+def test_inventory_table_tools_and_headers_use_the_new_layout_contract() -> None:
+    editor_source = read_frontend("components/InventoryEditor.tsx")
+    css = read_frontend("styles/app.css")
+
+    assert 'className="inventory-summary-head"' in editor_source
+    assert "summary-action-button" in editor_source
+    assert 'className="inventory-table-tools"' in editor_source
+    assert ".inventory-summary-head {" in css
+    assert ".inventory-table-tools {" in css
+    assert ".table-utility-button {" in css
+    assert ".ingredient-table th," in css or ".ingredient-table th" in css
+    assert ".craft-table th," in css or ".craft-table th" in css
+    assert "text-align: center;" in css
+    assert "overflow-wrap: normal;" in css
+    assert ".qty-cell-input {" in css
+    assert ".row-action-button {" in css
+
+
+def test_slider_and_select_styling_contracts_exist() -> None:
+    css = read_frontend("styles/app.css")
+
+    assert '.planning-stack input[type="range"] {' in css
+    assert "::-webkit-slider-thumb" in css
+    assert "::-moz-range-thumb" in css
+    assert ".panel-select select {" in css
+    assert "appearance: none;" in css
 
 
 def test_pills_and_buttons_keep_text_on_one_line_in_css() -> None:
@@ -284,6 +316,7 @@ def test_right_rail_cards_are_collapsible_and_can_stay_open_independently() -> N
 
     assert "type RightRailSectionId = " in results_source
     assert "openSections" in results_source
+    assert "near: false" in results_source
     assert "accordion-trigger" in results_source
     assert "accordion-panel" in results_source
     assert "rail-card__body" in results_source

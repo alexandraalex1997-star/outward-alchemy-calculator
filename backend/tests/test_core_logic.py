@@ -460,6 +460,123 @@ def test_snapshot_best_stat_fields_use_per_craft_recovery_not_inventory_volume()
     assert snapshot["best_mana"] == "Astral Potion"
 
 
+def test_sample_like_snapshot_and_direct_rankings_keep_miners_omelet_and_astral_useful() -> None:
+    service = make_service(
+        [
+            {
+                "recipe_id": "meat-stew",
+                "recipe_page": "Unit",
+                "section": "Snapshot",
+                "result": "Meat Stew",
+                "result_qty": 3,
+                "station": "Cooking Pot",
+                "ingredients": "Meat|Vegetable|Salt",
+            },
+            {
+                "recipe_id": "omelet",
+                "recipe_page": "Unit",
+                "section": "Snapshot",
+                "result": "Miner's Omelet",
+                "result_qty": 3,
+                "station": "Cooking Pot",
+                "ingredients": "Egg|Egg|Common Mushroom",
+            },
+            {
+                "recipe_id": "life",
+                "recipe_page": "Unit",
+                "section": "Snapshot",
+                "result": "Life Potion",
+                "result_qty": 1,
+                "station": "Alchemy Kit",
+                "ingredients": "Gravel Beetle|Blood Mushroom|Water",
+            },
+            {
+                "recipe_id": "astral",
+                "recipe_page": "Unit",
+                "section": "Snapshot",
+                "result": "Astral Potion",
+                "result_qty": 1,
+                "station": "Alchemy Kit",
+                "ingredients": "Star Mushroom|Turmmip|Water",
+            },
+            {
+                "recipe_id": "potage",
+                "recipe_page": "Unit",
+                "section": "Snapshot",
+                "result": "Turmmip Potage",
+                "result_qty": 3,
+                "station": "Cooking Pot",
+                "ingredients": "Turmmip|Turmmip|Turmmip|Salt",
+            },
+        ],
+        raw_groups={
+            "water": core.CANONICAL_GROUPS["water"],
+            "egg": core.CANONICAL_GROUPS["egg"],
+            "meat": core.CANONICAL_GROUPS["meat"],
+            "vegetable": core.CANONICAL_GROUPS["vegetable"],
+        },
+        item_metadata={
+            "Meat Stew": {
+                "heal": 24,
+                "stamina": 18,
+                "sale_value": 1,
+                "effects": ["Health Recovery 3"],
+                "category": "Food",
+            },
+            "Miner's Omelet": {
+                "heal": 16,
+                "stamina": 18,
+                "sale_value": 12,
+                "effects": ["Health Recovery 1", "Stamina Recovery 3"],
+                "category": "Food",
+            },
+            "Life Potion": {
+                "heal": 50,
+                "sale_value": 30,
+                "effects": ["Strong health restoration"],
+                "category": "Potion",
+            },
+            "Astral Potion": {
+                "mana": 50,
+                "sale_value": 8,
+                "buy_value": 25,
+                "effects": ["Restores 50% Mana", "Restores 20 Burnt Mana", "Restores 90 Drink"],
+                "category": "Potion",
+            },
+            "Turmmip Potage": {
+                "mana": 20,
+                "sale_value": 2,
+                "buy_value": 8,
+                "effects": ["Mana Recovery 3", "Removes Cold (Disease)"],
+                "category": "Food",
+            },
+        },
+    )
+    service.replace_inventory(
+        [
+            {"item": "Raw Meat", "qty": 1},
+            {"item": "Gaberries", "qty": 1},
+            {"item": "Salt", "qty": 2},
+            {"item": "Bird Egg", "qty": 2},
+            {"item": "Common Mushroom", "qty": 1},
+            {"item": "Gravel Beetle", "qty": 1},
+            {"item": "Blood Mushroom", "qty": 1},
+            {"item": "Star Mushroom", "qty": 1},
+            {"item": "Turmmip", "qty": 3},
+            {"item": "Clean Water", "qty": 2},
+        ]
+    )
+
+    dashboard = service.dashboard(stations=["Cooking Pot", "Alchemy Kit"])
+    direct = service.direct_crafts(sort_mode="Smart score", stations=["Cooking Pot", "Alchemy Kit"])
+
+    assert dashboard["snapshot"]["best_heal"] == "Miner's Omelet"
+    assert dashboard["snapshot"]["best_stamina"] == "Miner's Omelet"
+    assert dashboard["snapshot"]["best_mana"] == "Astral Potion"
+    assert direct["items"][0]["result"] == "Astral Potion"
+    assert any(row["result"] == "Miner's Omelet" for row in direct["items"][:5])
+
+
 def test_planner_success_path_crafts_intermediates() -> None:
     service = make_service(
         [

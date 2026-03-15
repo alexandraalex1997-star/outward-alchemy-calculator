@@ -471,9 +471,9 @@
 }
 
 .button.tiny {
-  padding: 0.35rem 0.58rem;
-  min-width: 4.8rem;
-  min-height: 1.9rem;
+  padding: 0.3rem 0.52rem;
+  min-width: 3.9rem;
+  min-height: 1.72rem;
 }
 
 .file-button {
@@ -552,6 +552,26 @@
 
 .panel-select-compact {
   min-width: 11rem;
+}
+
+.panel-select select {
+  appearance: none;
+  color: var(--text);
+  background-color: rgba(31, 18, 37, 0.96);
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgba(255, 255, 255, 0.9) 50%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.9) 50%, transparent 50%);
+  background-position:
+    calc(100% - 1rem) calc(50% - 0.1rem),
+    calc(100% - 0.72rem) calc(50% - 0.1rem);
+  background-size: 0.34rem 0.34rem, 0.34rem 0.34rem;
+  background-repeat: no-repeat;
+  padding-right: 2.1rem;
+}
+
+.panel-select select:hover {
+  border-color: rgba(255, 173, 229, 0.26);
+  background-color: rgba(39, 22, 44, 0.98);
 }
 
 .planning-stack,
@@ -709,12 +729,19 @@
 
 .inventory-summary-bar {
   display: grid;
-  gap: 0.58rem;
+  gap: 0.48rem;
   padding: 0.8rem;
   border: 1px solid rgba(255, 173, 229, 0.12);
   border-radius: var(--radius-md);
   background: rgba(255, 255, 255, 0.03);
   min-width: 0;
+}
+
+.inventory-summary-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.78rem;
 }
 
 .inventory-summary-copy {
@@ -734,7 +761,7 @@
 }
 
 .inventory-summary-row {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: stretch;
 }
 
@@ -742,15 +769,30 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.summary-stat,
-.summary-action-button {
+.summary-stat {
   min-height: 100%;
 }
 
 .summary-action-button {
-  display: inline-grid;
-  place-items: center;
-  width: 100%;
+  align-self: center;
+  min-height: 1.9rem;
+  padding: 0.34rem 0.72rem;
+  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-soft);
+  font-size: 0.76rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.summary-action-button:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.inventory-summary-head .summary-action-button {
+  width: auto;
   border-radius: var(--radius-sm);
 }
 
@@ -781,7 +823,7 @@
 
 .toolbar-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.58rem;
   align-items: center;
   min-width: 0;
@@ -834,7 +876,7 @@
   display: flex;
   justify-content: space-between;
   gap: 0.62rem;
-  align-items: end;
+  align-items: flex-start;
   min-width: 0;
   flex-wrap: wrap;
 }
@@ -850,10 +892,26 @@
   font-size: 0.84rem;
 }
 
+.inventory-table-tools {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
 .inventory-table-stats {
   display: inline-flex;
   gap: 0.65rem;
   flex-wrap: wrap;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.table-utility-button {
+  min-height: 1.9rem;
+  padding: 0.34rem 0.72rem;
+  font-size: 0.8rem;
 }
 
 .table-shell {
@@ -894,9 +952,12 @@
 
 .data-table th,
 .data-table td {
-  padding: 0.8rem 0.88rem;
+  padding: 0.78rem 0.82rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   vertical-align: top;
+}
+
+.data-table td {
   overflow-wrap: anywhere;
 }
 
@@ -920,6 +981,67 @@
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  text-align: center;
+  vertical-align: middle;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+  line-height: 1.2;
+}
+
+.ingredient-table th,
+.craft-table th {
+  text-align: center;
+}
+
+.ingredient-table th:nth-child(1),
+.ingredient-table td:nth-child(1) {
+  min-width: 4.6rem;
+  text-align: center;
+}
+
+.ingredient-table th:nth-child(5),
+.ingredient-table td:nth-child(5),
+.ingredient-table th:nth-child(6),
+.ingredient-table td:nth-child(6),
+.ingredient-table th:nth-child(7),
+.ingredient-table td:nth-child(7),
+.craft-table th:nth-child(2),
+.craft-table td:nth-child(2),
+.craft-table th:nth-child(3),
+.craft-table td:nth-child(3),
+.craft-table th:nth-child(4),
+.craft-table td:nth-child(4),
+.craft-table th:nth-child(5),
+.craft-table td:nth-child(5) {
+  text-align: center;
+}
+
+.ingredient-table th:nth-child(5),
+.ingredient-table td:nth-child(5) {
+  min-width: 5.6rem;
+}
+
+.ingredient-table th:nth-child(6),
+.ingredient-table td:nth-child(6),
+.ingredient-table th:nth-child(7),
+.ingredient-table td:nth-child(7) {
+  min-width: 5.9rem;
+}
+
+.craft-table th:nth-child(2),
+.craft-table td:nth-child(2) {
+  min-width: 6.5rem;
+}
+
+.craft-table th:nth-child(3),
+.craft-table td:nth-child(3),
+.craft-table th:nth-child(4),
+.craft-table td:nth-child(4),
+.craft-table th:nth-child(5),
+.craft-table td:nth-child(5) {
+  min-width: 5.8rem;
 }
 
 .data-table tr:hover td {
@@ -940,6 +1062,20 @@
 .qty-input {
   max-width: 5rem;
   padding: 0.42rem 0.5rem;
+}
+
+.qty-cell {
+  text-align: center;
+}
+
+.qty-cell-input {
+  margin-inline: auto;
+  text-align: center;
+}
+
+.row-action-button {
+  min-width: 3.85rem;
+  padding-inline: 0.5rem;
 }
 
 .stat-grid {
@@ -1052,19 +1188,38 @@
 
 .result-card,
 .near-card {
-  padding: 0.54rem 0.62rem;
+  padding: 0.48rem 0.56rem;
   border: 1px solid rgba(255, 173, 229, 0.12);
   border-radius: var(--radius-sm);
   background: rgba(255, 255, 255, 0.03);
 }
 
+.result-card-grid,
+.near-card-grid {
+  display: grid;
+  min-width: 0;
+}
+
+.result-card-main,
+.near-card-main {
+  display: grid;
+  gap: 0.16rem;
+  min-width: 0;
+}
+
 .result-card-header,
 .near-card-header {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.46rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.42rem;
   align-items: start;
-  margin-bottom: 0.2rem;
+}
+
+.result-card-title-block,
+.near-card-title-block {
+  display: grid;
+  gap: 0.06rem;
+  min-width: 0;
 }
 
 .result-card h3,
@@ -1096,18 +1251,16 @@
 }
 
 .result-card-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.26rem 0.58rem;
-  margin-bottom: 0.16rem;
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  gap: 0.14rem 0.66rem;
   color: var(--text-soft);
   font-size: 0.76rem;
 }
 
 .result-card-recipe {
   display: grid;
-  gap: 0.08rem;
-  margin-bottom: 0.18rem;
+  gap: 0.06rem;
 }
 
 .result-card-recipe span {
@@ -1124,8 +1277,8 @@
 
 .result-card-note {
   color: var(--text-muted);
-  font-size: 0.81rem;
-  line-height: 1.32;
+  font-size: 0.79rem;
+  line-height: 1.28;
 }
 
 .near-card-blocker-label {
@@ -1139,6 +1292,44 @@
 .missing-summary {
   color: var(--accent-soft);
   font-weight: 700;
+  overflow-wrap: break-word;
+}
+
+.planning-stack input[type="range"] {
+  width: 100%;
+  appearance: none;
+  height: 0.26rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 105, 200, 0.82), rgba(201, 123, 255, 0.75));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  outline: none;
+}
+
+.planning-stack input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 0.86rem;
+  height: 0.86rem;
+  border-radius: 999px;
+  background: rgba(255, 171, 224, 0.96);
+  border: 2px solid rgba(31, 18, 37, 0.95);
+  box-shadow: 0 0 0 1px rgba(255, 173, 229, 0.22), 0 0 14px rgba(255, 105, 200, 0.18);
+}
+
+.planning-stack input[type="range"]::-moz-range-track {
+  height: 0.26rem;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 105, 200, 0.82), rgba(201, 123, 255, 0.75));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.planning-stack input[type="range"]::-moz-range-thumb {
+  width: 0.86rem;
+  height: 0.86rem;
+  border: 2px solid rgba(31, 18, 37, 0.95);
+  border-radius: 999px;
+  background: rgba(255, 171, 224, 0.96);
+  box-shadow: 0 0 0 1px rgba(255, 173, 229, 0.22), 0 0 14px rgba(255, 105, 200, 0.18);
 }
 
 .results-preview {
@@ -1337,6 +1528,11 @@
   .inline-actions,
   .split-columns,
   .inventory-table-head {
+    display: grid;
+    gap: 0.7rem;
+  }
+
+  .inventory-summary-head {
     display: grid;
     gap: 0.7rem;
   }

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from collections import Counter
 from dataclasses import dataclass
 from io import BytesIO
@@ -249,13 +250,86 @@ class CalculatorService:
         ].copy()
         return filtered, craftable, near
 
+    def _snapshot_effect_tokens(self, effects: str) -> List[str]:
+        return [core.key(effect) for effect in str(effects or "").split(";") if core.normalize(effect)]
+
+    def _snapshot_effect_amount(self, effects: List[str], fragment: str) -> float:
+        best = 0.0
+        for effect in effects:
+            if fragment not in effect:
+                continue
+            match = re.search(r"(\d+(?:\.\d+)?)", effect)
+            best = max(best, float(match.group(1)) if match else 1.0)
+        return best
+
+    def _snapshot_row_matches_stat(self, row: pd.Series, stat_each_column: str) -> bool:
+        effects = self._snapshot_effect_tokens(str(row.get("effects", "")))
+        stat_value = float(row.get(stat_each_column, 0) or 0)
+        if stat_value > 0:
+            return True
+        if stat_each_column == "heal_each":
+            return any(fragment in effect for effect in effects for fragment in ["health recovery", "burnt health"])
+        if stat_each_column == "stamina_each":
+            return any(fragment in effect for effect in effects for fragment in ["stamina recovery", "burnt stamina"])
+        return any(fragment in effect for effect in effects for fragment in ["mana recovery", "burnt mana"])
+
+    def _snapshot_stat_score(self, row: pd.Series, stat_each_column: str) -> float:
+        effects = self._snapshot_effect_tokens(str(row.get("effects", "")))
+        heal_each = float(row.get("heal_each", 0) or 0)
+        stamina_each = float(row.get("stamina_each", 0) or 0)
+        mana_each = float(row.get("mana_each", 0) or 0)
+        smart_score = float(row.get("smart_score", 0) or 0)
+        category = core.key(str(row.get("category", "")))
+
+        health_recovery = self._snapshot_effect_amount(effects, "health recovery")
+        stamina_recovery = self._snapshot_effect_amount(effects, "stamina recovery")
+        mana_recovery = self._snapshot_effect_amount(effects, "mana recovery")
+        burnt_health = self._snapshot_effect_amount(effects, "burnt health")
+        burnt_stamina = self._snapshot_effect_amount(effects, "burnt stamina")
+        burnt_mana = self._snapshot_effect_amount(effects, "burnt mana")
+
+        if stat_each_column == "heal_each":
+            score = (
+                heal_each * 0.45
+                + health_recovery * 7.0
+                + stamina_each * 0.22
+                + stamina_recovery * 7.0
+                + burnt_health * 0.55
+                + smart_score * 0.2
+            )
+            if heal_each > 0 and stamina_each > 0:
+                score += 4.0
+            if category in {"food", "tea", "potions and drinks"}:
+                score += 1.0
+            return score
+
+        if stat_each_column == "stamina_each":
+            score = (
+                stamina_each * 0.55
+                + stamina_recovery * 9.0
+                + heal_each * 0.18
+                + health_recovery * 4.0
+                + burnt_stamina * 0.6
+                + smart_score * 0.18
+            )
+            if heal_each > 0 and stamina_each > 0:
+                score += 4.0
+            if category in {"food", "tea", "potions and drinks"}:
+                score += 1.0
+            return score
+
+        score = mana_each * 0.95 + mana_recovery * 7.0 + burnt_mana * 0.8 + smart_score * 0.2
+        if category in {"potion", "tea", "potions and drinks", "food"}:
+            score += 1.5
+        return score
+
     def _snapshot_best_result(self, craftable: pd.DataFrame, stat_each_column: str) -> Optional[str]:
-        eligible = craftable[craftable[stat_each_column] > 0].copy()
+        eligible = craftable[craftable.apply(lambda row: self._snapshot_row_matches_stat(row, stat_each_column), axis=1)].copy()
         if eligible.empty:
             return None
-        eligible["per_craft_stat"] = eligible[stat_each_column] * eligible["result_qty_per_craft"]
+        eligible["snapshot_stat_score"] = eligible.apply(lambda row: self._snapshot_stat_score(row, stat_each_column), axis=1)
         ordered = eligible.sort_values(
-            ["per_craft_stat", stat_each_column, "smart_score", "max_total_output", "result"],
+            ["snapshot_stat_score", "smart_score", stat_each_column, "max_total_output", "result"],
             ascending=[False, False, False, False, True],
         )
         return str(ordered.iloc[0]["result"])

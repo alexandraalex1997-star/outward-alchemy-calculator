@@ -422,7 +422,40 @@ def test_verified_item_metadata_fields_are_exposed_in_item_stats() -> None:
     assert "Restores 20 Burnt Mana" in stats["Astral Potion"]["effects"]
     assert stats["Great Astral Potion"]["mana"] == 100
     assert "Health Recovery 3" in stats["Meat Stew"]["effects"]
+    assert "Health Recovery 1" in stats["Miner's Omelet"]["effects"]
+    assert "Stamina Recovery 3" in stats["Miner's Omelet"]["effects"]
     assert "Mana Recovery 3" in stats["Turmmip Potage"]["effects"]
+
+
+def test_live_snapshot_and_best_direct_match_player_useful_outputs_for_sample_inventory() -> None:
+    client = make_client()
+
+    client.put(
+        "/api/inventory/replace",
+        json={
+            "items": [
+                {"item": "Raw Meat", "qty": 1},
+                {"item": "Gaberries", "qty": 1},
+                {"item": "Salt", "qty": 2},
+                {"item": "Bird Egg", "qty": 2},
+                {"item": "Common Mushroom", "qty": 1},
+                {"item": "Gravel Beetle", "qty": 1},
+                {"item": "Blood Mushroom", "qty": 1},
+                {"item": "Star Mushroom", "qty": 1},
+                {"item": "Turmmip", "qty": 3},
+                {"item": "Clean Water", "qty": 2},
+            ]
+        },
+    ).raise_for_status()
+
+    dashboard = client.get("/api/results/dashboard?stations=Alchemy+Kit&stations=Cooking+Pot&max_missing_slots=2").json()
+    direct = client.get("/api/results/direct?stations=Alchemy+Kit&stations=Cooking+Pot&sort_mode=Smart%20score").json()
+
+    assert dashboard["snapshot"]["best_heal"] == "Miner's Omelet"
+    assert dashboard["snapshot"]["best_stamina"] == "Miner's Omelet"
+    assert dashboard["snapshot"]["best_mana"] == "Astral Potion"
+    assert direct["items"][0]["result"] == "Astral Potion"
+    assert any(row["result"] == "Miner's Omelet" for row in direct["items"][:6])
 
 
 def test_inventory_can_grow_past_46_unique_entries_and_duplicates_still_aggregate() -> None:

@@ -62,16 +62,18 @@ export function InventoryEditor({
       className="inventory-workspace"
     >
       <div className="inventory-summary-bar">
-        <div className="inventory-summary-copy">
-          <h3>Inventory overview</h3>
-          <p>{inventory?.items.length ? "Live totals from the canonical inventory." : "Add items below or import a list to begin."}</p>
+        <div className="inventory-summary-head">
+          <div className="inventory-summary-copy">
+            <h3>Inventory overview</h3>
+            <p>{inventory?.items.length ? "Live totals from the canonical inventory." : "Add items below or import a list to begin."}</p>
+          </div>
+          <button type="button" className="button subtle summary-action-button" onClick={onDownloadInventoryCsv}>
+            CSV
+          </button>
         </div>
         <div className="inventory-summary-row">
           <StatCard className="summary-stat" label="Unique items" value={inventory?.unique_items ?? 0} />
           <StatCard className="summary-stat" label="Total quantity" value={inventory?.total_quantity ?? 0} />
-          <button type="button" className="button subtle summary-action-button" onClick={onDownloadInventoryCsv}>
-            CSV
-          </button>
         </div>
       </div>
 
@@ -124,13 +126,6 @@ export function InventoryEditor({
               })}
             </div>
           </div>
-          <label className="owned-toggle">
-            <input type="checkbox" checked={showOwnedOnly} onChange={(event) => onToggleOwnedOnly(event.target.checked)} />
-            <span>Owned only</span>
-          </label>
-          <button type="button" className="button subtle" onClick={onClearInventory}>
-            Clear
-          </button>
         </div>
 
         {filteredCatalogRows.length ? (
@@ -140,14 +135,23 @@ export function InventoryEditor({
                 <strong>Ingredient table</strong>
                 <span>Edit qty, then Apply. Remove clears the item.</span>
               </div>
-              <div className="inventory-table-stats">
-                <span>{filteredCatalogRows.length} visible</span>
-                <span>{inventory?.items.length ?? 0} owned</span>
+              <div className="inventory-table-tools">
+                <label className="owned-toggle">
+                  <input type="checkbox" checked={showOwnedOnly} onChange={(event) => onToggleOwnedOnly(event.target.checked)} />
+                  <span>Owned only</span>
+                </label>
+                <button type="button" className="button subtle table-utility-button" onClick={onClearInventory}>
+                  Clear
+                </button>
               </div>
+            </div>
+            <div className="inventory-table-stats">
+              <span>{filteredCatalogRows.length} visible</span>
+              <span>{inventory?.items.length ?? 0} owned</span>
             </div>
 
             <div className="table-shell ingredient-table-shell">
-              <table className="data-table">
+              <table className="data-table ingredient-table">
                 <thead>
                   <tr>
                     <th>Have it</th>
@@ -177,12 +181,12 @@ export function InventoryEditor({
                         <td>{row.category}</td>
                         <td>
                           <span className="buffs-cell" title={row.effects || "None"}>
-                            {row.effects || "—"}
+                            {row.effects || "None"}
                           </span>
                         </td>
-                        <td>
+                        <td className="qty-cell">
                           <input
-                            className="qty-input"
+                            className="qty-input qty-cell-input"
                             type="number"
                             min={0}
                             value={draftValue}
@@ -190,12 +194,20 @@ export function InventoryEditor({
                           />
                         </td>
                         <td>
-                          <button type="button" className="button subtle tiny" onClick={() => onApplyInventoryQty(row.item)}>
+                          <button
+                            type="button"
+                            className="button subtle tiny row-action-button"
+                            onClick={() => onApplyInventoryQty(row.item)}
+                          >
                             Apply
                           </button>
                         </td>
                         <td>
-                          <button type="button" className="button subtle tiny" onClick={() => onRemoveInventoryItem(row.item)}>
+                          <button
+                            type="button"
+                            className="button subtle tiny row-action-button"
+                            onClick={() => onRemoveInventoryItem(row.item)}
+                          >
                             Remove
                           </button>
                         </td>

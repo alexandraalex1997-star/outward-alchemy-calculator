@@ -230,7 +230,7 @@
     "heal": 16,
     "stamina": 18,
     "sale_value": 12,
-    "effects": ["Stamina-friendly breakfast"]
+    "effects": ["Health Recovery 1", "Stamina Recovery 3"]
   },
   "Stringy Salad": {
     "category": "Food",

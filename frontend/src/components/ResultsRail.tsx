@@ -65,7 +65,7 @@ export function ResultsRail({
   const [openSections, setOpenSections] = useState<Record<RightRailSectionId, boolean>>({
     best: true,
     full: true,
-    near: true,
+    near: false,
   });
 
   const toggleSection = (sectionId: RightRailSectionId) => {
