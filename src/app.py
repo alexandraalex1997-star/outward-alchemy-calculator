@@ -1013,7 +1013,7 @@ st.markdown('<div class="thin-divider"></div>', unsafe_allow_html=True)
 
 with named_block("content-shell"):
     # Manual edit point: main workflow width vs right results sidebar width.
-    inventory_col, overview_col = st.columns([1.34, 0.66], gap="medium")
+    inventory_col, overview_col = st.columns([1.46, 0.54], gap="medium")
     with inventory_col:
         render_hook("main-column")
         render_hook("inventory-section")
@@ -1039,7 +1039,7 @@ with named_block("content-shell"):
                 top_row[0].metric("Unique items", len(inventory))
                 top_row[1].metric("Total quantity", sum(inventory.values()))
                 with top_row[2]:
-                    st.caption(" ")
+                    st.markdown('<div class="inventory-overview-button-spacer"></div>', unsafe_allow_html=True)
                     st.download_button(
                         "Download inventory CSV",
                         data=inventory_df.to_csv(index=False).encode("utf-8"),
