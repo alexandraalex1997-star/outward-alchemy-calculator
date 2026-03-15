@@ -107,7 +107,7 @@ export function InventoryEditor({
         <div className="toolbar-row control-strip toolbar-strip">
           <div className="toolbar-categories">
             <span className="toolbar-label">Categories</span>
-            <div className="chip-group">
+            <div className="chip-group category-chip-row">
               {categories.map((category) => {
                 const active = selectedCategories.includes(category.name);
                 return (

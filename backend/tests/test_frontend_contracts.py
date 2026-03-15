@@ -221,20 +221,30 @@ def test_craft_now_main_view_contains_the_full_craftable_table_and_sort_control(
 
     assert "<CraftResultsTable" in results_source
     assert 'title="Full craftable list"' in results_source
-    assert '<span>Sort</span>' in results_source
+    assert '<span>Sort full list</span>' in results_source
+    assert 'className="result-panel-stack"' in results_source
 
 
 def test_long_result_lists_use_internal_scroll_containers_without_changing_column_contract() -> None:
     css = read_frontend("styles/app.css")
-    theme = read_frontend("styles/theme.css")
 
     assert ".results-preview {" in css
-    assert "max-height: clamp(17rem, 34vh, 27rem);" in css
+    assert "max-height: clamp(12.75rem, 22vh, 17.5rem);" in css
     assert "overflow: auto;" in css
     assert "scrollbar-gutter: stable both-edges;" in css
     assert ".results-rail .craft-table-shell {" in css
-    assert "grid-template-columns: var(--rail-width) minmax(0, 1fr) var(--results-width);" in css
-    assert "--results-width: 24.75rem;" in theme
+    assert "grid-template-columns: var(--rail-width) minmax(0, 1fr) minmax(0, 1fr);" in css
+    assert "height: clamp(28rem, calc(100vh - 15rem), 48rem);" in css
+
+
+def test_category_chips_stay_on_one_line_with_scroll_instead_of_wrapping() -> None:
+    css = read_frontend("styles/app.css")
+    editor_source = read_frontend("components/InventoryEditor.tsx")
+
+    assert 'className="chip-group category-chip-row"' in editor_source
+    assert ".category-chip-row {" in css
+    assert "flex-wrap: nowrap;" in css
+    assert "overflow-x: auto;" in css
 
 
 def test_banner_is_full_width_and_centered_in_css() -> None:

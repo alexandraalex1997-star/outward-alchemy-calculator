@@ -36,7 +36,7 @@ function utilityNote(row: RecipeResult) {
 
 export function BestDirectCards({
   rows,
-  emptyMessage = "No direct recommendations are available for the current filters.",
+  emptyMessage = "There are no direct craft picks for the current filters.",
 }: {
   rows: RecipeResult[];
   emptyMessage?: string;
@@ -59,8 +59,8 @@ export function BestDirectCards({
             </div>
           </div>
           <div className="result-card-meta">
-            <span>Yield {row.max_total_output}</span>
-            <span>{row.max_crafts} craftable</span>
+            <span>Crafts possible {row.max_crafts}</span>
+            <span>Total made {row.max_total_output}</span>
           </div>
           <div className="result-card-recipe">
             <span>Recipe</span>
@@ -75,7 +75,7 @@ export function BestDirectCards({
 
 export function CraftResultsTable({
   rows,
-  emptyMessage = "No recipes are directly craftable with the current inventory and station filters.",
+  emptyMessage = "You can't craft anything directly with the current inventory and station filters.",
 }: {
   rows: RecipeResult[];
   emptyMessage?: string;
@@ -90,9 +90,9 @@ export function CraftResultsTable({
         <thead>
           <tr>
             <th>Result</th>
-            <th>Score</th>
-            <th>Crafts</th>
-            <th>Yield</th>
+            <th>Smart score</th>
+            <th>Crafts possible</th>
+            <th>Total made</th>
             <th>Station</th>
           </tr>
         </thead>

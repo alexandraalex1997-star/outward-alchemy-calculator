@@ -44,10 +44,10 @@ export function ResultsRail({
 
   return (
     <aside className="results-rail">
-      <Panel title="Best direct options" description="Top live picks from the current stations and smart score.">
+      <Panel title="Best direct options" description="Best things you can make right now from your current bag and stations.">
         <div className="stat-grid two-up compact-grid">
-          <StatCard label="Direct crafts" value={bestDirect?.count ?? 0} />
-          <StatCard label="Near crafts" value={bestDirect?.near_count ?? 0} />
+          <StatCard label="Can make now" value={bestDirect?.count ?? 0} />
+          <StatCard label="Almost ready" value={bestDirect?.near_count ?? 0} />
         </div>
         <div className={classNames("results-preview", bestExpanded && "expanded")}>
           <BestDirectCards rows={bestRows} />
@@ -60,12 +60,13 @@ export function ResultsRail({
       </Panel>
 
       {activeSection === "Craft now" ? (
-        <Panel
-          title="Full craftable list"
-          description="Every direct craft from the current inventory, sorted by the live ranking."
-          headerAside={
+        <Panel title="Full craftable list" description="Everything you can make right now with your current inventory and station filters.">
+          <div className="result-panel-stack">
+            <div className="info-strip compact-info-strip">
+              {craftNow?.count ?? 0} recipe{craftNow?.count === 1 ? "" : "s"} ready to craft right now.
+            </div>
             <label className="panel-select panel-select-compact">
-              <span>Sort</span>
+              <span>Sort full list</span>
               <select value={sortMode} onChange={(event) => onSortModeChange(event.target.value)}>
                 {sortModes.map((mode) => (
                   <option key={mode} value={mode}>
@@ -74,19 +75,15 @@ export function ResultsRail({
                 ))}
               </select>
             </label>
-          }
-        >
-          <div className="info-strip">
-            {craftNow?.count ?? 0} craftable recipe{craftNow?.count === 1 ? "" : "s"} with the current station filters.
           </div>
           <CraftResultsTable rows={craftNow?.items ?? []} />
         </Panel>
       ) : null}
 
-      <Panel title="Almost craftable" description="Closest valid recipes under the current threshold.">
+      <Panel title="Almost craftable" description="Recipes you're closest to finishing with the current inventory and filters.">
         <div className="stat-grid two-up compact-grid">
-          <StatCard label="Near crafts" value={near?.count ?? 0} />
-          <StatCard label="Known recipes" value={near?.known_recipes ?? 0} />
+          <StatCard label="Almost ready" value={near?.count ?? 0} />
+          <StatCard label="Recipes checked" value={near?.known_recipes ?? 0} />
         </div>
         <div className={classNames("results-preview", nearExpanded && "expanded")}>
           <NearCraftTable

@@ -73,18 +73,18 @@ export function SupportRail({
                 <strong className="snapshot-tile-value">{snapshot?.known_recipes ?? 0}</strong>
               </div>
               <div className="snapshot-tile accent">
-                <span className="snapshot-tile-label">Direct crafts</span>
+                <span className="snapshot-tile-label">Can make now</span>
                 <strong className="snapshot-tile-value">{snapshot?.direct_crafts ?? 0}</strong>
               </div>
               <div className="snapshot-tile">
-                <span className="snapshot-tile-label">Near crafts</span>
+                <span className="snapshot-tile-label">Almost ready</span>
                 <strong className="snapshot-tile-value">{snapshot?.near_crafts ?? 0}</strong>
               </div>
             </div>
             <div className="snapshot-inline-grid">
-              <SnapshotMetric label="Best heal" value={snapshot?.best_heal ?? null} />
-              <SnapshotMetric label="Best stamina" value={snapshot?.best_stamina ?? null} />
-              <SnapshotMetric label="Best mana" value={snapshot?.best_mana ?? null} />
+              <SnapshotMetric label="Top healing" value={snapshot?.best_heal ?? null} />
+              <SnapshotMetric label="Top stamina" value={snapshot?.best_stamina ?? null} />
+              <SnapshotMetric label="Top mana" value={snapshot?.best_mana ?? null} />
             </div>
           </Panel>
 

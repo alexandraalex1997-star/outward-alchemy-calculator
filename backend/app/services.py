@@ -249,19 +249,27 @@ class CalculatorService:
         ].copy()
         return filtered, craftable, near
 
+    def _snapshot_best_result(self, craftable: pd.DataFrame, stat_each_column: str) -> Optional[str]:
+        eligible = craftable[craftable[stat_each_column] > 0].copy()
+        if eligible.empty:
+            return None
+        eligible["per_craft_stat"] = eligible[stat_each_column] * eligible["result_qty_per_craft"]
+        ordered = eligible.sort_values(
+            ["per_craft_stat", stat_each_column, "smart_score", "max_total_output", "result"],
+            ascending=[False, False, False, False, True],
+        )
+        return str(ordered.iloc[0]["result"])
+
     def _snapshot_payload(self, filtered: pd.DataFrame, craftable: pd.DataFrame, near: pd.DataFrame, inventory: Counter) -> dict:
         inventory_df = inventory_ops.inventory_table_df(inventory)
-        top_heal = craftable.sort_values(["healing_total", "result"], ascending=[False, True]).head(1)
-        top_stamina = craftable.sort_values(["stamina_total", "result"], ascending=[False, True]).head(1)
-        top_mana = craftable.sort_values(["mana_total", "result"], ascending=[False, True]).head(1)
         return {
             "inventory_lines": len(inventory_df),
             "known_recipes": len(filtered),
             "direct_crafts": len(craftable),
             "near_crafts": len(near),
-            "best_heal": top_heal.iloc[0]["result"] if not top_heal.empty and top_heal.iloc[0]["healing_total"] > 0 else None,
-            "best_stamina": top_stamina.iloc[0]["result"] if not top_stamina.empty and top_stamina.iloc[0]["stamina_total"] > 0 else None,
-            "best_mana": top_mana.iloc[0]["result"] if not top_mana.empty and top_mana.iloc[0]["mana_total"] > 0 else None,
+            "best_heal": self._snapshot_best_result(craftable, "heal_each"),
+            "best_stamina": self._snapshot_best_result(craftable, "stamina_each"),
+            "best_mana": self._snapshot_best_result(craftable, "mana_each"),
         }
 
     def overview(self, stations: Optional[List[str]] = None, max_missing_slots: int = 2) -> dict:

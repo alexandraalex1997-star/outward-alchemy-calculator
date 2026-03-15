@@ -389,6 +389,77 @@ def test_smart_score_allows_strong_deployable_utility_to_justify_weight() -> Non
     assert [row["result"] for row in ranked[:2]] == ["Mage Tent", "Filler Snack"]
 
 
+def test_snapshot_best_stat_fields_use_per_craft_recovery_not_inventory_volume() -> None:
+    service = make_service(
+        [
+            {
+                "recipe_id": "rations",
+                "recipe_page": "Unit",
+                "section": "Snapshot",
+                "result": "Travel Ration",
+                "result_qty": 3,
+                "station": "Manual Crafting",
+                "ingredients": "Ration A|Ration B|Salt",
+            },
+            {
+                "recipe_id": "omelet",
+                "recipe_page": "Unit",
+                "section": "Snapshot",
+                "result": "Miner's Omelet",
+                "result_qty": 3,
+                "station": "Cooking Pot",
+                "ingredients": "Bird Egg|Bird Egg|Common Mushroom",
+            },
+            {
+                "recipe_id": "astral",
+                "recipe_page": "Unit",
+                "section": "Snapshot",
+                "result": "Astral Potion",
+                "result_qty": 1,
+                "station": "Alchemy Kit",
+                "ingredients": "Star Mushroom|Turmmip|Clean Water",
+            },
+        ],
+        item_metadata={
+            "Travel Ration": {
+                "heal": 10,
+                "stamina": 10,
+                "sale_value": 8,
+                "category": "Food",
+            },
+            "Miner's Omelet": {
+                "heal": 16,
+                "stamina": 18,
+                "sale_value": 12,
+                "category": "Food",
+            },
+            "Astral Potion": {
+                "mana": 30,
+                "sale_value": 24,
+                "category": "Potion",
+            },
+        },
+    )
+    service.replace_inventory(
+        [
+            {"item": "Ration A", "qty": 8},
+            {"item": "Ration B", "qty": 8},
+            {"item": "Salt", "qty": 8},
+            {"item": "Bird Egg", "qty": 2},
+            {"item": "Common Mushroom", "qty": 1},
+            {"item": "Star Mushroom", "qty": 1},
+            {"item": "Turmmip", "qty": 1},
+            {"item": "Clean Water", "qty": 1},
+        ]
+    )
+
+    snapshot = service.dashboard(stations=["Manual Crafting", "Cooking Pot", "Alchemy Kit"])["snapshot"]
+
+    assert snapshot["best_heal"] == "Miner's Omelet"
+    assert snapshot["best_stamina"] == "Miner's Omelet"
+    assert snapshot["best_mana"] == "Astral Potion"
+
+
 def test_planner_success_path_crafts_intermediates() -> None:
     service = make_service(
         [
