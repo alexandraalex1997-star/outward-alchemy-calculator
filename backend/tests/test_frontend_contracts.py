@@ -12,7 +12,7 @@ def read_frontend(path: str) -> str:
 
 
 def test_view_config_maps_tabs_to_expected_logic() -> None:
-    config = json.loads(read_frontend("view-config.json"))
+    config = json.loads(read_frontend("config/view-config.json"))
     mapping = {entry["id"]: entry["logic"] for entry in config}
 
     assert mapping == {
@@ -29,7 +29,7 @@ def test_view_config_maps_tabs_to_expected_logic() -> None:
 
 
 def test_planning_controls_contract_spells_out_panel_impact() -> None:
-    controls = json.loads(read_frontend("planning-controls.json"))
+    controls = json.loads(read_frontend("config/planning-controls.json"))
     control_map = {entry["id"]: entry["affects"] for entry in controls}
 
     assert control_map["stations"] == ["Craft now", "Missing ingredients", "Plan a target", "Shopping list"]
@@ -186,11 +186,11 @@ def test_refresh_helper_stays_one_way_and_does_not_call_inventory_mutation_recur
 
 
 def test_inventory_export_uses_the_round_trip_item_qty_csv_shape() -> None:
-    app_source = read_frontend("App.tsx")
+    helper_source = read_frontend("lib/app-utils.ts")
 
-    assert '({ item: item.item, qty: item.qty })' in app_source
-    assert 'headers.join(",")' in app_source
-    assert 'JSON.stringify(row[header] ?? "")' in app_source
+    assert '({ item: item.item, qty: item.qty })' in helper_source
+    assert 'headers.join(",")' in helper_source
+    assert 'JSON.stringify(row[header] ?? "")' in helper_source
 
 
 def test_inventory_editor_reads_overview_and_table_from_live_inventory_state() -> None:

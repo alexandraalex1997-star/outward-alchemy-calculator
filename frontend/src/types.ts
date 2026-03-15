@@ -19,12 +19,6 @@ export type Snapshot = {
   best_mana: string | null;
 };
 
-export type OverviewResponse = {
-  inventory: InventoryResponse;
-  inventory_table: InventoryItem[];
-  snapshot: Snapshot;
-};
-
 export type DashboardResponse = {
   inventory: InventoryResponse;
   snapshot: Snapshot;

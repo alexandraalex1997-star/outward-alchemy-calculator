@@ -3,7 +3,6 @@ import type {
   DirectResponse,
   InventoryResponse,
   MetadataResponse,
-  OverviewResponse,
   PlannerResponse,
   ShoppingListResponse,
   NearResponse,
@@ -22,18 +21,11 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   getMetadata: () => request<MetadataResponse>("/api/metadata"),
-  getInventory: () => request<InventoryResponse>("/api/inventory"),
   getDashboard: (stations: string[], maxMissingSlots = 2) => {
     const params = new URLSearchParams();
     params.set("max_missing_slots", String(maxMissingSlots));
     stations.forEach((station) => params.append("stations", station));
     return request<DashboardResponse>(`/api/results/dashboard?${params.toString()}`);
-  },
-  getOverview: (stations: string[], maxMissingSlots = 2) => {
-    const params = new URLSearchParams();
-    params.set("max_missing_slots", String(maxMissingSlots));
-    stations.forEach((station) => params.append("stations", station));
-    return request<OverviewResponse>(`/api/results/overview?${params.toString()}`);
   },
   getDirect: (sortMode: string, stations: string[], limit?: number, maxMissingSlots = 2) => {
     const params = new URLSearchParams();
@@ -67,12 +59,6 @@ export const api = {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ items }),
-    }),
-  importText: (text: string) =>
-    request<InventoryResponse>("/api/inventory/import/text", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text }),
     }),
   importCsv: async (file: File) => {
     const body = new FormData();

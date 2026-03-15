@@ -2,6 +2,26 @@ import { startTransition, useCallback, useDeferredValue, useEffect, useMemo, use
 import type { FormEvent } from "react";
 
 import { api } from "./api";
+import {
+  NAV_ITEMS,
+  SORT_MODES,
+  VIEW_CONFIG,
+  VIEW_SUMMARIES,
+} from "./lib/app-config";
+import {
+  buildCatalogRows,
+  buildInventoryMap,
+  buildItemStatsMap,
+  buildRecipeCategoryOptions,
+  buildRecipeTargets,
+  createStationFilterNote,
+  deriveMetadataDefaults,
+  filterCatalogRows,
+  filterDatabaseRecipes,
+  filterIngredientGroups,
+  filterItemStats,
+} from "./lib/app-selectors";
+import { downloadCsv, inventoryRows, parseShoppingTargets, toggleSelection } from "./lib/app-utils";
 import { InventoryEditor } from "./components/InventoryEditor";
 import { ResultsRail } from "./components/ResultsRail";
 import { SupportRail } from "./components/SupportRail";
@@ -14,82 +34,14 @@ import {
   NearCraftTable,
 } from "./components/data-views";
 import { Panel, classNames } from "./components/ui";
-import rawViewConfig from "./view-config.json";
 import type {
   DashboardResponse,
-  InventoryItem,
   InventoryResponse,
   MetadataResponse,
   PlannerResponse,
   ShoppingListResponse,
 } from "./types";
-
-const NAV_ITEMS = ["Craft now", "Plan a target", "Shopping list", "Missing ingredients", "Recipe database"] as const;
-const SORT_MODES = [
-  "Smart score",
-  "Max crafts",
-  "Max total output",
-  "Healing yield",
-  "Stamina yield",
-  "Mana yield",
-  "Sale value",
-  "Result A-Z",
-] as const;
-
-type NavItem = (typeof NAV_ITEMS)[number];
-type RailSectionId = "snapshot" | "planning" | "bulk" | "data";
-type ViewConfigEntry = {
-  id: string;
-  logic: string;
-  summary: string;
-  apis?: string[];
-  viewState?: string[];
-};
-
-const VIEW_CONFIG = rawViewConfig as ViewConfigEntry[];
-const VIEW_SUMMARIES = VIEW_CONFIG.reduce<Record<string, string>>((accumulator, entry) => {
-  accumulator[entry.id] = entry.summary;
-  return accumulator;
-}, {});
-
-function parseShoppingTargets(raw: string): Array<{ item: string; qty: number }> {
-  return raw
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const [item, qty] = line.includes(",") ? line.split(",") : [line, "1"];
-      return { item: item.trim(), qty: Math.max(1, Number.parseInt(qty.trim(), 10) || 1) };
-    });
-}
-
-function downloadCsv(filename: string, rows: Array<Record<string, unknown>>) {
-  if (!rows.length) return;
-  const headers = Object.keys(rows[0]);
-  const lines = [
-    headers.join(","),
-    ...rows.map((row) =>
-      headers
-        .map((header) => JSON.stringify(row[header] ?? ""))
-        .join(","),
-    ),
-  ];
-  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
-}
-
-function toggleSelection(current: string[], value: string) {
-  return current.includes(value) ? current.filter((entry) => entry !== value) : [...current, value];
-}
-
-function inventoryRows(items: InventoryItem[] | undefined): Array<Record<string, unknown>> {
-  return (items ?? []).map((item) => ({ item: item.item, qty: item.qty }));
-}
+import type { NavItem, RailSectionId } from "./lib/app-config";
 
 export default function App() {
   const [metadata, setMetadata] = useState<MetadataResponse | null>(null);
@@ -166,19 +118,14 @@ export default function App() {
     async function bootstrap() {
       try {
         const meta = await api.getMetadata();
-        const nextStations = [...meta.stations];
-        const nextInventoryCategories = meta.categories.map((category) => category.name);
-        const nextRecipeCategories = Array.from(
-          new Set(meta.recipes.map((recipe) => recipe.category || "Uncategorized")),
-        ).sort();
-        const recipeTargets = Array.from(new Set(meta.recipes.map((recipe) => recipe.result))).sort();
+        const defaults = deriveMetadataDefaults(meta);
 
         setMetadata(meta);
-        setSelectedStations(nextStations);
-        setSelectedCategories(nextInventoryCategories);
-        setDatabaseStations(nextStations);
-        setDatabaseCategories(nextRecipeCategories);
-        setPlanTarget(recipeTargets[0] ?? "");
+        setSelectedStations(defaults.stations);
+        setSelectedCategories(defaults.inventoryCategories);
+        setDatabaseStations(defaults.stations);
+        setDatabaseCategories(defaults.recipeCategories);
+        setPlanTarget(defaults.recipeTargets[0] ?? "");
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load app data.");
       } finally {
@@ -205,85 +152,45 @@ export default function App() {
   }, [activeSection, hasBootstrapped, metadata, nearThreshold, refreshCraftNow, selectedStations, sortMode]);
 
   const inventoryMap = useMemo(() => {
-    const map = new Map<string, number>();
-    inventory?.items.forEach((item) => map.set(item.item, item.qty));
-    return map;
+    return buildInventoryMap(inventory?.items);
   }, [inventory]);
 
   const itemStatsMap = useMemo(() => {
-    const map = new Map<string, MetadataResponse["item_stats"][number]>();
-    (metadata?.item_stats ?? []).forEach((row) => map.set(row.item, row));
-    return map;
+    return buildItemStatsMap(metadata?.item_stats);
   }, [metadata]);
 
   const allCatalogRows = useMemo(() => {
-    if (!metadata) return [];
-    return metadata.categories.flatMap((category) =>
-      category.items.map((item) => ({
-        item,
-        category: category.name,
-        qty: inventoryMap.get(item) ?? 0,
-        effects: itemStatsMap.get(item)?.effects ?? "",
-      })),
-    );
+    return buildCatalogRows(metadata?.categories, inventoryMap, itemStatsMap);
   }, [itemStatsMap, inventoryMap, metadata]);
 
   const filteredCatalogRows = useMemo(() => {
-    const search = deferredQuickAddValue.trim().toLowerCase();
-    return allCatalogRows.filter((row) => {
-      const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(row.category);
-      const searchMatch = !search || row.item.toLowerCase().includes(search);
-      const ownedMatch = !showOwnedOnly || row.qty > 0;
-      return categoryMatch && searchMatch && ownedMatch;
-    });
+    return filterCatalogRows(allCatalogRows, deferredQuickAddValue, selectedCategories, showOwnedOnly);
   }, [allCatalogRows, deferredQuickAddValue, selectedCategories, showOwnedOnly]);
 
   const recipeTargets = useMemo(() => {
-    if (!metadata) return [];
-    return Array.from(new Set(metadata.recipes.map((recipe) => recipe.result))).sort();
+    return buildRecipeTargets(metadata?.recipes);
   }, [metadata]);
 
   const recipeCategoryOptions = useMemo(() => {
-    if (!metadata) return [];
-    return Array.from(new Set(metadata.recipes.map((recipe) => recipe.category || "Uncategorized"))).sort();
+    return buildRecipeCategoryOptions(metadata?.recipes);
   }, [metadata]);
 
   const filteredDatabaseRecipes = useMemo(() => {
-    const search = deferredDatabaseSearch.trim().toLowerCase();
-    return (metadata?.recipes ?? []).filter((recipe) => {
-      const category = recipe.category || "Uncategorized";
-      const categoryMatch = databaseCategories.length === 0 || databaseCategories.includes(category);
-      const stationMatch = databaseStations.length > 0 && databaseStations.includes(recipe.station);
-      const searchBlob = [recipe.result, recipe.ingredients, recipe.effects, recipe.station, recipe.recipe_page, recipe.section]
-        .join(" ")
-        .toLowerCase();
-      const searchMatch = !search || searchBlob.includes(search);
-      return categoryMatch && stationMatch && searchMatch;
-    });
+    return filterDatabaseRecipes(metadata?.recipes, deferredDatabaseSearch, databaseStations, databaseCategories);
   }, [databaseCategories, databaseStations, deferredDatabaseSearch, metadata]);
 
   const filteredIngredientGroups = useMemo(() => {
-    const search = deferredDatabaseSearch.trim().toLowerCase();
-    return (metadata?.ingredient_groups ?? []).filter((group) => {
-      if (!search) return true;
-      return `${group.group} ${group.members.join(" ")}`.toLowerCase().includes(search);
-    });
+    return filterIngredientGroups(metadata?.ingredient_groups, deferredDatabaseSearch);
   }, [deferredDatabaseSearch, metadata]);
 
   const filteredItemStats = useMemo(() => {
-    const search = deferredDatabaseSearch.trim().toLowerCase();
-    return (metadata?.item_stats ?? []).filter((row) => {
-      if (!search) return true;
-      return `${row.item} ${row.category} ${row.effects}`.toLowerCase().includes(search);
-    });
+    return filterItemStats(metadata?.item_stats, deferredDatabaseSearch);
   }, [deferredDatabaseSearch, metadata]);
 
   const activeView = VIEW_CONFIG.find((entry) => entry.id === activeSection);
   const activeSummary = VIEW_SUMMARIES[activeSection] ?? "";
   const activeApiSummary = activeView?.apis?.join(" | ") ?? "";
-  const stationFilterNote = selectedStations.length
-    ? `Stations: ${selectedStations.join(", ")}`
-    : "No stations selected. Recipe views will be empty.";
+  const stationFilterNote = createStationFilterNote(selectedStations);
 
   const executePlanner = useCallback(async () => {
     if (!planTarget) return;
