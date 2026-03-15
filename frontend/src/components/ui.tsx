@@ -59,13 +59,15 @@ export function StatCard({
   label,
   value,
   detail,
+  className,
 }: {
   label: string;
   value: string | number | null;
   detail?: string;
+  className?: string;
 }) {
   return (
-    <div className="stat-card">
+    <div className={classNames("stat-card", className)}>
       <span className="stat-label">{label}</span>
       <strong className="stat-value">{value ?? "None"}</strong>
       {detail ? <span className="stat-detail">{detail}</span> : null}

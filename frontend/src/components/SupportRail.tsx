@@ -58,18 +58,30 @@ export function SupportRail({
         <div className="rail-scroll">
           <Panel
             title="Snapshot"
-            description="Live stash and craft totals."
+            description="Live status summary."
             collapsible
             collapsed={!railSections.snapshot}
             onToggle={() => onToggleSection("snapshot")}
           >
-            <div className="snapshot-block">
-              <SnapshotMetric label="Inventory lines" value={snapshot?.inventory_lines ?? 0} />
-              <SnapshotMetric label="Known recipes" value={snapshot?.known_recipes ?? 0} />
-              <SnapshotMetric label="Direct crafts" value={snapshot?.direct_crafts ?? 0} accent />
-              <SnapshotMetric label="Near crafts" value={snapshot?.near_crafts ?? 0} />
+            <div className="snapshot-grid">
+              <div className="snapshot-tile">
+                <span className="snapshot-tile-label">Inventory lines</span>
+                <strong className="snapshot-tile-value">{snapshot?.inventory_lines ?? 0}</strong>
+              </div>
+              <div className="snapshot-tile">
+                <span className="snapshot-tile-label">Known recipes</span>
+                <strong className="snapshot-tile-value">{snapshot?.known_recipes ?? 0}</strong>
+              </div>
+              <div className="snapshot-tile accent">
+                <span className="snapshot-tile-label">Direct crafts</span>
+                <strong className="snapshot-tile-value">{snapshot?.direct_crafts ?? 0}</strong>
+              </div>
+              <div className="snapshot-tile">
+                <span className="snapshot-tile-label">Near crafts</span>
+                <strong className="snapshot-tile-value">{snapshot?.near_crafts ?? 0}</strong>
+              </div>
             </div>
-            <div className="snapshot-block snapshot-block-secondary">
+            <div className="snapshot-inline-grid">
               <SnapshotMetric label="Best heal" value={snapshot?.best_heal ?? null} />
               <SnapshotMetric label="Best stamina" value={snapshot?.best_stamina ?? null} />
               <SnapshotMetric label="Best mana" value={snapshot?.best_mana ?? null} />
@@ -78,7 +90,7 @@ export function SupportRail({
 
           <Panel
             title="Planning tools"
-            description="Stations, recursion, and near-craft scope."
+            description="What changes your results."
             collapsible
             collapsed={!railSections.planning}
             onToggle={() => onToggleSection("planning")}

@@ -19,10 +19,15 @@ function slotLabel(count: number) {
   return `${count} slot${count === 1 ? "" : "s"} missing`;
 }
 
+function ingredientSummary(tokens: string[] | undefined, fallback: string) {
+  const orderedTokens = (tokens ?? []).map((token) => token.trim()).filter(Boolean);
+  return orderedTokens.length ? orderedTokens.join(", ") : fallback;
+}
+
 function utilityNote(row: RecipeResult) {
   if (row.effects) return row.effects;
   if (row.category) return row.category;
-  return row.ingredients;
+  return ingredientSummary(row.ingredient_list, row.ingredients);
 }
 
 export function BestDirectCards({
@@ -150,7 +155,7 @@ export function NearCraftTable({
             <tr key={`${row.result}-${row.station}-${row.ingredients}`}>
               <td>
                 <div className="near-result-name">{row.result}</div>
-                <div className="table-note">{row.ingredients}</div>
+                <div className="table-note">{ingredientSummary(row.ingredient_list, row.ingredients)}</div>
               </td>
               <td>
                 <div className="missing-summary">{row.missing_items || "Nothing listed"}</div>
@@ -219,7 +224,7 @@ export function DatabaseTable({
               <td>{recipe.result}</td>
               <td>{recipe.result_qty}</td>
               <td>{recipe.station}</td>
-              <td>{recipe.ingredients}</td>
+              <td>{ingredientSummary(recipe.ingredient_list, recipe.ingredients)}</td>
               <td>{recipe.effects}</td>
               <td>{recipe.category || "Uncategorized"}</td>
             </tr>

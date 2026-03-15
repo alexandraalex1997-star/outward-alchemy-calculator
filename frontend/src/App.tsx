@@ -7,14 +7,13 @@ import { ResultsRail } from "./components/ResultsRail";
 import { SupportRail } from "./components/SupportRail";
 import { TopBanner } from "./components/TopBanner";
 import {
-  CraftResultsTable,
   DatabaseTable,
   IngredientGroupsTable,
   InventoryList,
   ItemStatsTable,
   NearCraftTable,
 } from "./components/data-views";
-import { Panel, StatCard, classNames } from "./components/ui";
+import { Panel, classNames } from "./components/ui";
 import rawViewConfig from "./view-config.json";
 import type {
   DashboardResponse,
@@ -448,155 +447,139 @@ export default function App() {
           {error ? <div className="error-banner">{error}</div> : null}
 
           {activeSection === "Craft now" ? (
-            <>
-              <InventoryEditor
-                inventory={inventory}
-                categories={metadata?.categories ?? []}
-                ingredientOptions={metadata?.ingredients ?? []}
-                filteredCatalogRows={filteredCatalogRows}
-                inventoryMap={inventoryMap}
-                quickAddValue={quickAddValue}
-                quickQty={quickQty}
-                showOwnedOnly={showOwnedOnly}
-                selectedCategories={selectedCategories}
-                draftQuantities={draftQuantities}
-                onQuickAddValueChange={setQuickAddValue}
-                onQuickQtyChange={setQuickQty}
-                onQuickAdd={handleQuickAdd}
-                onToggleCategory={(category) => setSelectedCategories((current) => toggleSelection(current, category))}
-                onToggleOwnedOnly={setShowOwnedOnly}
-                onClearInventory={() => void handleInventoryMutation(api.replaceInventory([]))}
-                onDraftQuantityChange={(item, value) =>
-                  setDraftQuantities((current) => ({
-                    ...current,
-                    [item]: value,
-                  }))
-                }
-                onToggleInventoryItem={(item, nextEnabled, currentQty) =>
-                  void handleInventoryMutation(api.setInventoryItem(item, nextEnabled ? Math.max(currentQty, 1) : 0))
-                }
-                onApplyInventoryQty={(item) => void applyInventoryQty(item)}
-                onRemoveInventoryItem={(item) => void removeInventoryItem(item)}
-                onDownloadInventoryCsv={() => downloadCsv("outward_inventory.csv", inventoryRows(inventory?.items))}
-              />
-
-              <Panel
-                title="Full craftable list"
-                description="Every direct craft from the current inventory, sorted by the live ranking."
-                headerAside={
-                  <label className="panel-select">
-                    <span>Sort</span>
-                    <select value={sortMode} onChange={(event) => setSortMode(event.target.value)}>
-                      {SORT_MODES.map((mode) => (
-                        <option key={mode} value={mode}>
-                          {mode}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                }
-              >
-                <div className="stat-grid two-up compact-grid">
-                  <StatCard label="Craftable recipes" value={craftNow?.count ?? 0} />
-                  <StatCard label="Top pick" value={bestDirect?.items?.[0]?.result ?? null} />
-                </div>
-                <CraftResultsTable rows={craftNow?.items ?? []} />
-              </Panel>
-            </>
+            <InventoryEditor
+              inventory={inventory}
+              categories={metadata?.categories ?? []}
+              ingredientOptions={metadata?.ingredients ?? []}
+              filteredCatalogRows={filteredCatalogRows}
+              inventoryMap={inventoryMap}
+              quickAddValue={quickAddValue}
+              quickQty={quickQty}
+              showOwnedOnly={showOwnedOnly}
+              selectedCategories={selectedCategories}
+              draftQuantities={draftQuantities}
+              onQuickAddValueChange={setQuickAddValue}
+              onQuickQtyChange={setQuickQty}
+              onQuickAdd={handleQuickAdd}
+              onToggleCategory={(category) => setSelectedCategories((current) => toggleSelection(current, category))}
+              onToggleOwnedOnly={setShowOwnedOnly}
+              onClearInventory={() => void handleInventoryMutation(api.replaceInventory([]))}
+              onDraftQuantityChange={(item, value) =>
+                setDraftQuantities((current) => ({
+                  ...current,
+                  [item]: value,
+                }))
+              }
+              onToggleInventoryItem={(item, nextEnabled, currentQty) =>
+                void handleInventoryMutation(api.setInventoryItem(item, nextEnabled ? Math.max(currentQty, 1) : 0))
+              }
+              onApplyInventoryQty={(item) => void applyInventoryQty(item)}
+              onRemoveInventoryItem={(item) => void removeInventoryItem(item)}
+              onDownloadInventoryCsv={() => downloadCsv("outward_inventory.csv", inventoryRows(inventory?.items))}
+            />
           ) : null}
 
           {activeSection === "Plan a target" ? (
             <Panel title="Plan a target" description="Run the recursive planner against the current inventory.">
-              <div className="inline-actions view-toolbar">
-                <label className="field grow">
-                  <span>Target item</span>
-                  <input
-                    list="planner-target-options"
-                    value={planTarget}
-                    onChange={(event) => setPlanTarget(event.target.value)}
-                    placeholder="Search for a target item..."
-                  />
-                  <datalist id="planner-target-options">
-                    {recipeTargets.map((target) => (
-                      <option key={target} value={target} />
-                    ))}
-                  </datalist>
-                </label>
-                <button
-                  type="button"
-                  className="button primary"
-                  onClick={() => {
-                    setPlannerRequested(true);
-                    void executePlanner();
-                  }}
-                >
-                  Run planner
-                </button>
+              <div className="view-stack">
+                <div className="inline-actions view-toolbar">
+                  <label className="field grow">
+                    <span>Target item</span>
+                    <input
+                      list="planner-target-options"
+                      value={planTarget}
+                      onChange={(event) => setPlanTarget(event.target.value)}
+                      placeholder="Search for a target item..."
+                    />
+                    <datalist id="planner-target-options">
+                      {recipeTargets.map((target) => (
+                        <option key={target} value={target} />
+                      ))}
+                    </datalist>
+                  </label>
+                  <button
+                    type="button"
+                    className="button primary"
+                    onClick={() => {
+                      setPlannerRequested(true);
+                      void executePlanner();
+                    }}
+                  >
+                    Run planner
+                  </button>
+                </div>
+                <div className="info-strip">
+                  {plannerResult?.explanation ??
+                    "Pick a target to see the best route through the recipes your current inventory can support."}
+                </div>
+                {plannerResult ? (
+                  <>
+                    <div className="split-columns">
+                      <InventoryList
+                        title="Still needed"
+                        items={plannerResult.missing}
+                        emptyMessage="You already have everything needed for this route."
+                      />
+                      <InventoryList
+                        title="Left in your bag"
+                        items={plannerResult.remaining_inventory}
+                        emptyMessage="This route would use up every item you committed to the plan."
+                      />
+                    </div>
+                    <div className="info-strip">Follow this route step by step to craft your target with what you have right now.</div>
+                    <pre className="code-block">{plannerResult.lines.join("\n") || "You can make this without any extra crafting steps."}</pre>
+                  </>
+                ) : (
+                  <div className="empty-state">Choose a target and run the planner to see a player-friendly craft route.</div>
+                )}
               </div>
-              <div className="info-strip">{plannerResult?.explanation ?? "Uses your inventory first, then crafts intermediates when possible."}</div>
-              {plannerResult ? (
-                <>
-                  <div className="split-columns">
-                    <InventoryList
-                      title="Missing leaves"
-                      items={plannerResult.missing}
-                      emptyMessage="Nothing missing. The planner found a complete path."
-                    />
-                    <InventoryList
-                      title="Remaining inventory"
-                      items={plannerResult.remaining_inventory}
-                      emptyMessage="No inventory would remain after this one-target plan."
-                    />
-                  </div>
-                  <pre className="code-block">{plannerResult.lines.join("\n") || "No planner steps available."}</pre>
-                </>
-              ) : (
-                <div className="empty-state">Choose a target and run the planner to see the recursive plan tree.</div>
-              )}
             </Panel>
           ) : null}
 
           {activeSection === "Shopping list" ? (
             <Panel title="Shopping list" description="Build a missing-items list for multiple targets.">
-              <textarea
-                className="bulk-text"
-                value={shoppingText}
-                onChange={(event) => setShoppingText(event.target.value)}
-                placeholder={"Life Potion,3\nWarm Potion,2"}
-              />
-              <div className="inline-actions view-toolbar">
-                <button
-                  type="button"
-                  className="button primary"
-                  onClick={() => {
-                    setShoppingRequested(true);
-                    void executeShoppingList();
-                  }}
-                >
-                  Build list
-                </button>
-              </div>
-              <div className="info-strip">Targets combine first. Stations and planner depth shape intermediate crafting.</div>
-              {shoppingResult ? (
-                <>
-                  <div className="split-columns">
-                    <InventoryList title="Targets" items={shoppingResult.targets} emptyMessage="No targets were parsed." />
+              <div className="view-stack">
+                <textarea
+                  className="bulk-text"
+                  value={shoppingText}
+                  onChange={(event) => setShoppingText(event.target.value)}
+                  placeholder={"Life Potion,3\nWarm Potion,2"}
+                />
+                <div className="inline-actions view-toolbar">
+                  <button
+                    type="button"
+                    className="button primary"
+                    onClick={() => {
+                      setShoppingRequested(true);
+                      void executeShoppingList();
+                    }}
+                  >
+                    Build list
+                  </button>
+                </div>
+                <div className="info-strip">Targets are combined first. Stations and planner depth decide which extra crafts can cover the gaps.</div>
+                {shoppingResult ? (
+                  <>
+                    <div className="split-columns">
+                      <InventoryList title="Requested outputs" items={shoppingResult.targets} emptyMessage="No targets were parsed." />
+                      <InventoryList
+                        title="Still needed"
+                        items={shoppingResult.missing}
+                        emptyMessage="You already have enough to cover this build."
+                      />
+                    </div>
                     <InventoryList
-                      title="Missing ingredients"
-                      items={shoppingResult.missing}
-                      emptyMessage="Nothing missing. The current inventory can satisfy this build."
+                      title="Left after the build"
+                      items={shoppingResult.remaining_inventory}
+                      emptyMessage="This build would use up every tracked item."
                     />
-                  </div>
-                  <InventoryList
-                    title="Remaining inventory after the build"
-                    items={shoppingResult.remaining_inventory}
-                    emptyMessage="No items would remain after fulfilling the targets."
-                  />
-                  <pre className="code-block">{shoppingResult.lines.join("\n") || "No shopping plan lines available."}</pre>
-                </>
-              ) : (
-                <div className="empty-state">Paste one or more `item,qty` targets and build the shopping list.</div>
-              )}
+                    <div className="info-strip">Use this route as your gather-and-craft checklist for the requested items.</div>
+                    <pre className="code-block">{shoppingResult.lines.join("\n") || "No extra shopping steps were needed."}</pre>
+                  </>
+                ) : (
+                  <div className="empty-state">Paste one or more `item,qty` targets and build the shopping list.</div>
+                )}
+              </div>
             </Panel>
           ) : null}
 
@@ -611,71 +594,81 @@ export default function App() {
 
           {activeSection === "Recipe database" ? (
             <Panel title="Recipe database" description="Search recipes, grouped ingredients, and item metadata.">
-              <div className="database-toolbar">
-                <label className="field grow">
-                  <span>Search recipes, groups, or stats</span>
-                  <input
-                    value={databaseSearch}
-                    onChange={(event) => setDatabaseSearch(event.target.value)}
-                    placeholder="Search result names, ingredients, effects, pages, or metadata..."
-                  />
-                </label>
-              </div>
-              <div className="database-filter-grid">
-                <div className="toolbar-categories">
-                  <span className="toolbar-label">Recipe categories</span>
-                  <div className="chip-group">
-                    {recipeCategoryOptions.map((category) => {
-                      const active = databaseCategories.includes(category);
-                      return (
-                        <button
-                          key={category}
-                          type="button"
-                          className={classNames("chip", active && "active")}
-                          onClick={() => setDatabaseCategories((current) => toggleSelection(current, category))}
-                        >
-                          {category}
-                        </button>
-                      );
-                    })}
+              <div className="database-view">
+                <div className="database-toolbar">
+                  <label className="field grow">
+                    <span>Search recipes, groups, or stats</span>
+                    <input
+                      value={databaseSearch}
+                      onChange={(event) => setDatabaseSearch(event.target.value)}
+                      placeholder="Search result names, ingredients, effects, pages, or metadata..."
+                    />
+                  </label>
+                </div>
+                <div className="database-filter-grid">
+                  <div className="toolbar-categories">
+                    <span className="toolbar-label">Recipe categories</span>
+                    <div className="chip-group">
+                      {recipeCategoryOptions.map((category) => {
+                        const active = databaseCategories.includes(category);
+                        return (
+                          <button
+                            key={category}
+                            type="button"
+                            className={classNames("chip", active && "active")}
+                            onClick={() => setDatabaseCategories((current) => toggleSelection(current, category))}
+                          >
+                            {category}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="toolbar-categories">
+                    <span className="toolbar-label">Stations</span>
+                    <div className="chip-group">
+                      {metadata?.stations.map((station) => {
+                        const active = databaseStations.includes(station);
+                        return (
+                          <button
+                            key={station}
+                            type="button"
+                            className={classNames("chip", active && "active")}
+                            onClick={() => setDatabaseStations((current) => toggleSelection(current, station))}
+                          >
+                            {station}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
-                <div className="toolbar-categories">
-                  <span className="toolbar-label">Stations</span>
-                  <div className="chip-group">
-                    {metadata?.stations.map((station) => {
-                      const active = databaseStations.includes(station);
-                      return (
-                        <button
-                          key={station}
-                          type="button"
-                          className={classNames("chip", active && "active")}
-                          onClick={() => setDatabaseStations((current) => toggleSelection(current, station))}
-                        >
-                          {station}
-                        </button>
-                      );
-                    })}
-                  </div>
+                <div className="info-strip">
+                  Recipe matches: {filteredDatabaseRecipes.length} of {metadata?.recipe_count ?? 0}.
                 </div>
-              </div>
-              <div className="info-strip">
-                Recipe matches: {filteredDatabaseRecipes.length} of {metadata?.recipe_count ?? 0}.
-              </div>
-              <DatabaseTable rows={filteredDatabaseRecipes} />
-              <div className="database-columns">
-                <Panel title="Ingredient groups" description="Canonical grouped-ingredient slots used by the recipe logic." className="sub-panel">
-                  <IngredientGroupsTable groups={filteredIngredientGroups} />
-                </Panel>
-                <Panel title="Item metadata" description="Stats and effects used by the ranking views." className="sub-panel">
-                  <ItemStatsTable rows={filteredItemStats} />
-                </Panel>
+                <DatabaseTable rows={filteredDatabaseRecipes} />
+                <div className="database-columns">
+                  <Panel title="Ingredient groups" description="Canonical grouped-ingredient slots used by the recipe logic." className="sub-panel">
+                    <IngredientGroupsTable groups={filteredIngredientGroups} />
+                  </Panel>
+                  <Panel title="Item metadata" description="Stats and effects used by the ranking views." className="sub-panel">
+                    <ItemStatsTable rows={filteredItemStats} />
+                  </Panel>
+                </div>
               </div>
             </Panel>
           ) : null}
         </section>
 
-        <ResultsRail bestDirect={bestDirect} near={near} />
+        <ResultsRail
+          activeSection={activeSection}
+          bestDirect={bestDirect}
+          craftNow={craftNow}
+          near={near}
+          sortMode={sortMode}
+          onSortModeChange={setSortMode}
+          sortOptions={SORT_MODES}
+        />
       </div>
     </main>
   );

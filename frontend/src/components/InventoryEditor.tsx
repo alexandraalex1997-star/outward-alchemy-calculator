@@ -61,19 +61,17 @@ export function InventoryEditor({
       className="inventory-workspace"
     >
       <div className="inventory-summary-bar">
-        <div className="inventory-summary-main">
-          <div className="inventory-summary-copy">
-            <h3>Inventory overview</h3>
-            <p>{inventory?.items.length ? "Live totals from the canonical inventory." : "Add items below or import a list to begin."}</p>
-          </div>
-          <div className="inventory-summary-stats">
-            <StatCard label="Unique items" value={inventory?.unique_items ?? 0} />
-            <StatCard label="Total quantity" value={inventory?.total_quantity ?? 0} />
-          </div>
+        <div className="inventory-summary-copy">
+          <h3>Inventory overview</h3>
+          <p>{inventory?.items.length ? "Live totals from the canonical inventory." : "Add items below or import a list to begin."}</p>
         </div>
-        <button type="button" className="button subtle" onClick={onDownloadInventoryCsv}>
-          Download inventory CSV
-        </button>
+        <div className="inventory-summary-row">
+          <StatCard className="summary-stat" label="Unique items" value={inventory?.unique_items ?? 0} />
+          <StatCard className="summary-stat" label="Total quantity" value={inventory?.total_quantity ?? 0} />
+          <button type="button" className="button subtle summary-action-button" onClick={onDownloadInventoryCsv}>
+            CSV
+          </button>
+        </div>
       </div>
 
       <div className="inventory-editor">
