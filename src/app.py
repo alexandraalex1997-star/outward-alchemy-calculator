@@ -620,29 +620,6 @@ def render_inventory_picker(catalog: List[str], catalog_by_category: Dict[str, L
     )
     search_key = key(search)
     suggestions = [item_name for item_name in catalog if search_key and search_key in key(item_name)][:8]
-
-    selected_categories = st.multiselect(
-        "Categories",
-        options=list(catalog_by_category.keys()),
-        default=list(catalog_by_category.keys()),
-        help="Filter the inventory list to the categories you want to see.",
-    )
-    action_cols = st.columns([1.35, 0.85, 2.0])
-    show_owned_only = action_cols[0].checkbox(
-        "Owned only",
-        value=False,
-        help="Show only the items currently in your inventory.",
-    )
-    if action_cols[1].button(
-        "Clear",
-        help="Remove every selected item from the inventory builder.",
-        use_container_width=True,
-        type="primary",
-    ):
-        st.session_state["picker_inventory"] = {}
-        picker_inventory = {}
-        st.rerun()
-
     if suggestions:
         st.markdown('<div class="inline-matches">', unsafe_allow_html=True)
         match_cols = st.columns(min(4, len(suggestions)))
@@ -658,6 +635,28 @@ def render_inventory_picker(catalog: List[str], catalog_by_category: Dict[str, L
                 st.session_state["picker_inventory"] = picker_inventory
                 st.rerun()
         st.markdown("</div>", unsafe_allow_html=True)
+
+    filter_cols = st.columns([2.8, 0.85, 0.85])
+    selected_categories = filter_cols[0].multiselect(
+        "Categories",
+        options=list(catalog_by_category.keys()),
+        default=list(catalog_by_category.keys()),
+        help="Filter the ingredient list to the categories you want to see.",
+    )
+    show_owned_only = filter_cols[1].checkbox(
+        "Owned only",
+        value=False,
+        help="Show only the items currently in your inventory.",
+    )
+    if filter_cols[2].button(
+        "Clear",
+        help="Remove every selected item from the inventory builder.",
+        use_container_width=True,
+        type="primary",
+    ):
+        st.session_state["picker_inventory"] = {}
+        picker_inventory = {}
+        st.rerun()
 
     active_categories = set(selected_categories or list(catalog_by_category.keys()))
     rows = []
@@ -678,12 +677,6 @@ def render_inventory_picker(catalog: List[str], catalog_by_category: Dict[str, L
                     "Qty": qty if qty > 0 else 1,
                 }
             )
-
-    summary_cols = st.columns(4)
-    summary_cols[0].metric("Categories shown", len(active_categories))
-    summary_cols[1].metric("Visible now", len(rows))
-    summary_cols[2].metric("Selected total", sum(picker_inventory.values()))
-    summary_cols[3].metric("Unique selected", len(picker_inventory))
 
     if not rows:
         st.info("No items match this search.")
@@ -726,6 +719,12 @@ def render_inventory_picker(catalog: List[str], catalog_by_category: Dict[str, L
                 picker_inventory[item_name] = int(row["Qty"])
             elif item_name in visible_items:
                 picker_inventory.pop(item_name, None)
+
+    summary_cols = st.columns(4)
+    summary_cols[0].metric("Categories shown", len(active_categories))
+    summary_cols[1].metric("Visible now", len(rows))
+    summary_cols[2].metric("Selected total", sum(picker_inventory.values()))
+    summary_cols[3].metric("Unique selected", len(picker_inventory))
 
     st.session_state["picker_inventory"] = picker_inventory
     return Counter(picker_inventory)
@@ -976,6 +975,9 @@ def inject_styles() -> None:
             border-radius: 10px;
             padding: 0.45rem 0.55rem;
         }
+        [data-testid="stMetric"] label, [data-testid="stMetric"] div {
+            text-align: center;
+        }
         [data-testid="stDataFrame"] {
             border-radius: 10px;
             overflow: hidden;
@@ -1047,7 +1049,7 @@ def inject_styles() -> None:
             margin: 0.2rem 0 0.45rem 0;
         }
         [data-baseweb="tag"] {
-            transform: scale(0.9);
+            transform: scale(0.84);
             transform-origin: left center;
         }
         [data-testid="stSidebar"] {
@@ -1205,9 +1207,10 @@ with overview_col:
         file_name="outward_inventory.csv",
         mime="text/csv",
         use_container_width=True,
+        type="secondary",
     )
     render_table_header("Inventory overview", "This table shows the current inventory feeding the calculator.")
-    st.dataframe(inventory_df, use_container_width=True, hide_index=True, height=620)
+    st.dataframe(inventory_df, use_container_width=True, hide_index=True, height=420)
     st.markdown("</div>", unsafe_allow_html=True)
 
 filtered = recipes_df[recipes_df["station"].isin(station_filter)].copy()
@@ -1245,7 +1248,7 @@ with overview_col:
         present_recipe_table(craftable.head(12), preview_cols),
         use_container_width=True,
         hide_index=True,
-        height=340,
+        height=280,
     )
     st.markdown("</div>", unsafe_allow_html=True)
 
