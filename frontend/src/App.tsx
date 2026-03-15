@@ -1,6 +1,7 @@
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 
 import { api } from "./api";
+import rawPlanningControls from "./planning-controls.json";
 import rawViewConfig from "./view-config.json";
 import type {
   DirectResponse,
@@ -34,9 +35,19 @@ type ViewConfigEntry = {
   id: string;
   logic: string;
   summary: string;
+  apis?: string[];
+  viewState?: string[];
+};
+
+type PlanningControlEntry = {
+  id: string;
+  label: string;
+  summary: string;
+  affects: string[];
 };
 
 const VIEW_CONFIG = rawViewConfig as ViewConfigEntry[];
+const PLANNING_CONTROLS = rawPlanningControls as PlanningControlEntry[];
 const VIEW_SUMMARIES = VIEW_CONFIG.reduce<Record<string, string>>((accumulator, entry) => {
   accumulator[entry.id] = entry.summary;
   return accumulator;
@@ -459,7 +470,9 @@ export default function App() {
     });
   }, [deferredDatabaseSearch, metadata]);
 
+  const activeView = VIEW_CONFIG.find((entry) => entry.id === activeSection);
   const activeSummary = VIEW_SUMMARIES[activeSection] ?? "";
+  const activeApiSummary = activeView?.apis?.join(" | ") ?? "";
   const stationFilterNote = selectedStations.length
     ? `Station filter: ${selectedStations.join(", ")}.`
     : "No stations selected. Craft, planner, shopping, and near-craft panels will show no station-backed recipes.";
@@ -566,6 +579,7 @@ export default function App() {
           type="button"
           onClick={() => setLeftCollapsed((value) => !value)}
           aria-label={leftCollapsed ? "Expand utility rail" : "Collapse utility rail"}
+          title={leftCollapsed ? "Expand support rail" : "Collapse support rail"}
         >
           {leftCollapsed ? ">" : "<"}
         </button>
@@ -591,7 +605,7 @@ export default function App() {
               </div>
             </Panel>
 
-            <Panel title="Planning tools" description="These controls now affect craft-now, planner, shopping-list, and missing-ingredient logic.">
+            <Panel title="Planning tools" description="The control summaries below make it explicit which outputs update when you change each setting.">
               <label className="field">
                 <span>Planner depth</span>
                 <input type="range" min={1} max={8} value={plannerDepth} onChange={(event) => setPlannerDepth(Number(event.target.value))} />
@@ -624,6 +638,13 @@ export default function App() {
                 })}
               </div>
               <div className="info-strip">{stationFilterNote}</div>
+              <div className="helper-list compact-list">
+                {PLANNING_CONTROLS.map((control) => (
+                  <div key={control.id}>
+                    <strong>{control.label}:</strong> {control.summary}
+                  </div>
+                ))}
+              </div>
             </Panel>
 
             <Panel title="How this works">
@@ -688,7 +709,10 @@ export default function App() {
           ))}
         </nav>
 
-        <div className="mode-note">{activeSummary}</div>
+        <div className="mode-note">
+          <div>{activeSummary}</div>
+          {activeApiSummary ? <div className="mode-api-note">Uses: {activeApiSummary}</div> : null}
+        </div>
 
         {error ? <div className="error-banner">{error}</div> : null}
 
@@ -774,65 +798,68 @@ export default function App() {
           </div>
 
           {filteredCatalogRows.length ? (
-            <div className="table-shell ingredient-table-shell">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Have it</th>
-                    <th>Ingredient</th>
-                    <th>Category</th>
-                    <th>Qty</th>
-                    <th>Apply</th>
-                    <th>Remove</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredCatalogRows.map((row) => {
-                    const currentQty = inventoryMap.get(row.item) ?? 0;
-                    const draftValue = draftQuantities[row.item] ?? String(currentQty);
-                    return (
-                      <tr key={row.item}>
-                        <td>
-                          <input
-                            type="checkbox"
-                            checked={currentQty > 0}
-                            onChange={(event) =>
-                              void handleInventoryMutation(api.setInventoryItem(row.item, event.target.checked ? Math.max(currentQty, 1) : 0))
-                            }
-                          />
-                        </td>
-                        <td>{row.item}</td>
-                        <td>{row.category}</td>
-                        <td>
-                          <input
-                            className="qty-input"
-                            type="number"
-                            min={0}
-                            value={draftValue}
-                            onChange={(event) =>
-                              setDraftQuantities((current) => ({
-                                ...current,
-                                [row.item]: event.target.value,
-                              }))
-                            }
-                          />
-                        </td>
-                        <td>
-                          <button type="button" className="button subtle tiny" onClick={() => void applyInventoryQty(row.item)}>
-                            Apply
-                          </button>
-                        </td>
-                        <td>
-                          <button type="button" className="button subtle tiny" onClick={() => void removeInventoryItem(row.item)}>
-                            Remove
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <>
+              <div className="info-strip">Row data lives on the left. Use `Apply` to save quantity edits and `Remove` to clear an owned ingredient from the canonical inventory.</div>
+              <div className="table-shell ingredient-table-shell">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Have it</th>
+                      <th>Ingredient</th>
+                      <th>Category</th>
+                      <th>Qty</th>
+                      <th>Apply</th>
+                      <th>Remove</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredCatalogRows.map((row) => {
+                      const currentQty = inventoryMap.get(row.item) ?? 0;
+                      const draftValue = draftQuantities[row.item] ?? String(currentQty);
+                      return (
+                        <tr key={row.item}>
+                          <td>
+                            <input
+                              type="checkbox"
+                              checked={currentQty > 0}
+                              onChange={(event) =>
+                                void handleInventoryMutation(api.setInventoryItem(row.item, event.target.checked ? Math.max(currentQty, 1) : 0))
+                              }
+                            />
+                          </td>
+                          <td>{row.item}</td>
+                          <td>{row.category}</td>
+                          <td>
+                            <input
+                              className="qty-input"
+                              type="number"
+                              min={0}
+                              value={draftValue}
+                              onChange={(event) =>
+                                setDraftQuantities((current) => ({
+                                  ...current,
+                                  [row.item]: event.target.value,
+                                }))
+                              }
+                            />
+                          </td>
+                          <td>
+                            <button type="button" className="button subtle tiny" onClick={() => void applyInventoryQty(row.item)}>
+                              Apply
+                            </button>
+                          </td>
+                          <td>
+                            <button type="button" className="button subtle tiny" onClick={() => void removeInventoryItem(row.item)}>
+                              Remove
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
           ) : (
             <div className="empty-state">No ingredients match the current search and category filters.</div>
           )}
@@ -908,6 +935,7 @@ export default function App() {
               {plannerResult?.explanation ??
                 "The planner resolves inventory first, then tries craftable intermediates within the current depth and station filters."}
             </div>
+            <div className="info-strip">Stations affect planner recipes. Planner depth affects recursion depth only. If you have already run the planner, inventory and control changes rerun it automatically.</div>
             {plannerResult ? (
               <>
                 <div className="split-columns">
@@ -951,6 +979,7 @@ export default function App() {
               </button>
             </div>
             <div className="info-strip">Targets are aggregated before the shopping run, and the planner reuses crafted intermediates where possible.</div>
+            <div className="info-strip">Stations affect recipe availability for shopping expansion. Planner depth affects how far the build can recurse into intermediate crafts.</div>
             {shoppingResult ? (
               <>
                 <div className="split-columns">
@@ -977,7 +1006,7 @@ export default function App() {
         {activeSection === "Missing ingredients" ? (
           <Panel title="Almost craftable recipes" description="Slot-based near-craft results from the current inventory and near-craft threshold.">
             <div className="info-strip">
-              Showing recipes with up to {nearThreshold} missing slot{nearThreshold === 1 ? "" : "s"}.
+              Showing valid recipes with up to {nearThreshold} missing slot{nearThreshold === 1 ? "" : "s"}, and only when at least one slot is already satisfied by your current inventory.
             </div>
             <RecipeTable
               rows={near?.items ?? []}

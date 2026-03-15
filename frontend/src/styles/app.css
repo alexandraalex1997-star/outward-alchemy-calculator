@@ -6,6 +6,7 @@
   grid-template-columns: var(--rail-width) minmax(0, 1fr) var(--results-width);
   gap: var(--shell-gap);
   align-items: start;
+  transition: grid-template-columns 180ms ease, gap 180ms ease;
 }
 
 .app-shell.left-collapsed {
@@ -27,6 +28,8 @@
   position: sticky;
   top: 1.2rem;
   align-self: start;
+  display: grid;
+  gap: 0.45rem;
 }
 
 .rail-scroll {
@@ -42,6 +45,11 @@
   background: var(--bg-panel-soft);
   color: var(--text);
   cursor: pointer;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.rail-toggle:hover {
+  transform: translateY(-1px);
 }
 
 .rail-header {
@@ -106,6 +114,12 @@
   border-radius: var(--radius-sm);
   background: rgba(255, 255, 255, 0.025);
   color: var(--text-muted);
+}
+
+.mode-api-note {
+  margin-top: 0.28rem;
+  font-size: 0.84rem;
+  color: var(--text-soft);
 }
 
 .nav-pill,
@@ -381,6 +395,11 @@
 .helper-list {
   display: grid;
   gap: 0.35rem;
+}
+
+.compact-list {
+  margin-top: 0.6rem;
+  font-size: 0.88rem;
 }
 
 .mini-table {

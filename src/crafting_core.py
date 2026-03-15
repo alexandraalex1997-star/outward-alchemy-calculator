@@ -15,6 +15,16 @@ TEXT_REPAIRS = {
     "â€": '"',
 }
 
+TEXT_REPAIRS.update(
+    {
+        "\u00e2\u20ac\u201c": "-",
+        "\u00e2\u20ac\u201d": "-",
+        "\u00e2\u20ac\u2122": "'",
+        "\u00e2\u20ac\u0153": '"',
+        "\u00e2\u20ac\ufffd": '"',
+    }
+)
+
 CANONICAL_GROUPS: Dict[str, List[str]] = {
     "water": ["Clean Water", "Salt Water", "Rancid Water", "Leyline Water"],
     "egg": [
@@ -159,6 +169,21 @@ def build_recipe_index(recipes_df: pd.DataFrame) -> Dict[str, List[dict]]:
     return out
 
 
+def recipe_is_valid(row: pd.Series | dict, groups: Dict[str, List[str]]) -> bool:
+    ingredients = list(row["ingredient_list"])
+    result = normalize(row["result"])
+    result_qty = int(row.get("result_qty", 1))
+    _, assignments = valid_slot_assignments(ingredients, groups, result, result_qty)
+    return bool(assignments)
+
+
+def prune_invalid_recipes(recipes_df: pd.DataFrame, groups: Dict[str, List[str]]) -> pd.DataFrame:
+    if recipes_df.empty:
+        return recipes_df.copy()
+    valid_rows = recipes_df[recipes_df.apply(lambda row: recipe_is_valid(row, groups), axis=1)].copy()
+    return valid_rows.reset_index(drop=True)
+
+
 def build_item_catalog(recipes_df: pd.DataFrame, groups: Dict[str, List[str]]) -> List[str]:
     items = set()
     for _, row in recipes_df.iterrows():
@@ -216,47 +241,102 @@ def build_catalog_by_category(catalog: List[str], metadata: Dict[str, dict]) -> 
     return {category: sorted(grouped[category]) for category in order if category in grouped}
 
 
-def option_lists(recipe_ingredients: List[str], inventory: Counter, groups: Dict[str, List[str]]) -> List[List[str]]:
-    slots = []
+def recipe_slot_options(recipe_ingredients: List[str], groups: Dict[str, List[str]]) -> List[Tuple[str, List[str]]]:
+    slots: List[Tuple[str, List[str]]] = []
     for ingredient in recipe_ingredients:
-        ingredient_key = key(ingredient)
-        if ingredient_key in groups:
-            options = [item for item in groups[ingredient_key] if inventory.get(item, 0) > 0]
-            if not options:
-                options = groups[ingredient_key][:]
-            slots.append(options)
-        else:
-            slots.append([ingredient])
-    slots.sort(key=len)
+        token_name = normalize(ingredient)
+        token_key = key(token_name)
+        options = groups[token_key][:] if token_key in groups else [token_name]
+        slots.append((token_name, options))
     return slots
 
 
-def consumption_patterns(
-    recipe_ingredients: List[str], inventory: Counter, groups: Dict[str, List[str]]
-) -> Tuple[List[str], List[Tuple[int, ...]]]:
-    slots = option_lists(recipe_ingredients, inventory, groups)
-    universe = sorted({item for options in slots for item in options})
-    if not universe:
-        return [], []
-    item_index = {name: idx for idx, name in enumerate(universe)}
-    patterns = set()
-    current = [0] * len(universe)
+def is_noop_assignment(assignment: Tuple[str, ...], result: str, result_qty: int) -> bool:
+    if not assignment:
+        return False
+    counts = Counter(normalize(item_name) for item_name in assignment)
+    result_name = normalize(result)
+    return len(counts) == 1 and counts.get(result_name, 0) == int(result_qty)
+
+
+def valid_slot_assignments(
+    recipe_ingredients: List[str],
+    groups: Dict[str, List[str]],
+    result: str,
+    result_qty: int,
+) -> Tuple[List[Tuple[str, List[str]]], List[Tuple[str, ...]]]:
+    slots = recipe_slot_options(recipe_ingredients, groups)
+    assignments: List[Tuple[str, ...]] = []
+    current: List[str] = []
 
     def backtrack(position: int) -> None:
         if position == len(slots):
-            patterns.add(tuple(current))
+            assignment = tuple(current)
+            if not is_noop_assignment(assignment, result, result_qty):
+                assignments.append(assignment)
             return
-        for item_name in slots[position]:
-            current[item_index[item_name]] += 1
+        _, options = slots[position]
+        for item_name in options:
+            current.append(normalize(item_name))
             backtrack(position + 1)
-            current[item_index[item_name]] -= 1
+            current.pop()
 
     backtrack(0)
+    return slots, assignments
+
+
+def assignment_sort_key(assignment: Tuple[str, ...], inventory: Counter, recipe_index: Dict[str, List[dict]]) -> Tuple[int, int, Tuple[str, ...]]:
+    return (
+        sum(1 for item_name in assignment if inventory.get(item_name, 0) <= 0),
+        sum(1 for item_name in assignment if key(item_name) not in recipe_index),
+        assignment,
+    )
+
+
+def self_group_slots_supported(
+    slots: List[Tuple[str, List[str]]],
+    assignment: Tuple[str, ...],
+    result: str,
+    groups: Dict[str, List[str]],
+    inventory: Counter,
+) -> bool:
+    result_key = key(result)
+    for (token_name, _), chosen_item in zip(slots, assignment):
+        token_key = key(token_name)
+        if token_key not in groups:
+            continue
+        if result_key not in {key(member) for member in groups[token_key]}:
+            continue
+        if inventory.get(chosen_item, 0) <= 0:
+            return False
+    return True
+
+
+def consumption_patterns(
+    recipe_ingredients: List[str],
+    groups: Dict[str, List[str]],
+    result: str,
+    result_qty: int,
+) -> Tuple[List[str], List[Tuple[int, ...]]]:
+    _, assignments = valid_slot_assignments(recipe_ingredients, groups, result, result_qty)
+    universe = sorted({item_name for assignment in assignments for item_name in assignment})
+    if not universe:
+        return [], []
+    patterns = {
+        tuple(Counter(assignment).get(item_name, 0) for item_name in universe)
+        for assignment in assignments
+    }
     return universe, sorted(patterns)
 
 
-def max_crafts_for_recipe(recipe_ingredients: List[str], inventory: Counter, groups: Dict[str, List[str]]) -> int:
-    universe, patterns = consumption_patterns(recipe_ingredients, inventory, groups)
+def max_crafts_for_recipe(
+    recipe_ingredients: List[str],
+    inventory: Counter,
+    groups: Dict[str, List[str]],
+    result: str,
+    result_qty: int,
+) -> int:
+    universe, patterns = consumption_patterns(recipe_ingredients, groups, result, result_qty)
     if not universe:
         return 0
 
@@ -289,51 +369,49 @@ def _missing_label(token: str, groups: Dict[str, List[str]]) -> str:
     return f"{token} ({options_preview}{suffix})"
 
 
-def count_missing_slots(recipe_ingredients: List[str], inventory: Counter, groups: Dict[str, List[str]]) -> Tuple[int, List[str]]:
-    slot_options: List[Tuple[str, List[str]]] = []
-    universe: List[str] = []
-    seen_universe = set()
-    for token in recipe_ingredients:
-        token_name = normalize(token)
-        token_key = key(token_name)
-        options = groups[token_key][:] if token_key in groups else [token_name]
-        slot_options.append((token_name, options))
-        for option_name in options:
-            normalized_option = normalize(option_name)
-            if normalized_option and normalized_option not in seen_universe:
-                seen_universe.add(normalized_option)
-                universe.append(normalized_option)
+def missing_slot_details(
+    recipe_ingredients: List[str],
+    inventory: Counter,
+    groups: Dict[str, List[str]],
+    result: str,
+    result_qty: int,
+) -> Tuple[int, List[str], int]:
+    slots, assignments = valid_slot_assignments(recipe_ingredients, groups, result, result_qty)
+    if not slots:
+        return 0, [], 0
+    if not assignments:
+        missing = [_missing_label(token_name, groups) for token_name, _ in slots]
+        return len(missing), missing, 0
 
-    if not slot_options:
-        return 0, []
+    best_matched = -1
+    best_missing: Tuple[str, ...] = tuple()
+    for assignment in assignments:
+        trial_inventory = Counter(inventory)
+        missing: List[str] = []
+        matched = 0
+        for (token_name, _), chosen_item in zip(slots, assignment):
+            if trial_inventory.get(chosen_item, 0) > 0:
+                trial_inventory[chosen_item] -= 1
+                matched += 1
+            else:
+                missing.append(_missing_label(token_name, groups))
+        candidate_missing = tuple(missing)
+        if matched > best_matched or (matched == best_matched and candidate_missing < best_missing):
+            best_matched = matched
+            best_missing = candidate_missing
 
-    item_index = {name: idx for idx, name in enumerate(universe)}
-    start_state = tuple(int(inventory.get(item_name, 0)) for item_name in universe)
+    return len(slots) - best_matched, list(best_missing), best_matched
 
-    @lru_cache(maxsize=None)
-    def dp(position: int, state: Tuple[int, ...]) -> Tuple[int, Tuple[str, ...]]:
-        if position == len(slot_options):
-            return 0, tuple()
 
-        token_name, options = slot_options[position]
-        best_matched, best_missing = dp(position + 1, state)
-        best_missing = (_missing_label(token_name, groups),) + best_missing
-
-        for option_name in options:
-            option_index = item_index[normalize(option_name)]
-            if state[option_index] <= 0:
-                continue
-            next_state = list(state)
-            next_state[option_index] -= 1
-            matched_rest, missing_rest = dp(position + 1, tuple(next_state))
-            candidate = (1 + matched_rest, missing_rest)
-            if candidate[0] > best_matched or (candidate[0] == best_matched and candidate[1] < best_missing):
-                best_matched, best_missing = candidate
-
-        return best_matched, best_missing
-
-    matched_slots, missing = dp(0, start_state)
-    return len(recipe_ingredients) - matched_slots, list(missing)
+def count_missing_slots(
+    recipe_ingredients: List[str],
+    inventory: Counter,
+    groups: Dict[str, List[str]],
+    result: str,
+    result_qty: int,
+) -> Tuple[int, List[str]]:
+    missing_count, missing, _ = missing_slot_details(recipe_ingredients, inventory, groups, result, result_qty)
+    return missing_count, missing
 
 
 def smart_score(row: pd.Series) -> float:
@@ -364,8 +442,14 @@ def build_direct_results(
     for _, row in recipes_df.iterrows():
         ingredients = row["ingredient_list"]
         result_meta = item_meta_for(row["result"], metadata)
-        max_crafts = max_crafts_for_recipe(ingredients, inventory, groups)
-        missing_count, missing = count_missing_slots(ingredients, inventory, groups)
+        max_crafts = max_crafts_for_recipe(ingredients, inventory, groups, row["result"], int(row["result_qty"]))
+        missing_count, missing, matched_slots = missing_slot_details(
+            ingredients,
+            inventory,
+            groups,
+            row["result"],
+            int(row["result_qty"]),
+        )
         max_total_output = int(max_crafts) * int(row["result_qty"])
         rows.append(
             {
@@ -378,6 +462,7 @@ def build_direct_results(
                 "section": row["section"],
                 "ingredients": ", ".join(ingredients),
                 "ingredient_list": ingredients,
+                "matched_slots": int(matched_slots),
                 "missing_slots": missing_count,
                 "missing_items": ", ".join(missing),
                 "heal_each": result_meta["heal"],
@@ -449,23 +534,42 @@ def plan_item(
     candidates = sorted(candidates, key=lambda row: (len(row["ingredient_list"]), row["station"], row["result"]))
 
     for recipe in candidates:
-        trial_inventory = Counter(inventory)
-        steps = []
-        ok = True
-        for token in recipe["ingredient_list"]:
-            step = plan_token(token, trial_inventory, groups, recipe_index, depth + 1, max_depth, stack + (item_key,))
-            if step is None:
-                ok = False
-                break
-            steps.append(step)
-        if ok:
-            trial_inventory[recipe["result"]] += int(recipe.get("result_qty", 1))
-            if not consume_item(trial_inventory, recipe["result"], 1):
-                ok = False
-        if ok:
-            inventory.clear()
-            inventory.update(trial_inventory)
-            return {"type": "craft", "item": item, "recipe": recipe, "steps": steps}
+        slots, assignments = valid_slot_assignments(
+            recipe["ingredient_list"],
+            groups,
+            recipe["result"],
+            int(recipe.get("result_qty", 1)),
+        )
+        for assignment in sorted(assignments, key=lambda selected: assignment_sort_key(selected, inventory, recipe_index)):
+            trial_inventory = Counter(inventory)
+            if not self_group_slots_supported(slots, assignment, recipe["result"], groups, trial_inventory):
+                continue
+            steps = []
+            ok = True
+            for (token_name, _), chosen_item in zip(slots, assignment):
+                step = plan_item(
+                    chosen_item,
+                    trial_inventory,
+                    groups,
+                    recipe_index,
+                    depth + 1,
+                    max_depth,
+                    stack + (item_key,),
+                )
+                if step is None:
+                    ok = False
+                    break
+                if key(token_name) in groups:
+                    step = {"type": "group", "group": token_name, "chosen": chosen_item, "step": step}
+                steps.append(step)
+            if ok:
+                trial_inventory[recipe["result"]] += int(recipe.get("result_qty", 1))
+                if not consume_item(trial_inventory, recipe["result"], 1):
+                    ok = False
+            if ok:
+                inventory.clear()
+                inventory.update(trial_inventory)
+                return {"type": "craft", "item": item, "recipe": recipe, "steps": steps}
     return None
 
 
@@ -536,34 +640,46 @@ def shopping_item_plan(
 
     best_choice: Optional[Tuple[Tuple[int, int, int, str], Counter, dict, Counter]] = None
     for recipe in sorted(candidates, key=lambda row: (len(row["ingredient_list"]), row["station"], row["result"])):
-        trial_inventory = Counter(inventory)
-        total_missing = Counter()
-        steps = []
-        for token in recipe["ingredient_list"]:
-            token_missing, token_plan = shopping_token_plan(
-                token,
-                trial_inventory,
-                groups,
-                recipe_index,
-                depth + 1,
-                max_depth,
-                stack + (item_key,),
-            )
-            total_missing.update(token_missing)
-            steps.append(token_plan)
-        trial_inventory[recipe["result"]] += int(recipe.get("result_qty", 1))
-        consume_item(trial_inventory, recipe["result"], 1)
-        rank = (
-            sum(total_missing.values()),
-            len(total_missing),
-            len(recipe["ingredient_list"]),
-            recipe["station"],
+        slots, assignments = valid_slot_assignments(
+            recipe["ingredient_list"],
+            groups,
+            recipe["result"],
+            int(recipe.get("result_qty", 1)),
         )
-        plan = {"type": "craft", "item": item, "recipe": recipe, "steps": steps}
-        if best_choice is None or rank < best_choice[0]:
-            best_choice = (rank, total_missing, plan, trial_inventory)
+        for assignment in sorted(assignments, key=lambda selected: assignment_sort_key(selected, inventory, recipe_index)):
+            trial_inventory = Counter(inventory)
+            if not self_group_slots_supported(slots, assignment, recipe["result"], groups, trial_inventory):
+                continue
+            total_missing = Counter()
+            steps = []
+            for (token_name, _), chosen_item in zip(slots, assignment):
+                token_missing, token_plan = shopping_item_plan(
+                    chosen_item,
+                    trial_inventory,
+                    groups,
+                    recipe_index,
+                    depth + 1,
+                    max_depth,
+                    stack + (item_key,),
+                )
+                total_missing.update(token_missing)
+                if key(token_name) in groups:
+                    token_plan = {"type": "group", "group": token_name, "chosen": chosen_item, "step": token_plan}
+                steps.append(token_plan)
+            trial_inventory[recipe["result"]] += int(recipe.get("result_qty", 1))
+            consume_item(trial_inventory, recipe["result"], 1)
+            rank = (
+                sum(total_missing.values()),
+                len(total_missing),
+                len(recipe["ingredient_list"]),
+                recipe["station"],
+            )
+            plan = {"type": "craft", "item": item, "recipe": recipe, "steps": steps}
+            if best_choice is None or rank < best_choice[0]:
+                best_choice = (rank, total_missing, plan, trial_inventory)
 
-    assert best_choice is not None
+    if best_choice is None:
+        return Counter({item: 1}), {"type": "missing", "item": item}
     inventory.clear()
     inventory.update(best_choice[3])
     return best_choice[1], best_choice[2]

@@ -35,6 +35,7 @@ export type RecipeResult = {
   section: string;
   ingredients: string;
   ingredient_list: string[];
+  matched_slots: number;
   missing_slots: number;
   missing_items: string;
   heal_each: number;

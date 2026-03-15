@@ -80,6 +80,7 @@ def load_calculator_data() -> CalculatorData:
     recipes_df = _load_recipes()
     raw_groups = _load_raw_groups()
     groups = core.sanitize_groups(recipes_df, raw_groups)
+    recipes_df = core.prune_invalid_recipes(recipes_df, groups)
     item_metadata = _load_item_metadata()
     recipe_index = core.build_recipe_index(recipes_df)
     item_catalog = core.build_item_catalog(recipes_df, groups)
@@ -239,7 +240,11 @@ class CalculatorService:
         inventory = self.get_inventory()
         results = core.build_direct_results(filtered, inventory, self.data.groups, self.data.item_metadata)
         craftable = results[results["max_crafts"] > 0].copy()
-        near = results[(results["max_crafts"] == 0) & (results["missing_slots"] <= max_missing_slots)].copy()
+        near = results[
+            (results["max_crafts"] == 0)
+            & (results["missing_slots"] <= max_missing_slots)
+            & (results["matched_slots"] > 0)
+        ].copy()
         return filtered, craftable, near
 
     def overview(self, stations: Optional[List[str]] = None, max_missing_slots: int = 2) -> dict:
@@ -288,7 +293,7 @@ class CalculatorService:
         max_missing_slots: int = 2,
     ) -> dict:
         filtered, _, near = self.result_frames(stations, max_missing_slots=max_missing_slots)
-        ordered = near.sort_values(["missing_slots", "result"]) if not near.empty else near
+        ordered = near.sort_values(["missing_slots", "matched_slots", "result"], ascending=[True, False, True]) if not near.empty else near
         if limit is not None:
             ordered = ordered.head(limit)
         return {

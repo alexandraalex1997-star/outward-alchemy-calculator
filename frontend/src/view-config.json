@@ -2,26 +2,36 @@
   {
     "id": "Craft now",
     "logic": "direct",
-    "summary": "Immediate craftable results from the current inventory, ranking mode, station filters, and result quantities."
+    "summary": "Immediate craftable results from the current inventory, ranking mode, station filters, and result quantities.",
+    "apis": ["GET /api/results/direct"],
+    "viewState": ["sortMode", "selectedStations"]
   },
   {
     "id": "Plan a target",
     "logic": "planner",
-    "summary": "A recursive single-target planner that prefers current inventory first and shows missing leaves when the path fails."
+    "summary": "A recursive single-target planner that prefers current inventory first and shows missing leaves when the path fails.",
+    "apis": ["POST /api/results/planner"],
+    "viewState": ["planTarget", "plannerDepth", "selectedStations", "plannerResult"]
   },
   {
     "id": "Shopping list",
     "logic": "shopping",
-    "summary": "An aggregated missing-items builder for multiple targets, using the current inventory and craftable intermediates."
+    "summary": "An aggregated missing-items builder for multiple targets, using the current inventory and craftable intermediates.",
+    "apis": ["POST /api/results/shopping-list"],
+    "viewState": ["shoppingText", "plannerDepth", "selectedStations", "shoppingResult"]
   },
   {
     "id": "Missing ingredients",
     "logic": "near",
-    "summary": "A slot-based near-craft view showing recipes that are close to craftable based on the live inventory."
+    "summary": "A slot-based near-craft view showing recipes that are close to craftable based on the live inventory.",
+    "apis": ["GET /api/results/near"],
+    "viewState": ["nearThreshold", "selectedStations"]
   },
   {
     "id": "Recipe database",
     "logic": "database",
-    "summary": "A browse, search, and filter view over the full recipe dataset, ingredient groups, and item metadata."
+    "summary": "A browse, search, and filter view over the full recipe dataset, ingredient groups, and item metadata.",
+    "apis": ["GET /api/metadata"],
+    "viewState": ["databaseSearch", "databaseStations", "databaseCategories"]
   }
 ]

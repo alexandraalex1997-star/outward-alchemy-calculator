@@ -36,6 +36,18 @@ def test_recipe_loading_uses_canonical_groups_and_manual_station_label() -> None
     assert "Manual Crafting" in data.station_options
 
 
+def test_clean_water_recipe_is_not_a_noop_self_recipe() -> None:
+    client = make_client()
+
+    client.post("/api/inventory/items/add", json={"item": "Clean Water", "qty": 2}).raise_for_status()
+
+    direct = client.get("/api/results/direct?stations=Campfire&limit=20").json()
+    near = client.get("/api/results/near?stations=Campfire&max_missing_slots=1&limit=20").json()
+
+    assert "Clean Water" not in result_map(direct["items"])
+    assert "Clean Water" not in result_map(near["items"])
+
+
 def test_duplicate_inventory_additions_aggregate_and_drive_direct_results() -> None:
     client = make_client()
 
@@ -141,9 +153,16 @@ def test_station_filters_apply_to_direct_planner_and_shopping_logic() -> None:
         json={"targets": [{"item": "Cool Potion", "qty": 1}], "max_depth": 5, "stations": ["Cooking Pot"]},
     ).json()
 
+    near_client = make_client()
+    near_client.post("/api/inventory/items/add", json={"item": "Gravel Beetle", "qty": 1}).raise_for_status()
+    near_alchemy = near_client.get("/api/results/near?stations=Alchemy+Kit&max_missing_slots=1&limit=20").json()
+    near_cooking = near_client.get("/api/results/near?stations=Cooking+Pot&max_missing_slots=1&limit=20").json()
+
     assert "Cool Potion" in result_map(direct_alchemy["items"])
     assert "Cool Potion" not in result_map(direct_cooking["items"])
     assert "Mineral Tea" in result_map(direct_cooking["items"])
+    assert any(row["result"] == "Cool Potion" for row in near_alchemy["items"])
+    assert all(row["result"] != "Cool Potion" for row in near_cooking["items"])
     assert planner_cooking["found"] is False
     assert planner_cooking["missing"] == [{"item": "Cool Potion", "qty": 1}]
     assert shopping_cooking["missing"] == [{"item": "Cool Potion", "qty": 1}]
