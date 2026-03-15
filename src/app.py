@@ -9,6 +9,8 @@ from typing import Dict, List, Optional, Tuple
 import pandas as pd
 import streamlit as st
 
+import crafting_core as core
+import inventory_ops
 from ui_layout import (
     load_ui_styles,
     named_block,
@@ -645,29 +647,31 @@ def utility_rail_defaults(recipes_df: pd.DataFrame) -> Tuple[List[str], int, Cou
     return station_filter, max_depth, extra_inventory
 
 
+def inventory_quick_add_keys() -> Tuple[int, str, str]:
+    nonce = int(st.session_state.get("inventory_quick_add_nonce", 0))
+    return nonce, f"inventory_search_select_{nonce}", f"inventory_add_qty_{nonce}"
+
+
 def add_inventory_quick_entry(selected_value: Optional[str], quantity_value: int) -> bool:
     selected = normalize(selected_value)
     if not selected:
         return False
-    picker_inventory = {
-        normalize(item_name): int(qty)
-        for item_name, qty in st.session_state.get("picker_inventory", {}).items()
-        if int(qty) > 0
-    }
-    current_qty = int(picker_inventory.get(selected, 0))
-    quantity = max(1, int(quantity_value))
-    picker_inventory[selected] = current_qty + quantity
+    picker_inventory = inventory_ops.merge_inventory_entry(
+        st.session_state.get("picker_inventory", {}),
+        selected,
+        max(1, int(quantity_value)),
+    )
     st.session_state["picker_inventory"] = picker_inventory
-    st.session_state["inventory_search_select"] = None
-    st.session_state["inventory_add_qty"] = 1
+    st.session_state["inventory_quick_add_nonce"] = int(st.session_state.get("inventory_quick_add_nonce", 0)) + 1
     return True
 
 
 # UI rendering keeps the working Streamlit widgets but places them in named sections.
 def render_inventory_picker(catalog: List[str], catalog_by_category: Dict[str, List[str]]) -> Counter:
     picker_inventory = inventory_picker_state(catalog)
-    if "inventory_add_qty" not in st.session_state:
-        st.session_state["inventory_add_qty"] = 1
+    _, search_key, qty_key = inventory_quick_add_keys()
+    if qty_key not in st.session_state:
+        st.session_state[qty_key] = 1
 
     with named_block("inventory-search-block"):
         with st.form("inventory_quick_add_form"):
@@ -678,7 +682,7 @@ def render_inventory_picker(catalog: List[str], catalog_by_category: Dict[str, L
                         "Search items",
                         options=catalog,
                         index=None,
-                        key="inventory_search_select",
+                        key=search_key,
                         placeholder="Start typing an ingredient name...",
                         help="Search the ingredient dropdown, pick one match, then add it with the quantity beside it.",
                     )
@@ -688,7 +692,7 @@ def render_inventory_picker(catalog: List[str], catalog_by_category: Dict[str, L
                         "Qty",
                         min_value=1,
                         step=1,
-                        key="inventory_add_qty",
+                        key=qty_key,
                         help="How many of the selected ingredient to add right now.",
                     )
             with add_cols[2]:
@@ -702,8 +706,8 @@ def render_inventory_picker(catalog: List[str], catalog_by_category: Dict[str, L
                     )
         if add_submitted:
             did_add = add_inventory_quick_entry(
-                st.session_state.get("inventory_search_select"),
-                int(st.session_state.get("inventory_add_qty", 1)),
+                st.session_state.get(search_key),
+                int(st.session_state.get(qty_key, 1)),
             )
             if did_add:
                 st.rerun()
@@ -981,10 +985,10 @@ def render_utility_sidebar(
                     uploaded_df = pd.read_csv(uploaded)
                 else:
                     uploaded_df = pd.read_excel(uploaded)
-                extra_inventory.update(inventory_from_df(uploaded_df))
+                extra_inventory.update(inventory_ops.inventory_from_df(uploaded_df))
 
             if raw_text.strip():
-                extra_inventory.update(counts_from_text(raw_text))
+                extra_inventory.update(inventory_ops.counts_from_text(raw_text))
 
         with named_expander("data-details-panel", "Data details", expanded=False):
             st.caption(f"Recipes loaded: {len(recipes_df)}")
@@ -1062,11 +1066,11 @@ load_ui_styles()
 
 recipes_df = load_recipes()
 raw_groups = load_raw_groups()
-groups = sanitize_groups(recipes_df, raw_groups)
+groups = core.sanitize_groups(recipes_df, raw_groups)
 item_metadata = load_item_metadata()
-recipe_index = build_recipe_index(recipes_df)
-item_catalog = build_item_catalog(recipes_df, groups)
-catalog_by_category = build_catalog_by_category(item_catalog, item_metadata)
+recipe_index = core.build_recipe_index(recipes_df)
+item_catalog = core.build_item_catalog(recipes_df, groups)
+catalog_by_category = core.build_catalog_by_category(item_catalog, item_metadata)
 
 render_hook("app-shell")
 using_live = (DATA_DIR / "recipes.csv").exists()
@@ -1111,7 +1115,7 @@ with named_block("content-shell"):
         inventory = Counter(picker_inventory)
         inventory.update(extra_inventory)
 
-    inventory_df = render_inventory_table(inventory)
+    inventory_df = inventory_ops.inventory_table_df(inventory)
     inventory_overview_height = table_height_for_rows(len(inventory_df), min_height=88, max_height=160, row_px=20)
 
     with inventory_overview_placeholder.container():
@@ -1147,7 +1151,7 @@ with named_block("content-shell"):
                     st.dataframe(inventory_df, use_container_width=True, hide_index=True, height=inventory_overview_height)
 
     filtered = recipes_df[recipes_df["station"].isin(station_filter)].copy()
-    results = build_direct_results(filtered, inventory, groups, item_metadata)
+    results = core.build_direct_results(filtered, inventory, groups, item_metadata)
     craftable = results[results["max_crafts"] > 0].copy()
     near = results[(results["max_crafts"] == 0) & (results["missing_slots"] <= 2)].copy()
     ordered_preview = order_craftable_results(craftable, "Smart score") if not craftable.empty else craftable
@@ -1267,14 +1271,14 @@ if active_section == "Plan a target":
             help="Pick one craft result and the planner will try to reach it through sub-crafts.",
         )
         working_inventory = Counter(inventory)
-        plan = plan_item(target, working_inventory, groups, recipe_index, depth=0, max_depth=max_depth, stack=tuple())
+        plan = core.plan_item(target, working_inventory, groups, recipe_index, depth=0, max_depth=max_depth, stack=tuple())
         if plan is None:
             st.warning("No multi-step plan found with the current inventory and planner depth.")
         else:
             st.success(f"A plan was found for at least 1x {target}.")
-            st.code("\n".join(format_plan_lines(plan)), language="text")
+            st.code("\n".join(core.format_plan_lines(plan)), language="text")
             render_table_header("Inventory after crafting one target", "A preview of what remains in your bag after following the plan once.")
-            st.dataframe(render_inventory_table(working_inventory), use_container_width=True, hide_index=True, height=280)
+            st.dataframe(inventory_ops.inventory_table_df(working_inventory), use_container_width=True, hide_index=True, height=280)
 
 elif active_section == "Shopping list":
     with named_expander("shopping-list-panel", "Shopping list", expanded=True):
@@ -1288,19 +1292,19 @@ elif active_section == "Shopping list":
             height=150,
             help="Use `item,qty` lines just like inventory input. This can contain multiple goal items.",
         )
-        target_counts = counts_from_text(target_text)
+        target_counts = inventory_ops.counts_from_text(target_text)
         if not target_counts:
             st.info("Add at least one target item to generate a shopping list.")
         else:
-            missing_counts, shopping_lines, final_inventory = build_shopping_list(
+            missing_counts, shopping_lines, final_inventory = core.build_shopping_list(
                 target_counts, inventory, groups, recipe_index, max_depth=max_depth
             )
             render_table_header("Requested build", "The target items and quantities you asked the shopping list to satisfy.")
-            st.dataframe(render_inventory_table(target_counts, item_label="target"), use_container_width=True, hide_index=True)
+            st.dataframe(inventory_ops.inventory_table_df(target_counts, item_label="target"), use_container_width=True, hide_index=True)
             if not missing_counts:
                 st.success("Your current stash is enough for this build. No shopping needed.")
             else:
-                missing_df = render_inventory_table(missing_counts)
+                missing_df = inventory_ops.inventory_table_df(missing_counts)
                 render_table_header("Minimum missing ingredients found", "The smallest missing ingredient list the planner found for the requested build.")
                 st.dataframe(missing_df, use_container_width=True, hide_index=True)
                 shopping_csv = missing_df.to_csv(index=False).encode("utf-8")
@@ -1316,7 +1320,7 @@ elif active_section == "Shopping list":
             with named_expander("shopping-plan-lines", "Show build plan", expanded=False):
                 st.code("\n".join(shopping_lines), language="text")
             with named_expander("shopping-plan-remaining", "Show remaining inventory after the build", expanded=False):
-                st.dataframe(render_inventory_table(final_inventory), use_container_width=True, hide_index=True)
+                st.dataframe(inventory_ops.inventory_table_df(final_inventory), use_container_width=True, hide_index=True)
 
 elif active_section == "Missing ingredients":
     with named_expander("missing-ingredients-panel", "Missing ingredients", expanded=True):
@@ -1354,11 +1358,11 @@ elif active_section == "Recipe database":
         )
         show_recipes = recipes_df.copy()
         show_recipes["ingredients"] = show_recipes["ingredient_list"].apply(lambda items: ", ".join(items))
-        show_recipes["effects"] = show_recipes["result"].apply(lambda result: "; ".join(item_meta_for(result, item_metadata)["effects"]))
-        show_recipes["heal"] = show_recipes["result"].apply(lambda result: item_meta_for(result, item_metadata)["heal"])
-        show_recipes["stamina"] = show_recipes["result"].apply(lambda result: item_meta_for(result, item_metadata)["stamina"])
-        show_recipes["mana"] = show_recipes["result"].apply(lambda result: item_meta_for(result, item_metadata)["mana"])
-        show_recipes["sale_value"] = show_recipes["result"].apply(lambda result: item_meta_for(result, item_metadata)["sale_value"])
+        show_recipes["effects"] = show_recipes["result"].apply(lambda result: "; ".join(core.item_meta_for(result, item_metadata)["effects"]))
+        show_recipes["heal"] = show_recipes["result"].apply(lambda result: core.item_meta_for(result, item_metadata)["heal"])
+        show_recipes["stamina"] = show_recipes["result"].apply(lambda result: core.item_meta_for(result, item_metadata)["stamina"])
+        show_recipes["mana"] = show_recipes["result"].apply(lambda result: core.item_meta_for(result, item_metadata)["mana"])
+        show_recipes["sale_value"] = show_recipes["result"].apply(lambda result: core.item_meta_for(result, item_metadata)["sale_value"])
         show_recipes = show_recipes.drop(columns=["ingredient_list", "result_key"])
         render_table_header("Recipe database", "The full recipe dataset currently loaded into the app.")
         st.dataframe(show_recipes, use_container_width=True, hide_index=True, height=420)
@@ -1370,4 +1374,4 @@ elif active_section == "Recipe database":
 
         if item_metadata:
             render_table_header("Item effects and prices", "Editable metadata that powers effect text, recovery values, and sale-value ranking.")
-            st.dataframe(build_metadata_table(item_metadata), use_container_width=True, hide_index=True)
+            st.dataframe(core.build_metadata_table(item_metadata), use_container_width=True, hide_index=True)
