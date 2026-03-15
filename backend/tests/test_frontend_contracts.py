@@ -63,15 +63,15 @@ def test_left_rail_sections_are_individually_collapsible() -> None:
     support_rail_source = read_frontend("components/SupportRail.tsx")
     ui_source = read_frontend("components/ui.tsx")
 
-    assert 'type RailSectionId = "snapshot" | "planning" | "how" | "bulk" | "data";' in support_rail_source
+    assert 'type RailSectionId = "snapshot" | "planning" | "bulk" | "data";' in support_rail_source
     assert 'onToggleSection("snapshot")' in support_rail_source
     assert 'onToggleSection("planning")' in support_rail_source
-    assert 'onToggleSection("how")' in support_rail_source
     assert 'onToggleSection("bulk")' in support_rail_source
     assert 'onToggleSection("data")' in support_rail_source
     assert 'className="panel-toggle"' in ui_source
     assert "Support rail" not in support_rail_source
     assert "Quick tools" not in support_rail_source
+    assert "How this works" not in support_rail_source
 
 
 def test_direct_result_sections_are_clearly_distinguished() -> None:
@@ -233,7 +233,7 @@ def test_long_result_lists_use_internal_scroll_containers_without_changing_colum
     assert "overflow: auto;" in css
     assert "scrollbar-gutter: stable both-edges;" in css
     assert ".results-rail .craft-table-shell {" in css
-    assert "grid-template-columns: var(--rail-width) minmax(0, 1fr) minmax(0, 1fr);" in css
+    assert "grid-template-columns: var(--rail-width) minmax(0, 1.34fr) minmax(22rem, 0.96fr);" in css
     assert "height: clamp(28rem, calc(100vh - 15rem), 48rem);" in css
 
 
@@ -245,6 +245,16 @@ def test_category_chips_stay_on_one_line_with_scroll_instead_of_wrapping() -> No
     assert ".category-chip-row {" in css
     assert "flex-wrap: nowrap;" in css
     assert "overflow-x: auto;" in css
+
+
+def test_left_rail_uses_a_scroll_region_so_expanding_one_section_does_not_hide_others() -> None:
+    css = read_frontend("styles/app.css")
+
+    assert ".utility-rail {" in css
+    assert "grid-template-rows: auto minmax(0, 1fr);" in css
+    assert ".rail-scroll {" in css
+    assert "min-height: 0;" in css
+    assert "overflow: auto;" in css
 
 
 def test_banner_is_full_width_and_centered_in_css() -> None:

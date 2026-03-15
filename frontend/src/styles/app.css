@@ -1,5 +1,5 @@
 .app-page {
-  width: min(1500px, calc(100vw - 2.2rem));
+  width: min(1580px, calc(100vw - 1.6rem));
   margin: 0 auto;
   min-height: 100vh;
   padding: 1rem 0 1.2rem;
@@ -82,7 +82,7 @@
 .app-shell {
   width: 100%;
   display: grid;
-  grid-template-columns: var(--rail-width) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: var(--rail-width) minmax(0, 1.34fr) minmax(22rem, 0.96fr);
   gap: var(--shell-gap);
   align-items: stretch;
   height: clamp(28rem, calc(100vh - 15rem), 48rem);
@@ -90,7 +90,7 @@
 }
 
 .app-shell.left-collapsed {
-  grid-template-columns: var(--rail-collapsed-width) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: var(--rail-collapsed-width) minmax(0, 1.34fr) minmax(22rem, 0.96fr);
 }
 
 .utility-rail,
@@ -115,6 +115,7 @@
 
 .utility-rail {
   display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 0.7rem;
   overflow: hidden;
 }
@@ -132,6 +133,11 @@
   overflow: auto;
   padding-right: 0.12rem;
   scrollbar-gutter: stable both-edges;
+}
+
+.rail-scroll {
+  min-height: 0;
+  align-content: start;
 }
 
 .rail-toggle {

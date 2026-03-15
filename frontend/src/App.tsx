@@ -37,7 +37,7 @@ const SORT_MODES = [
 ] as const;
 
 type NavItem = (typeof NAV_ITEMS)[number];
-type RailSectionId = "snapshot" | "planning" | "how" | "bulk" | "data";
+type RailSectionId = "snapshot" | "planning" | "bulk" | "data";
 type ViewConfigEntry = {
   id: string;
   logic: string;
@@ -105,7 +105,6 @@ export default function App() {
   const [railSections, setRailSections] = useState<Record<RailSectionId, boolean>>({
     snapshot: true,
     planning: true,
-    how: false,
     bulk: true,
     data: false,
   });

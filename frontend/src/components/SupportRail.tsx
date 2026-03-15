@@ -3,7 +3,7 @@ import type { ChangeEvent } from "react";
 import type { MetadataResponse, Snapshot } from "../types";
 import { Panel, SnapshotMetric, classNames } from "./ui";
 
-type RailSectionId = "snapshot" | "planning" | "how" | "bulk" | "data";
+type RailSectionId = "snapshot" | "planning" | "bulk" | "data";
 
 export function SupportRail({
   leftCollapsed,
@@ -143,13 +143,6 @@ export function SupportRail({
                 <strong>{nearThreshold} missing slot{nearThreshold === 1 ? "" : "s"}</strong>
               </label>
             </div>
-          </Panel>
-
-          <Panel title="How this works" collapsible collapsed={!railSections.how} onToggle={() => onToggleSection("how")}>
-            <ul className="helper-list">
-              <li>One live inventory powers every view.</li>
-              <li>Filters and imports stay in sync.</li>
-            </ul>
           </Panel>
 
           <Panel
