@@ -857,12 +857,13 @@ def render_utility_sidebar(
     groups: Dict[str, List[str]],
     item_metadata: Dict[str, dict],
     using_live: bool,
-) -> Tuple[List[str], int, Counter]:
+) -> Tuple[List[str], int, Counter, st.delta_generator.DeltaGenerator]:
     glossary = column_glossary()
     extra_inventory = Counter()
     with st.sidebar:
         st.caption("UTILITY RAIL")
         st.caption("Planning tools, helper notes, and bulk inventory actions live here.")
+        snapshot_placeholder = st.empty()
 
         with st.expander("Planning tools", expanded=True):
             station_filter = st.multiselect(
@@ -915,10 +916,11 @@ def render_utility_sidebar(
             for column, description in glossary:
                 st.markdown(f"- **{column}**: {description}")
 
-    return station_filter, max_depth, extra_inventory
+    return station_filter, max_depth, extra_inventory, snapshot_placeholder
 
 
 def render_utility_sidebar_extras(
+    snapshot_placeholder: st.delta_generator.DeltaGenerator,
     inventory_df: pd.DataFrame,
     filtered: pd.DataFrame,
     craftable: pd.DataFrame,
@@ -927,7 +929,7 @@ def render_utility_sidebar_extras(
     top_stamina: pd.DataFrame,
     top_mana: pd.DataFrame,
 ) -> None:
-    with st.sidebar:
+    with snapshot_placeholder.container():
         with st.container(border=True):
             st.subheader("Snapshot")
             st.caption("Compact summary of your current stash, direct options, and near-craft coverage.")
@@ -1130,6 +1132,18 @@ def inject_styles() -> None:
         [data-testid="stMetricValue"] {
             color: var(--text) !important;
         }
+        section[data-testid="stSidebar"] [data-testid="stMetric"] {
+            padding: 0.22rem 0.3rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+        }
+        section[data-testid="stSidebar"] [data-testid="stMetricLabel"] p {
+            font-size: 0.62rem !important;
+            line-height: 1.05 !important;
+        }
+        section[data-testid="stSidebar"] [data-testid="stMetricValue"] {
+            line-height: 1 !important;
+        }
         div[data-testid="stVerticalBlockBorderWrapper"] {
             background: linear-gradient(180deg, rgba(34, 18, 40, 0.92), rgba(24, 14, 29, 0.94));
             border: 1px solid rgba(157, 74, 255, 0.24) !important;
@@ -1260,7 +1274,7 @@ def inject_styles() -> None:
             transform-origin: left center;
         }
         [data-baseweb="tag"] span {
-            font-size: 0.72rem !important;
+            font-size: 0.8rem !important;
         }
         [data-baseweb="tag"] > span {
             padding-top: 0.04rem !important;
@@ -1384,7 +1398,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 using_live = (DATA_DIR / "recipes.csv").exists()
-station_filter, max_depth, extra_inventory = render_utility_sidebar(recipes_df, groups, item_metadata, using_live)
+station_filter, max_depth, extra_inventory, snapshot_placeholder = render_utility_sidebar(
+    recipes_df, groups, item_metadata, using_live
+)
 
 nav_col, _ = st.columns([0.78, 0.22], gap="small")
 with nav_col:
@@ -1437,7 +1453,7 @@ ordered_preview = order_craftable_results(craftable, "Smart score") if not craft
 top_heal = craftable.sort_values(["healing_total", "result"], ascending=[False, True]).head(1)
 top_stamina = craftable.sort_values(["stamina_total", "result"], ascending=[False, True]).head(1)
 top_mana = craftable.sort_values(["mana_total", "result"], ascending=[False, True]).head(1)
-render_utility_sidebar_extras(inventory_df, filtered, craftable, near, top_heal, top_stamina, top_mana)
+render_utility_sidebar_extras(snapshot_placeholder, inventory_df, filtered, craftable, near, top_heal, top_stamina, top_mana)
 
 with overview_col:
     with st.container(border=True):
