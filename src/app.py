@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from collections import Counter
 from functools import lru_cache
+from html import escape
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -616,25 +617,29 @@ def render_inventory_picker(catalog: List[str], catalog_by_category: Dict[str, L
         "Search items",
         key="inventory_search_text",
         placeholder="Start typing an ingredient name...",
-        help="Search any ingredient name. Matching items appear directly below and in the ingredient list.",
+        help="Search any ingredient name. Matching suggestions appear below and matching rows stay filtered in the ingredient list.",
     )
     search_key = key(search)
     suggestions = [item_name for item_name in catalog if search_key and search_key in key(item_name)][:8]
-    if suggestions:
-        st.markdown('<div class="inline-matches">', unsafe_allow_html=True)
-        match_cols = st.columns(min(4, len(suggestions)))
-        for idx, item_name in enumerate(suggestions):
-            label = f"+ {item_name}" if picker_inventory.get(item_name, 0) <= 0 else f"{item_name} ({picker_inventory[item_name]})"
-            if match_cols[idx % len(match_cols)].button(
-                label,
-                key=f"inline_match_{idx}_{item_name}",
-                use_container_width=True,
-                type="secondary",
-            ):
-                picker_inventory[item_name] = max(1, int(picker_inventory.get(item_name, 0)) + (0 if picker_inventory.get(item_name, 0) > 0 else 1))
+    if search_key:
+        if suggestions:
+            st.caption("Autocomplete")
+            selected_suggestion = st.selectbox(
+                "Matching ingredients",
+                options=suggestions,
+                index=None,
+                placeholder="Pick a matching ingredient to add...",
+                key=f"inventory_search_choice_{search_key}",
+                label_visibility="collapsed",
+                help="Choose a matching ingredient to add it directly to your inventory.",
+            )
+            if selected_suggestion:
+                picker_inventory[selected_suggestion] = max(1, int(picker_inventory.get(selected_suggestion, 0)) + (0 if picker_inventory.get(selected_suggestion, 0) > 0 else 1))
                 st.session_state["picker_inventory"] = picker_inventory
+                st.session_state["inventory_search_text"] = ""
                 st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
+        else:
+            render_quiet_empty("No ingredient names match the current search.", tone="inline")
 
     filter_cols = st.columns([2.9, 0.8, 0.7])
     selected_categories = filter_cols[0].multiselect(
@@ -652,7 +657,7 @@ def render_inventory_picker(catalog: List[str], catalog_by_category: Dict[str, L
         "Clear",
         help="Remove every selected item from the inventory builder.",
         use_container_width=True,
-        type="primary",
+        type="secondary",
     ):
         st.session_state["picker_inventory"] = {}
         picker_inventory = {}
@@ -679,14 +684,14 @@ def render_inventory_picker(catalog: List[str], catalog_by_category: Dict[str, L
             )
 
     if not rows:
-        st.info("No items match this search.")
+        render_quiet_empty("No items match the current search and filter combination.", tone="soft")
     else:
         render_table_header("Ingredient list", "This is the live filtered ingredient list. Tick or quantity-edit the rows directly here.")
         edited_rows = st.data_editor(
             pd.DataFrame(rows),
             use_container_width=True,
             hide_index=True,
-            height=500,
+            height=table_height_for_rows(len(rows), min_height=240, max_height=460, row_px=28),
             column_config={
                 "Have it": st.column_config.CheckboxColumn(
                     "Have it",
@@ -720,11 +725,16 @@ def render_inventory_picker(catalog: List[str], catalog_by_category: Dict[str, L
             elif item_name in visible_items:
                 picker_inventory.pop(item_name, None)
 
-    summary_cols = st.columns(4, gap="small")
-    summary_cols[0].metric("Categories shown", len(active_categories))
-    summary_cols[1].metric("Visible now", len(rows))
-    summary_cols[2].metric("Selected total", sum(picker_inventory.values()))
-    summary_cols[3].metric("Unique selected", len(picker_inventory))
+    render_compact_stats(
+        [
+            ("Categories shown", len(active_categories)),
+            ("Visible now", len(rows)),
+            ("Selected total", sum(picker_inventory.values())),
+            ("Unique selected", len(picker_inventory)),
+        ],
+        columns=4,
+        variant="compact",
+    )
 
     st.session_state["picker_inventory"] = picker_inventory
     return Counter(picker_inventory)
@@ -784,22 +794,6 @@ def explain_columns(title: str, keys: List[str]) -> None:
         st.markdown("\n".join(lines))
 
 
-def render_column_help_sidebar() -> None:
-    glossary = column_glossary()
-    with st.sidebar:
-        with st.expander("Data details", expanded=False):
-            st.markdown('<div class="ghost-card">', unsafe_allow_html=True)
-            st.caption(f"Recipes loaded: {len(recipes_df)}")
-            st.caption(f"Ingredient groups cleaned: {len(groups)}")
-            st.caption(f"Items with effect/value notes: {len(item_metadata)}")
-            st.caption("Live wiki pull detected." if using_live else "Using bundled sample data until you run the sync script.")
-            st.caption("Item effects and sale values come from `data/item_metadata.json`, so you can keep tuning them.")
-            st.markdown("</div>", unsafe_allow_html=True)
-        with st.expander("Column help", expanded=False):
-            for column, description in glossary:
-                st.markdown(f"- **{column}**: {description}")
-
-
 def present_recipe_table(df: pd.DataFrame, columns: List[str]) -> pd.DataFrame:
     labels = {
         "result": "Item",
@@ -845,6 +839,104 @@ def render_table_header(title: str, help_text: str) -> None:
     )
 
 
+def render_compact_stats(stats: List[Tuple[str, object]], columns: int = 4, variant: str = "") -> None:
+    cards = []
+    for label, value in stats:
+        cards.append(
+            """
+            <div class="stat-pill">
+                <span class="stat-pill-label">{label}</span>
+                <span class="stat-pill-value">{value}</span>
+            </div>
+            """.format(label=escape(str(label)), value=escape(str(value)))
+        )
+    st.markdown(
+        f'<div class="compact-stats {variant}" style="grid-template-columns: repeat({columns}, minmax(0, 1fr));">{"".join(cards)}</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def render_quiet_empty(message: str, tone: str = "soft") -> None:
+    st.markdown(
+        f'<div class="empty-state {tone}">{escape(message)}</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def table_height_for_rows(row_count: int, min_height: int = 150, max_height: int = 320, row_px: int = 32) -> int:
+    if row_count <= 0:
+        return min_height
+    return min(max_height, max(min_height, 72 + row_count * row_px))
+
+
+def render_utility_sidebar(
+    recipes_df: pd.DataFrame,
+    groups: Dict[str, List[str]],
+    item_metadata: Dict[str, dict],
+    using_live: bool,
+) -> Tuple[List[str], int, Counter]:
+    glossary = column_glossary()
+    extra_inventory = Counter()
+    with st.sidebar:
+        st.markdown('<div class="utility-rail-label">Utility rail</div>', unsafe_allow_html=True)
+        st.caption("Planning tools, helper notes, and bulk inventory actions live here.")
+
+        with st.expander("Planning tools", expanded=True):
+            station_filter = st.multiselect(
+                "Stations",
+                options=sorted(recipes_df["station"].dropna().unique().tolist()),
+                default=sorted(recipes_df["station"].dropna().unique().tolist()),
+                help="Limit recipe results to the crafting stations you want to use.",
+            )
+            max_depth = st.slider(
+                "Planner depth",
+                min_value=1,
+                max_value=8,
+                value=5,
+                help="Higher depth allows more intermediate crafting steps, but may take longer to search.",
+            )
+
+        with st.expander("Bulk add inventory", expanded=False):
+            st.caption("Use this if paste/upload is faster than ticking individual ingredients.")
+            uploaded = st.file_uploader(
+                "Upload CSV or Excel",
+                type=["csv", "xlsx"],
+                help="Use an inventory sheet with an item/name column and an optional qty column.",
+            )
+            raw_text = st.text_area(
+                "Paste item,qty lines",
+                value="",
+                height=120,
+                placeholder="Wheat,8\nClean Water,4\nSalt,3",
+                help="Formats like `item,qty`, `item<TAB>qty`, or just `item` all work.",
+            )
+
+            if uploaded is not None:
+                if uploaded.name.lower().endswith(".csv"):
+                    uploaded_df = pd.read_csv(uploaded)
+                else:
+                    uploaded_df = pd.read_excel(uploaded)
+                extra_inventory.update(inventory_from_df(uploaded_df))
+
+            if raw_text.strip():
+                extra_inventory.update(counts_from_text(raw_text))
+
+        with st.expander("Data details", expanded=False):
+            st.markdown('<div class="ghost-card">', unsafe_allow_html=True)
+            st.caption(f"Recipes loaded: {len(recipes_df)}")
+            st.caption(f"Ingredient groups cleaned: {len(groups)}")
+            st.caption(f"Items with effect/value notes: {len(item_metadata)}")
+            st.caption("Live wiki pull detected." if using_live else "Using bundled sample data until you run the sync script.")
+            st.caption("Item effects and sale values come from `data/item_metadata.json`, so you can keep tuning them.")
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        with st.expander("Column help", expanded=False):
+            for column, description in glossary:
+                st.markdown(f"- **{column}**: {description}")
+
+    return station_filter, max_depth, extra_inventory
+
+
 def inject_styles() -> None:
     st.markdown(
         """
@@ -888,51 +980,53 @@ def inject_styles() -> None:
             color: var(--text);
         }
         .block-container {
-            padding-top: 1.05rem;
-            padding-bottom: 1.8rem;
+            padding-top: 0.8rem;
+            padding-bottom: 1.45rem;
             max-width: 1680px;
         }
         .hero-card {
             background: linear-gradient(135deg, rgba(38, 17, 44, 0.96), rgba(27, 16, 32, 0.94));
             border: 1px solid var(--border);
             border-radius: 16px;
-            padding: 0.78rem 1.2rem 0.62rem 1.2rem;
+            padding: 0.62rem 1rem 0.48rem 1rem;
             box-shadow: 0 12px 30px var(--shadow);
-            margin: 0 auto 0.45rem auto;
-            max-width: 760px;
+            margin: 0 0 0.26rem 0;
+            max-width: none;
+            width: 100%;
             text-align: center;
         }
         .hero-title {
-            font-size: clamp(1.95rem, 3vw, 2.85rem);
-            line-height: 0.98;
-            letter-spacing: 0.02em;
+            font-size: clamp(1.9rem, 2.7vw, 2.7rem);
+            line-height: 0.96;
+            letter-spacing: 0.015em;
         }
         .hero-subtitle {
-            max-width: 610px;
-            margin: 0.35rem auto 0 auto;
+            max-width: none;
+            margin: 0.2rem auto 0 auto;
             color: var(--muted);
             font-family: "Manrope", "Segoe UI", sans-serif;
-            font-size: clamp(0.66rem, 0.95vw, 0.82rem);
+            font-size: clamp(0.58rem, 0.7vw, 0.72rem);
             font-weight: 300;
             text-transform: uppercase;
-            letter-spacing: 0.16em;
-            line-height: 1.35;
+            letter-spacing: 0.18em;
+            line-height: 1.15;
+            white-space: nowrap;
         }
         .soft-card {
             background: linear-gradient(180deg, rgba(34, 18, 40, 0.92), rgba(24, 14, 29, 0.92));
             border: 1px solid rgba(157, 74, 255, 0.22);
             border-radius: 10px;
-            padding: 0.8rem 0.9rem;
-            margin-bottom: 0.4rem;
-            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
+            padding: 0.64rem 0.8rem;
+            margin-bottom: 0.32rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.14);
         }
         .side-card {
-            background: linear-gradient(180deg, var(--panel-side), var(--panel-side-2));
-            border: 1px solid rgba(157, 74, 255, 0.14);
+            background: linear-gradient(180deg, rgba(20, 18, 27, 0.92), rgba(17, 16, 23, 0.95));
+            border: 1px solid rgba(157, 74, 255, 0.1);
             border-radius: 10px;
-            padding: 0.72rem 0.82rem;
-            margin-bottom: 0.38rem;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.14);
+            padding: 0.58rem 0.7rem;
+            margin-bottom: 0.3rem;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
         }
         .section-note {
             color: var(--muted);
@@ -940,25 +1034,25 @@ def inject_styles() -> None:
         }
         .ghost-card {
             background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(157, 74, 255, 0.22);
+            border: 1px solid rgba(157, 74, 255, 0.12);
             color: rgba(248, 238, 253, 0.55);
             border-radius: 8px;
-            padding: 0.45rem 0.7rem;
-            opacity: 0.72;
+            padding: 0.35rem 0.55rem;
+            opacity: 0.64;
         }
         .tab-help {
             background: rgba(255, 105, 200, 0.08);
-            border: 1px solid rgba(255, 173, 229, 0.14);
-            border-radius: 14px;
-            padding: 0.42rem 0.65rem;
-            margin: 0.15rem 0 0.55rem 0;
+            border: 1px solid rgba(255, 173, 229, 0.1);
+            border-radius: 10px;
+            padding: 0.34rem 0.5rem;
+            margin: 0.12rem 0 0.4rem 0;
             color: var(--muted);
         }
         .thin-divider {
             width: 100%;
             height: 1px;
             background: linear-gradient(90deg, rgba(157, 74, 255, 0), rgba(157, 74, 255, 0.58), rgba(157, 74, 255, 0));
-            margin: 0.3rem 0 0.55rem 0;
+            margin: 0.16rem 0 0.4rem 0;
         }
         button[kind="primary"], .stDownloadButton button[kind="primary"], .stButton button[kind="primary"] {
             background: linear-gradient(135deg, var(--pink), var(--pink-deep)) !important;
@@ -967,8 +1061,8 @@ def inject_styles() -> None:
             border-radius: 999px !important;
             font-weight: 700 !important;
             box-shadow: 0 8px 18px rgba(255, 74, 184, 0.22) !important;
-            min-height: 2.12rem !important;
-            padding: 0.2rem 0.78rem !important;
+            min-height: 1.92rem !important;
+            padding: 0.12rem 0.7rem !important;
         }
         button[kind="secondary"], .stDownloadButton button[kind="secondary"], .stButton button[kind="secondary"] {
             background: rgba(255, 255, 255, 0.035) !important;
@@ -976,8 +1070,8 @@ def inject_styles() -> None:
             border: 1px solid rgba(157, 74, 255, 0.14) !important;
             border-radius: 999px !important;
             font-weight: 600 !important;
-            min-height: 1.8rem !important;
-            padding: 0.08rem 0.52rem !important;
+            min-height: 1.6rem !important;
+            padding: 0.06rem 0.46rem !important;
             box-shadow: none !important;
         }
         .stSelectbox div[data-baseweb="select"] > div,
@@ -989,34 +1083,66 @@ def inject_styles() -> None:
             background: rgba(255, 255, 255, 0.03) !important;
             color: var(--text) !important;
             border: 1px solid var(--border) !important;
-            border-radius: 14px !important;
+            border-radius: 10px !important;
         }
         .stSlider [data-baseweb="slider"] * {
             color: var(--pink-soft) !important;
         }
-        [data-testid="stMetric"] {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(157, 74, 255, 0.14);
-            border-radius: 9px;
-            padding: 0.32rem 0.4rem;
+        .compact-stats {
+            display: grid;
+            gap: 0.32rem;
+            margin: 0.22rem 0 0.18rem 0;
         }
-        [data-testid="stMetric"] label, [data-testid="stMetric"] div {
-            text-align: center;
+        .compact-stats.tight {
+            margin-top: 0.14rem;
+        }
+        .stat-pill {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(157, 74, 255, 0.12);
+            border-radius: 8px;
+            padding: 0.28rem 0.38rem;
+            min-width: 0;
+        }
+        .compact-stats.compact .stat-pill,
+        .compact-stats.sidebar .stat-pill {
+            padding: 0.24rem 0.34rem;
+        }
+        .stat-pill-label {
+            display: block;
+            color: rgba(248, 238, 253, 0.58);
+            font-size: 0.58rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            line-height: 1.1;
+        }
+        .stat-pill-value {
+            display: block;
+            color: var(--text);
+            font-size: 0.96rem;
+            font-weight: 700;
+            line-height: 1.05;
+            margin-top: 0.12rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         [data-testid="stDataFrame"] {
             border-radius: 10px;
             overflow: hidden;
-            border: 1px solid rgba(157, 74, 255, 0.18);
+            border: 1px solid rgba(157, 74, 255, 0.12);
         }
         .table-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 0.5rem;
-            margin-bottom: 0.35rem;
+            margin-bottom: 0.22rem;
+            padding-bottom: 0.18rem;
+            border-bottom: 1px solid rgba(157, 74, 255, 0.24);
         }
         .table-header-title {
-            font-size: 1rem;
+            font-size: 0.94rem;
             font-weight: 700;
             color: var(--text);
         }
@@ -1035,29 +1161,32 @@ def inject_styles() -> None:
         }
         .muted-nav-note {
             color: rgba(248, 238, 253, 0.6);
-            font-size: 0.78rem;
-            margin: 0.08rem 0 0.25rem 0;
+            font-size: 0.72rem;
+            margin: 0.02rem 0 0.14rem 0;
         }
         [data-testid="stMarkdownContainer"] a {
             color: var(--pink-soft);
         }
         div[role="radiogroup"] {
-            gap: 0.15rem;
+            gap: 0.08rem;
         }
         div[role="radiogroup"] > label {
             background: transparent;
             border: none;
             border-radius: 0;
-            padding: 0.02rem 0.14rem;
-            min-height: 1.25rem;
+            padding: 0.01rem 0.1rem;
+            min-height: 1rem;
+        }
+        div[role="radiogroup"] p {
+            font-size: 0.82rem !important;
         }
         .stCheckbox {
             display: flex;
             align-items: center;
-            min-height: 1.8rem;
+            min-height: 1.5rem;
             padding-top: 0;
-            min-width: 7.4rem;
-            justify-content: center;
+            min-width: 6.7rem;
+            justify-content: flex-start;
         }
         .stCheckbox label {
             margin-bottom: 0 !important;
@@ -1075,12 +1204,20 @@ def inject_styles() -> None:
             margin: 0.16rem 0 0.35rem 0;
         }
         [data-baseweb="tag"] {
-            transform: scale(0.76);
+            transform: scale(0.66);
             transform-origin: left center;
         }
         [data-testid="stSidebar"] {
             background: linear-gradient(180deg, rgba(18, 10, 22, 0.96), rgba(24, 14, 29, 0.96));
             border-right: 1px solid rgba(157, 74, 255, 0.18);
+        }
+        .utility-rail-label {
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(248, 238, 253, 0.52);
+            margin-bottom: 0.12rem;
         }
         section[data-testid="stSidebar"] details {
             border: 1px solid rgba(157, 74, 255, 0.12);
@@ -1088,7 +1225,23 @@ def inject_styles() -> None:
             background: rgba(255, 255, 255, 0.025);
         }
         section[data-testid="stSidebar"] details summary {
-            font-size: 0.92rem;
+            font-size: 0.88rem;
+        }
+        .empty-state {
+            border: 1px dashed rgba(157, 74, 255, 0.18);
+            border-radius: 8px;
+            color: rgba(248, 238, 253, 0.48);
+            background: rgba(255, 255, 255, 0.018);
+            padding: 0.5rem 0.62rem;
+            font-size: 0.84rem;
+        }
+        .empty-state.soft {
+            margin-top: 0.22rem;
+        }
+        .empty-state.inline {
+            margin-top: 0.12rem;
+            padding: 0.34rem 0.52rem;
+            font-size: 0.78rem;
         }
         .section-stack {
             display: block;
@@ -1096,6 +1249,9 @@ def inject_styles() -> None:
         @media (max-width: 1100px) {
             .hero-card {
                 max-width: 100%;
+            }
+            .hero-subtitle {
+                white-space: normal;
             }
         }
         </style>
@@ -1169,86 +1325,54 @@ st.markdown(
     unsafe_allow_html=True,
 )
 using_live = (DATA_DIR / "recipes.csv").exists()
-render_column_help_sidebar()
+station_filter, max_depth, extra_inventory = render_utility_sidebar(recipes_df, groups, item_metadata, using_live)
 
-nav_col, _ = st.columns([0.72, 0.28], gap="small")
+nav_col, _ = st.columns([0.78, 0.22], gap="small")
 with nav_col:
     active_section = render_section_nav()
     render_active_section_note(active_section)
 st.markdown('<div class="thin-divider"></div>', unsafe_allow_html=True)
 
-inventory_col, overview_col = st.columns([1.18, 0.82], gap="medium")
+inventory_col, overview_col = st.columns([1.34, 0.66], gap="small")
 with inventory_col:
     st.markdown('<div class="soft-card">', unsafe_allow_html=True)
     st.subheader("Inventory input")
-    st.caption("Build your stash here. Search, filter by category, and tick the items you own.")
+    st.caption("Search, filter, and edit the ingredients you own here.")
     picker_inventory = render_inventory_picker(item_catalog, catalog_by_category)
-
-    render_table_header("Planning controls", "These settings affect recipe filtering and how deeply the planner searches intermediate crafts.")
-    station_filter = st.multiselect(
-        "Stations",
-        options=sorted(recipes_df["station"].dropna().unique().tolist()),
-        default=sorted(recipes_df["station"].dropna().unique().tolist()),
-        help="Limit recipe results to the crafting stations you want to use.",
-    )
-    max_depth = st.slider(
-        "Planner depth",
-        min_value=1,
-        max_value=8,
-        value=5,
-        help="Higher depth allows more intermediate crafting steps, but may take longer to search.",
-    )
-
-    extra_inventory = Counter()
-    with st.expander("Optional: bulk add with paste or CSV / Excel"):
-        st.caption("Use this only if it is faster for you to add a lot of items at once.")
-        uploaded = st.file_uploader(
-            "Upload CSV or Excel",
-            type=["csv", "xlsx"],
-            help="Use an inventory sheet with an item/name column and an optional qty column.",
-        )
-        raw_text = st.text_area(
-            "Paste item,qty lines",
-            value="",
-            height=120,
-            placeholder="Wheat,8\nClean Water,4\nSalt,3",
-            help="Formats like `item,qty`, `item<TAB>qty`, or just `item` all work.",
-        )
-
-        if uploaded is not None:
-            if uploaded.name.lower().endswith(".csv"):
-                uploaded_df = pd.read_csv(uploaded)
-            else:
-                uploaded_df = pd.read_excel(uploaded)
-            extra_inventory.update(inventory_from_df(uploaded_df))
-
-        if raw_text.strip():
-            extra_inventory.update(counts_from_text(raw_text))
 
     inventory = Counter(picker_inventory)
     inventory.update(extra_inventory)
     st.markdown("</div>", unsafe_allow_html=True)
 
 inventory_df = render_inventory_table(inventory)
-inventory_overview_height = 220 if inventory_df.empty else min(320, max(200, 118 + len(inventory_df) * 24))
+inventory_overview_height = table_height_for_rows(len(inventory_df), min_height=150, max_height=290, row_px=28)
 
 with overview_col:
     st.markdown('<div class="side-card">', unsafe_allow_html=True)
     st.subheader("Inventory overview")
     st.caption("Your currently selected inventory, including anything added from paste or upload.")
-    bag_cols = st.columns([0.92, 0.92, 1.06], gap="small")
-    bag_cols[0].metric("Unique items", len(inventory))
-    bag_cols[1].metric("Total quantity", sum(inventory.values()))
-    bag_cols[2].download_button(
-        "Download inventory CSV",
-        data=inventory_df.to_csv(index=False).encode("utf-8"),
-        file_name="outward_inventory.csv",
-        mime="text/csv",
-        use_container_width=True,
-        type="secondary",
-    )
-    render_table_header("Inventory overview", "This table shows the current inventory feeding the calculator.")
-    st.dataframe(inventory_df, use_container_width=True, hide_index=True, height=inventory_overview_height)
+    bag_cols = st.columns([1.28, 0.92], gap="small")
+    with bag_cols[0]:
+        render_compact_stats(
+            [("Unique items", len(inventory)), ("Total quantity", sum(inventory.values()))],
+            columns=2,
+            variant="sidebar tight",
+        )
+    with bag_cols[1]:
+        st.download_button(
+            "Download inventory CSV",
+            data=inventory_df.to_csv(index=False).encode("utf-8"),
+            file_name="outward_inventory.csv",
+            mime="text/csv",
+            use_container_width=True,
+            type="secondary",
+            disabled=inventory_df.empty,
+        )
+    if inventory_df.empty:
+        render_quiet_empty("No inventory selected yet. Add ingredients in the main list or use bulk add from the utility rail.")
+    else:
+        render_table_header("Inventory overview", "This table shows the current inventory feeding the calculator.")
+        st.dataframe(inventory_df, use_container_width=True, hide_index=True, height=inventory_overview_height)
     st.markdown("</div>", unsafe_allow_html=True)
 
 filtered = recipes_df[recipes_df["station"].isin(station_filter)].copy()
@@ -1265,24 +1389,24 @@ with overview_col:
     st.markdown('<div class="side-card">', unsafe_allow_html=True)
     st.subheader("Snapshot")
     st.caption("Compact summary of your current stash, direct options, and recipe coverage.")
-    metric_cols = st.columns(2, gap="small")
-    metric_cols[0].metric("Inventory lines", len(inventory_df))
-    metric_cols[1].metric("Known recipes", len(filtered))
-    detail_cols = st.columns(2, gap="small")
-    detail_cols[0].metric("Direct crafts", len(craftable))
-    detail_cols[1].metric("Near crafts", len(near))
-    best_cols = st.columns(3, gap="small")
-    best_cols[0].metric(
-        "Best heal",
-        top_heal.iloc[0]["result"] if not top_heal.empty and top_heal.iloc[0]["healing_total"] > 0 else "None",
+    render_compact_stats(
+        [
+            ("Inventory lines", len(inventory_df)),
+            ("Known recipes", len(filtered)),
+            ("Direct crafts", len(craftable)),
+            ("Near crafts", len(near)),
+        ],
+        columns=2,
+        variant="sidebar tight",
     )
-    best_cols[1].metric(
-        "Best stamina",
-        top_stamina.iloc[0]["result"] if not top_stamina.empty and top_stamina.iloc[0]["stamina_total"] > 0 else "None",
-    )
-    best_cols[2].metric(
-        "Best mana",
-        top_mana.iloc[0]["result"] if not top_mana.empty and top_mana.iloc[0]["mana_total"] > 0 else "None",
+    render_compact_stats(
+        [
+            ("Best heal", top_heal.iloc[0]["result"] if not top_heal.empty and top_heal.iloc[0]["healing_total"] > 0 else "None"),
+            ("Best stamina", top_stamina.iloc[0]["result"] if not top_stamina.empty and top_stamina.iloc[0]["stamina_total"] > 0 else "None"),
+            ("Best mana", top_mana.iloc[0]["result"] if not top_mana.empty and top_mana.iloc[0]["mana_total"] > 0 else "None"),
+        ],
+        columns=3,
+        variant="sidebar tight",
     )
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -1290,17 +1414,23 @@ with overview_col:
     st.markdown('<div class="side-card">', unsafe_allow_html=True)
     st.subheader("Best direct options")
     st.caption("A quiet shortlist of the strongest immediate crafts from your current inventory.")
-    metric_cols = st.columns(2, gap="small")
-    metric_cols[0].metric("Direct crafts", len(craftable))
-    metric_cols[1].metric("Near crafts", len(near))
-    preview_cols = ["result", "max_crafts", "max_total_output", "station", "effects", "ingredients"]
-    render_table_header("Best direct options", "A quick shortlist of the most immediately craftable options from your current inventory.")
-    st.dataframe(
-        present_recipe_table(ordered_preview.head(12), preview_cols),
-        use_container_width=True,
-        hide_index=True,
-        height=250,
+    render_compact_stats(
+        [("Direct crafts", len(craftable)), ("Near crafts", len(near))],
+        columns=2,
+        variant="sidebar tight",
     )
+    preview_cols = ["result", "max_crafts", "max_total_output", "station", "effects", "ingredients"]
+    preview_df = present_recipe_table(ordered_preview.head(12), preview_cols) if not ordered_preview.empty else pd.DataFrame()
+    if preview_df.empty:
+        render_quiet_empty("Direct craft recommendations will appear here once your selected inventory can make something.")
+    else:
+        render_table_header("Best direct options", "A quick shortlist of the most immediately craftable options from your current inventory.")
+        st.dataframe(
+            preview_df,
+            use_container_width=True,
+            hide_index=True,
+            height=table_height_for_rows(len(preview_df), min_height=150, max_height=260, row_px=28),
+        )
     st.markdown("</div>", unsafe_allow_html=True)
 
 with overview_col:
@@ -1310,7 +1440,7 @@ with overview_col:
             "This answers the live question: what can I make immediately from what I already have? Sort by output, healing, stamina, mana, or sale value."
         )
         if craftable.empty:
-            st.info("No direct crafts found with the current inventory.")
+            render_quiet_empty("No direct crafts found with the current inventory.", tone="soft")
         else:
             sort_mode = st.selectbox(
                 "Sort results by",
@@ -1334,7 +1464,12 @@ with overview_col:
                 "ingredients",
             ]
             render_table_header("Craftable recipes", "Recipes you can make immediately with the current inventory and station filters.")
-            st.dataframe(present_recipe_table(ordered, craft_now_cols), use_container_width=True, hide_index=True, height=340)
+            st.dataframe(
+                present_recipe_table(ordered, craft_now_cols),
+                use_container_width=True,
+                hide_index=True,
+                height=table_height_for_rows(len(ordered), min_height=200, max_height=340, row_px=28),
+            )
             csv_bytes = ordered.drop(columns=["ingredient_list"]).to_csv(index=False).encode("utf-8")
             st.download_button(
                 "Download craftable recipes as CSV",
