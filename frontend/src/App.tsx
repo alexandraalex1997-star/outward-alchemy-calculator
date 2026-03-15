@@ -171,6 +171,66 @@ function RecipeTable({
   );
 }
 
+function slotLabel(count: number) {
+  return `${count} slot${count === 1 ? "" : "s"} missing`;
+}
+
+function NearCraftTable({
+  rows,
+  emptyMessage = "Nothing falls inside the current near-craft threshold.",
+  compact = false,
+}: {
+  rows: RecipeResult[];
+  emptyMessage?: string;
+  compact?: boolean;
+}) {
+  if (!rows.length) {
+    return <div className="empty-state">{emptyMessage}</div>;
+  }
+
+  return (
+    <div className={classNames("table-shell", compact && "near-table-compact")}>
+      <table className="data-table near-table">
+        <thead>
+          <tr>
+            <th>Recipe</th>
+            <th>{compact ? "Need" : "Near status"}</th>
+            <th>{compact ? "Slots" : "Still missing"}</th>
+            <th>Station</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
+            const totalSlots = row.ingredient_list.length || row.matched_slots + row.missing_slots;
+            return (
+              <tr key={`${row.result}-${row.station}-${row.ingredients}`}>
+                <td>
+                  <div className="near-result-name">{row.result}</div>
+                  {!compact ? <div className="table-note">{row.ingredients}</div> : null}
+                </td>
+                <td>
+                  {compact ? (
+                    row.missing_items || "See details"
+                  ) : (
+                    <>
+                      <div>{slotLabel(row.missing_slots)}</div>
+                      <div className="table-note">
+                        {row.matched_slots}/{totalSlots} slots ready
+                      </div>
+                    </>
+                  )}
+                </td>
+                <td>{compact ? slotLabel(row.missing_slots) : row.missing_items || "Nothing listed"}</td>
+                <td>{row.station}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 function InventoryList({
   title,
   items,
@@ -474,8 +534,8 @@ export default function App() {
   const activeSummary = VIEW_SUMMARIES[activeSection] ?? "";
   const activeApiSummary = activeView?.apis?.join(" | ") ?? "";
   const stationFilterNote = selectedStations.length
-    ? `Station filter: ${selectedStations.join(", ")}.`
-    : "No stations selected. Craft, planner, shopping, and near-craft panels will show no station-backed recipes.";
+    ? `Stations: ${selectedStations.join(", ")}`
+    : "No stations selected. Recipe views will be empty.";
 
   const executePlanner = useCallback(async () => {
     if (!planTarget) return;
@@ -586,12 +646,12 @@ export default function App() {
         {!leftCollapsed ? (
           <div className="rail-scroll">
             <header className="rail-header">
-              <span className="eyebrow">Utility rail</span>
-              <h2>Support tools</h2>
-              <p>Snapshot, filters, imports, and live planner controls all point at the same inventory state.</p>
+              <span className="eyebrow">Support rail</span>
+              <h2>Quick tools</h2>
+              <p>Live totals, filters, and imports.</p>
             </header>
 
-            <Panel title="Snapshot" description="Live summary driven by the same canonical inventory state used by every result panel.">
+            <Panel title="Snapshot" description="Live totals from your inventory.">
               <div className="stat-grid two-up">
                 <StatCard label="Inventory lines" value={overview?.snapshot.inventory_lines ?? 0} />
                 <StatCard label="Known recipes" value={overview?.snapshot.known_recipes ?? 0} />
@@ -605,7 +665,7 @@ export default function App() {
               </div>
             </Panel>
 
-            <Panel title="Planning tools" description="The control summaries below make it explicit which outputs update when you change each setting.">
+            <Panel title="Planning tools" description="These settings shape crafting, near-craft, and planning views.">
               <label className="field">
                 <span>Planner depth</span>
                 <input type="range" min={1} max={8} value={plannerDepth} onChange={(event) => setPlannerDepth(Number(event.target.value))} />
@@ -649,13 +709,12 @@ export default function App() {
 
             <Panel title="How this works">
               <ul className="helper-list">
-                <li>Direct craft, near-craft, planner, and shopping list all read from one backend inventory store.</li>
-                <li>Bulk imports merge into that same store instead of creating a hidden second inventory.</li>
-                <li>Planner and shopping panels stay in sync after inventory edits once you run them.</li>
+                <li>One inventory powers every panel.</li>
+                <li>Imports, edits, planner, and shopping stay in sync.</li>
               </ul>
             </Panel>
 
-            <Panel title="Bulk add inventory" description="Paste text or upload CSV / Excel without leaving the calculator flow.">
+            <Panel title="Bulk add inventory" description="Paste text or upload CSV / Excel.">
               <textarea
                 className="bulk-text compact-text"
                 value={bulkText}
@@ -664,7 +723,7 @@ export default function App() {
               />
               <div className="inline-actions">
                 <button type="button" className="button subtle" onClick={() => void handleInventoryMutation(api.importText(bulkText))}>
-                  Import text
+                  Paste text
                 </button>
                 <label className="button subtle file-button">
                   Upload CSV / Excel
@@ -679,45 +738,55 @@ export default function App() {
 
             <Panel title="Data details">
               <div className="helper-list">
-                <div>Recipes loaded: {metadata?.recipe_count ?? 0}</div>
-                <div>Ingredient categories: {metadata?.categories.length ?? 0}</div>
-                <div>Ingredient groups: {metadata?.ingredient_groups.length ?? 0}</div>
+                <div>Recipes: {metadata?.recipe_count ?? 0}</div>
+                <div>Categories: {metadata?.categories.length ?? 0}</div>
+                <div>Groups: {metadata?.ingredient_groups.length ?? 0}</div>
                 <div>Stations: {metadata?.stations.length ?? 0}</div>
               </div>
             </Panel>
           </div>
-        ) : null}
+        ) : (
+          <div className="rail-peek" aria-hidden="true">
+            <span>Tools</span>
+          </div>
+        )}
       </aside>
 
       <section className="main-column">
         <header className="hero-card">
           <p className="eyebrow">Outward crafting helper</p>
           <h1>Alie&apos;s Outward Crafting</h1>
-          <p>Audit-ready crafting, target planning, shopping prep, and recipe browsing from one canonical inventory.</p>
+          <p>Craft, plan, shop, and browse recipes from one live inventory.</p>
         </header>
 
-        <nav className="mode-nav">
-          {NAV_ITEMS.map((item) => (
-            <button
-              key={item}
-              type="button"
-              className={classNames("nav-pill", activeSection === item && "active")}
-              onClick={() => setActiveSection(item)}
-            >
-              {item}
-            </button>
-          ))}
-        </nav>
+        <section className="mode-shell">
+          <nav className="mode-nav">
+            {NAV_ITEMS.map((item) => (
+              <button
+                key={item}
+                type="button"
+                className={classNames("nav-pill", activeSection === item && "active")}
+                onClick={() => setActiveSection(item)}
+              >
+                {item}
+              </button>
+            ))}
+          </nav>
 
-        <div className="mode-note">
-          <div>{activeSummary}</div>
-          {activeApiSummary ? <div className="mode-api-note">Uses: {activeApiSummary}</div> : null}
-        </div>
+          <div className="mode-note">
+            <div>{activeSummary}</div>
+            {activeApiSummary ? (
+              <span className="mode-info" title={`API: ${activeApiSummary}`}>
+                i
+              </span>
+            ) : null}
+          </div>
+        </section>
 
         {error ? <div className="error-banner">{error}</div> : null}
 
-        <Panel title="Inventory input" description="Quick-add ingredients, filter the catalog, and edit the same inventory that drives every result panel.">
-          <Panel title="Inventory overview" className="inline-overview" description="Current canonical inventory state.">
+        <Panel title="Inventory input" className="inventory-panel" description="Add, filter, and edit your live inventory.">
+          <Panel title="Inventory overview" className="inline-overview inventory-overview-panel" description="Current totals.">
             <div className="inventory-overview-row">
               <StatCard label="Unique items" value={inventory?.unique_items ?? 0} />
               <StatCard label="Total quantity" value={inventory?.total_quantity ?? 0} />
@@ -731,19 +800,19 @@ export default function App() {
             </div>
             <div className="info-strip">
               {inventory?.items.length
-                ? "Every live result panel in this React app reads from the same backend inventory store."
-                : "No inventory selected yet. Add ingredients below or use bulk add from the utility rail."}
+                ? "This inventory powers every panel."
+                : "Add items below or use bulk import."}
             </div>
           </Panel>
 
-          <form className="quick-add-row" onSubmit={(event) => void handleQuickAdd(event)}>
+          <form className="quick-add-row control-strip" onSubmit={(event) => void handleQuickAdd(event)}>
             <label className="field grow">
               <span>Search items</span>
               <input
                 list="ingredient-options"
                 value={quickAddValue}
                 onChange={(event) => setQuickAddValue(event.target.value)}
-                placeholder="Start typing an ingredient name..."
+                placeholder="Find an ingredient..."
               />
               <datalist id="ingredient-options">
                 {metadata?.ingredients.map((ingredient) => (
@@ -765,7 +834,7 @@ export default function App() {
             </button>
           </form>
 
-          <div className="toolbar-row">
+          <div className="toolbar-row control-strip toolbar-strip">
             <div className="toolbar-categories">
               <span className="toolbar-label">Categories</span>
               <div className="chip-group">
@@ -799,7 +868,7 @@ export default function App() {
 
           {filteredCatalogRows.length ? (
             <>
-              <div className="info-strip">Row data lives on the left. Use `Apply` to save quantity edits and `Remove` to clear an owned ingredient from the canonical inventory.</div>
+              <div className="info-strip inventory-table-note">Edit qty, then Apply. Remove clears the item.</div>
               <div className="table-shell ingredient-table-shell">
                 <table className="data-table">
                   <thead>
@@ -873,7 +942,7 @@ export default function App() {
         </Panel>
 
         {activeSection === "Craft now" ? (
-          <Panel title="What you can craft right now" description="Immediate craftable results from the current inventory, ranking mode, and station filters.">
+          <Panel title="What you can craft right now" description="Direct crafts from your current inventory.">
             <div className="inline-actions">
               <label className="field inline-field grow">
                 <span>Sort results by</span>
@@ -882,13 +951,11 @@ export default function App() {
                     <option key={mode} value={mode}>
                       {mode}
                     </option>
-                  ))}
+                ))}
                 </select>
               </label>
             </div>
-            <div className="info-strip">
-              Smart score is the overall utility ranking. Other ranking modes fall back cleanly when item metadata is blank.
-            </div>
+            <div className="info-strip">Sort by overall utility, output, or a single stat.</div>
             <RecipeTable
               rows={craftNow?.items ?? []}
               columns={[
@@ -904,7 +971,7 @@ export default function App() {
         ) : null}
 
         {activeSection === "Plan a target" ? (
-          <Panel title="Plan a target" description="Run the recursive planner against the same inventory and station filters used everywhere else.">
+          <Panel title="Plan a target" description="Plan one target with inventory-first recursion.">
             <div className="inline-actions">
               <label className="field grow">
                 <span>Target item</span>
@@ -933,9 +1000,8 @@ export default function App() {
             </div>
             <div className="info-strip">
               {plannerResult?.explanation ??
-                "The planner resolves inventory first, then tries craftable intermediates within the current depth and station filters."}
+                "Uses your inventory first. Stations change recipes; depth changes recursion."}
             </div>
-            <div className="info-strip">Stations affect planner recipes. Planner depth affects recursion depth only. If you have already run the planner, inventory and control changes rerun it automatically.</div>
             {plannerResult ? (
               <>
                 <div className="split-columns">
@@ -959,7 +1025,7 @@ export default function App() {
         ) : null}
 
         {activeSection === "Shopping list" ? (
-          <Panel title="Shopping list" description="Aggregate missing ingredients for a multi-target build using the current inventory and craftable intermediates.">
+          <Panel title="Shopping list" description="Build a missing-items list for multiple targets.">
             <textarea
               className="bulk-text"
               value={shoppingText}
@@ -975,11 +1041,10 @@ export default function App() {
                   void executeShoppingList();
                 }}
               >
-                Build shopping list
+                Build list
               </button>
             </div>
-            <div className="info-strip">Targets are aggregated before the shopping run, and the planner reuses crafted intermediates where possible.</div>
-            <div className="info-strip">Stations affect recipe availability for shopping expansion. Planner depth affects how far the build can recurse into intermediate crafts.</div>
+            <div className="info-strip">Targets are combined first. Stations and depth shape intermediate crafting.</div>
             {shoppingResult ? (
               <>
                 <div className="split-columns">
@@ -1004,28 +1069,22 @@ export default function App() {
         ) : null}
 
         {activeSection === "Missing ingredients" ? (
-          <Panel title="Almost craftable recipes" description="Slot-based near-craft results from the current inventory and near-craft threshold.">
+          <Panel title="Almost craftable recipes" description="Closest valid recipes from your current inventory.">
             <div className="info-strip">
-              Showing valid recipes with up to {nearThreshold} missing slot{nearThreshold === 1 ? "" : "s"}, and only when at least one slot is already satisfied by your current inventory.
+              Up to {nearThreshold} missing slot{nearThreshold === 1 ? "" : "s"}. The table shows what is still blocking each recipe.
             </div>
-            <RecipeTable
+            <NearCraftTable
               rows={near?.items ?? []}
-              columns={[
-                { key: "result", label: "Item" },
-                { key: "missing_slots", label: "Missing slots" },
-                { key: "missing_items", label: "Missing items" },
-                { key: "station", label: "Station" },
-              ]}
               emptyMessage="Nothing falls inside the current near-craft threshold."
             />
           </Panel>
         ) : null}
 
         {activeSection === "Recipe database" ? (
-          <Panel title="Recipe database" description="Browse, search, and filter the full recipe set, ingredient groups, and item metadata.">
+          <Panel title="Recipe database" description="Search recipes, groups, and item stats.">
             <div className="database-toolbar">
               <label className="field grow">
-                <span>Search recipes, groups, or item notes</span>
+                <span>Search recipes, groups, or stats</span>
                 <input
                   value={databaseSearch}
                   onChange={(event) => setDatabaseSearch(event.target.value)}
@@ -1088,7 +1147,7 @@ export default function App() {
       </section>
 
       <aside className="results-rail">
-        <Panel title="Best direct options" description="Smart-score shortlist from the current inventory, station filters, and near-craft threshold.">
+        <Panel title="Best direct options" description="Top direct results for the current filters.">
           <div className="stat-grid two-up">
             <StatCard label="Direct crafts" value={bestDirect?.count ?? 0} />
             <StatCard label="Near crafts" value={bestDirect?.near_count ?? 0} />
@@ -1104,23 +1163,19 @@ export default function App() {
           />
         </Panel>
 
-        <Panel title="Almost craftable recipes" description="Near-craft recipes from the same inventory, station filters, and missing-slot threshold.">
+        <Panel title="Almost craftable recipes" description="Closest valid recipes under the current threshold.">
           <div className="stat-grid two-up">
             <StatCard label="Near crafts" value={near?.count ?? 0} />
             <StatCard label="Known recipes" value={near?.known_recipes ?? 0} />
           </div>
-          <RecipeTable
+          <NearCraftTable
+            compact
             rows={near?.items ?? []}
-            columns={[
-              { key: "result", label: "Item" },
-              { key: "missing_slots", label: "Missing" },
-              { key: "station", label: "Station" },
-            ]}
             emptyMessage="No recipes are currently inside the selected near-craft threshold."
           />
         </Panel>
 
-        <Panel title="What you can craft right now" description="Live craftable list from the current inventory and active ranking mode.">
+        <Panel title="What you can craft right now" description="Live craftable list from your current inventory.">
           <RecipeTable
             rows={craftNow?.items ?? []}
             columns={[

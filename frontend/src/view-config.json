@@ -2,35 +2,35 @@
   {
     "id": "Craft now",
     "logic": "direct",
-    "summary": "Immediate craftable results from the current inventory, ranking mode, station filters, and result quantities.",
+    "summary": "Direct crafts from your live inventory.",
     "apis": ["GET /api/results/direct"],
     "viewState": ["sortMode", "selectedStations"]
   },
   {
     "id": "Plan a target",
     "logic": "planner",
-    "summary": "A recursive single-target planner that prefers current inventory first and shows missing leaves when the path fails.",
+    "summary": "Plan one target with inventory-first recursion.",
     "apis": ["POST /api/results/planner"],
     "viewState": ["planTarget", "plannerDepth", "selectedStations", "plannerResult"]
   },
   {
     "id": "Shopping list",
     "logic": "shopping",
-    "summary": "An aggregated missing-items builder for multiple targets, using the current inventory and craftable intermediates.",
+    "summary": "Build a missing-items list for multiple targets.",
     "apis": ["POST /api/results/shopping-list"],
     "viewState": ["shoppingText", "plannerDepth", "selectedStations", "shoppingResult"]
   },
   {
     "id": "Missing ingredients",
     "logic": "near",
-    "summary": "A slot-based near-craft view showing recipes that are close to craftable based on the live inventory.",
+    "summary": "See which recipes are close and what they still need.",
     "apis": ["GET /api/results/near"],
     "viewState": ["nearThreshold", "selectedStations"]
   },
   {
     "id": "Recipe database",
     "logic": "database",
-    "summary": "A browse, search, and filter view over the full recipe dataset, ingredient groups, and item metadata.",
+    "summary": "Search recipes, groups, and item stats.",
     "apis": ["GET /api/metadata"],
     "viewState": ["databaseSearch", "databaseStations", "databaseCategories"]
   }

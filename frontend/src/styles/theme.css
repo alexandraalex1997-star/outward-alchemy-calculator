@@ -20,10 +20,10 @@
   --space-2: 0.7rem;
   --space-3: 1rem;
   --space-4: 1.4rem;
-  --rail-width: 16rem;
-  --rail-collapsed-width: 3rem;
+  --rail-width: 14.5rem;
+  --rail-collapsed-width: 2.85rem;
   --results-width: 24rem;
-  --shell-gap: 1rem;
+  --shell-gap: 0.9rem;
   --font-display: "Segoe UI", "Trebuchet MS", sans-serif;
   --font-body: "Segoe UI", system-ui, sans-serif;
 }

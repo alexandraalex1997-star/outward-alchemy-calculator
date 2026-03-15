@@ -2,19 +2,19 @@
   {
     "id": "stations",
     "label": "Stations",
-    "summary": "Filters recipes globally for Craft now, Missing ingredients, Plan a target, and Shopping list.",
+    "summary": "Affects Craft now, Missing ingredients, Plan a target, and Shopping list.",
     "affects": ["Craft now", "Missing ingredients", "Plan a target", "Shopping list"]
   },
   {
     "id": "planner_depth",
     "label": "Planner depth",
-    "summary": "Changes recursive planning depth for target planning and shopping-list expansion only.",
+    "summary": "Affects planner and shopping recursion only.",
     "affects": ["Plan a target", "Shopping list"]
   },
   {
     "id": "near_threshold",
     "label": "Near-craft threshold",
-    "summary": "Controls which recipes count as almost craftable in the near-craft views and snapshot counts.",
+    "summary": "Affects almost craftable results and near counts.",
     "affects": ["Missing ingredients", "Craft now"]
   }
 ]
