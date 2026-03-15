@@ -928,7 +928,8 @@ def render_utility_sidebar_extras(
     top_mana: pd.DataFrame,
 ) -> None:
     with st.sidebar:
-        with st.expander("Snapshot", expanded=False):
+        with st.container(border=True):
+            st.subheader("Snapshot")
             st.caption("Compact summary of your current stash, direct options, and near-craft coverage.")
             render_compact_stats(
                 [
@@ -1255,11 +1256,11 @@ def inject_styles() -> None:
             margin: 0.16rem 0 0.35rem 0;
         }
         [data-baseweb="tag"] {
-            transform: scale(0.56);
+            transform: scale(0.6);
             transform-origin: left center;
         }
         [data-baseweb="tag"] span {
-            font-size: 0.66rem !important;
+            font-size: 0.72rem !important;
         }
         [data-baseweb="tag"] > span {
             padding-top: 0.04rem !important;
@@ -1407,14 +1408,11 @@ with inventory_col:
     with st.container(border=True):
         st.subheader("Inventory overview")
         st.caption("Your currently selected inventory, including anything added from paste or upload.")
-        bag_cols = st.columns([1.28, 0.92], gap="small")
-        with bag_cols[0]:
-            render_compact_stats(
-                [("Unique items", len(inventory)), ("Total quantity", sum(inventory.values()))],
-                columns=2,
-                variant="sidebar tight",
-            )
-        with bag_cols[1]:
+        top_row = st.columns([1, 1, 1.08], gap="small")
+        top_row[0].metric("Unique items", len(inventory))
+        top_row[1].metric("Total quantity", sum(inventory.values()))
+        with top_row[2]:
+            st.caption(" ")
             st.download_button(
                 "Download inventory CSV",
                 data=inventory_df.to_csv(index=False).encode("utf-8"),
@@ -1425,7 +1423,7 @@ with inventory_col:
                 disabled=inventory_df.empty,
             )
         if inventory_df.empty:
-            render_quiet_empty("No inventory selected yet. Add ingredients in the main list or use bulk add from the utility rail.")
+            st.caption("No inventory selected yet. Add ingredients in the main list or use bulk add from the utility rail.")
         else:
             render_table_header("Inventory overview", "This table shows the current inventory feeding the calculator.")
             st.dataframe(inventory_df, use_container_width=True, hide_index=True, height=inventory_overview_height)
