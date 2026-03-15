@@ -60,31 +60,45 @@ def create_app() -> FastAPI:
         return app.state.service.import_excel_inventory(await file.read())
 
     @app.get("/api/results/overview")
-    def results_overview(stations: Optional[List[str]] = Query(default=None)) -> dict:
-        return app.state.service.overview(stations)
+    def results_overview(
+        stations: Optional[List[str]] = Query(default=None),
+        max_missing_slots: int = Query(default=2, ge=1, le=4),
+    ) -> dict:
+        return app.state.service.overview(stations, max_missing_slots=max_missing_slots)
 
     @app.get("/api/results/direct")
     def results_direct(
         sort_mode: str = Query(default="Smart score"),
         stations: Optional[List[str]] = Query(default=None),
         limit: Optional[int] = Query(default=None),
+        max_missing_slots: int = Query(default=2, ge=1, le=4),
     ) -> dict:
-        return app.state.service.direct_crafts(stations=stations, sort_mode=sort_mode, limit=limit)
+        return app.state.service.direct_crafts(
+            stations=stations,
+            sort_mode=sort_mode,
+            limit=limit,
+            max_missing_slots=max_missing_slots,
+        )
 
     @app.get("/api/results/near")
     def results_near(
         stations: Optional[List[str]] = Query(default=None),
         limit: Optional[int] = Query(default=None),
+        max_missing_slots: int = Query(default=2, ge=1, le=4),
     ) -> dict:
-        return app.state.service.near_crafts(stations=stations, limit=limit)
+        return app.state.service.near_crafts(stations=stations, limit=limit, max_missing_slots=max_missing_slots)
 
     @app.post("/api/results/planner")
     def results_planner(payload: PlannerRequest) -> dict:
-        return app.state.service.planner(payload.target, payload.max_depth)
+        return app.state.service.planner(payload.target, payload.max_depth, payload.stations)
 
     @app.post("/api/results/shopping-list")
     def results_shopping_list(payload: ShoppingListRequest) -> dict:
-        return app.state.service.shopping_list([target.model_dump() for target in payload.targets], payload.max_depth)
+        return app.state.service.shopping_list(
+            [target.model_dump() for target in payload.targets],
+            payload.max_depth,
+            payload.stations,
+        )
 
     @app.get("/api/metadata")
     def metadata() -> dict:

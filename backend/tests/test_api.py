@@ -6,6 +6,7 @@ import pandas as pd
 from fastapi.testclient import TestClient
 
 from backend.app.main import create_app
+from backend.app.services import load_calculator_data
 
 
 def make_client() -> TestClient:
@@ -22,55 +23,34 @@ def excel_bytes(rows: list[dict]) -> bytes:
     return buffer.getvalue()
 
 
-def direct_result_map(items: list[dict]) -> dict[str, dict]:
+def result_map(items: list[dict]) -> dict[str, dict]:
     return {row["result"]: row for row in items}
 
 
-def test_add_inventory_item_updates_direct_and_overview_results() -> None:
+def test_recipe_loading_uses_canonical_groups_and_manual_station_label() -> None:
+    data = load_calculator_data()
+
+    assert data.groups["water"] == ["Clean Water", "Salt Water", "Rancid Water", "Leyline Water"]
+    assert data.groups["bread (any)"] == ["Bread", "Bread Of The Wild", "Toast"]
+    assert "bread" not in data.groups
+    assert "Manual Crafting" in data.station_options
+
+
+def test_duplicate_inventory_additions_aggregate_and_drive_direct_results() -> None:
     client = make_client()
 
-    baseline = client.get("/api/results/direct").json()
-    assert baseline["count"] == 0
-
-    client.post("/api/inventory/items/add", json={"item": "Gravel Beetle", "qty": 1}).raise_for_status()
-
-    inventory = client.get("/api/inventory").json()
-    overview = client.get("/api/results/overview").json()
-    direct = client.get("/api/results/direct?limit=10").json()
-
-    assert inventory["items"] == [{"item": "Gravel Beetle", "qty": 1}]
-    assert overview["inventory"]["items"] == [{"item": "Gravel Beetle", "qty": 1}]
-    assert overview["snapshot"]["direct_crafts"] > 0
-    assert "Clean Water" in direct_result_map(direct["items"])
-
-
-def test_adding_same_item_merges_quantity_and_results() -> None:
-    client = make_client()
-
-    client.post("/api/inventory/items/add", json={"item": "Gravel Beetle", "qty": 1}).raise_for_status()
+    client.post("/api/inventory/items/add", json={"item": "Clean Water", "qty": 1}).raise_for_status()
+    client.post("/api/inventory/items/add", json={"item": "Clean Water", "qty": 1}).raise_for_status()
     client.post("/api/inventory/items/add", json={"item": "Gravel Beetle", "qty": 2}).raise_for_status()
 
     inventory = client.get("/api/inventory").json()
-    direct = client.get("/api/results/direct?limit=10").json()
-    clean_water = direct_result_map(direct["items"])["Clean Water"]
+    direct = client.get("/api/results/direct?stations=Alchemy+Kit&limit=20").json()
+    cool_potion = result_map(direct["items"])["Cool Potion"]
 
-    assert inventory["items"] == [{"item": "Gravel Beetle", "qty": 3}]
-    assert inventory["total_quantity"] == 3
-    assert clean_water["max_crafts"] == 3
-
-
-def test_editing_existing_quantity_updates_outputs() -> None:
-    client = make_client()
-
-    client.post("/api/inventory/items/add", json={"item": "Gravel Beetle", "qty": 1}).raise_for_status()
-    client.put("/api/inventory/items/Gravel Beetle", json={"qty": 5}).raise_for_status()
-
-    inventory = client.get("/api/inventory").json()
-    direct = client.get("/api/results/direct?limit=10").json()
-    clean_water = direct_result_map(direct["items"])["Clean Water"]
-
-    assert inventory["items"] == [{"item": "Gravel Beetle", "qty": 5}]
-    assert clean_water["max_crafts"] == 5
+    assert inventory["items"] == [{"item": "Clean Water", "qty": 2}, {"item": "Gravel Beetle", "qty": 2}]
+    assert inventory["total_quantity"] == 4
+    assert cool_potion["max_crafts"] == 2
+    assert cool_potion["max_total_output"] == 6
 
 
 def test_csv_import_updates_canonical_inventory_and_results() -> None:
@@ -78,16 +58,21 @@ def test_csv_import_updates_canonical_inventory_and_results() -> None:
 
     response = client.post(
         "/api/inventory/import/csv",
-        files={"file": ("inventory.csv", csv_bytes([{"item": "Gravel Beetle", "qty": 2}]), "text/csv")},
+        files={
+            "file": (
+                "inventory.csv",
+                csv_bytes([{"item": "Clean Water", "qty": 2}, {"item": "Gravel Beetle", "qty": 2}]),
+                "text/csv",
+            )
+        },
     )
     response.raise_for_status()
 
     inventory = client.get("/api/inventory").json()
-    direct = client.get("/api/results/direct?limit=10").json()
-    clean_water = direct_result_map(direct["items"])["Clean Water"]
+    direct = client.get("/api/results/direct?stations=Alchemy+Kit&limit=20").json()
 
-    assert inventory["items"] == [{"item": "Gravel Beetle", "qty": 2}]
-    assert clean_water["max_crafts"] == 2
+    assert inventory["items"] == [{"item": "Clean Water", "qty": 2}, {"item": "Gravel Beetle", "qty": 2}]
+    assert result_map(direct["items"])["Cool Potion"]["max_crafts"] == 2
 
 
 def test_excel_import_updates_canonical_inventory_and_results() -> None:
@@ -98,7 +83,7 @@ def test_excel_import_updates_canonical_inventory_and_results() -> None:
         files={
             "file": (
                 "inventory.xlsx",
-                excel_bytes([{"item": "Gravel Beetle", "qty": 2}]),
+                excel_bytes([{"item": "Clean Water", "qty": 2}, {"item": "Gravel Beetle", "qty": 2}]),
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             )
         },
@@ -106,23 +91,81 @@ def test_excel_import_updates_canonical_inventory_and_results() -> None:
     response.raise_for_status()
 
     inventory = client.get("/api/inventory").json()
-    direct = client.get("/api/results/direct?limit=10").json()
-    clean_water = direct_result_map(direct["items"])["Clean Water"]
+    direct = client.get("/api/results/direct?stations=Alchemy+Kit&limit=20").json()
 
-    assert inventory["items"] == [{"item": "Gravel Beetle", "qty": 2}]
-    assert clean_water["max_crafts"] == 2
+    assert inventory["items"] == [{"item": "Clean Water", "qty": 2}, {"item": "Gravel Beetle", "qty": 2}]
+    assert result_map(direct["items"])["Cool Potion"]["max_crafts"] == 2
 
 
-def test_planner_and_shopping_list_read_same_canonical_inventory() -> None:
+def test_edits_and_removals_update_planner_and_shopping_against_same_inventory() -> None:
     client = make_client()
 
-    client.post("/api/inventory/items/add", json={"item": "Gravel Beetle", "qty": 2}).raise_for_status()
+    client.post("/api/inventory/items/add", json={"item": "Clean Water", "qty": 1}).raise_for_status()
+    client.post("/api/inventory/items/add", json={"item": "Gravel Beetle", "qty": 1}).raise_for_status()
 
-    planner = client.post("/api/results/planner", json={"target": "Cool Potion", "max_depth": 5}).json()
-    shopping = client.post(
+    planner_before = client.post("/api/results/planner", json={"target": "Cool Potion", "max_depth": 5}).json()
+    shopping_before = client.post(
         "/api/results/shopping-list",
         json={"targets": [{"item": "Mineral Tea", "qty": 1}], "max_depth": 5},
     ).json()
 
-    assert planner["found"] is True
-    assert shopping["missing"] == []
+    client.put("/api/inventory/items/Clean%20Water", json={"qty": 0}).raise_for_status()
+
+    planner_after = client.post("/api/results/planner", json={"target": "Cool Potion", "max_depth": 5}).json()
+    shopping_after = client.post(
+        "/api/results/shopping-list",
+        json={"targets": [{"item": "Mineral Tea", "qty": 1}], "max_depth": 5},
+    ).json()
+
+    assert planner_before["found"] is True
+    assert shopping_before["missing"] == []
+    assert planner_after["found"] is False
+    assert planner_after["missing"] == [{"item": "Clean Water", "qty": 1}]
+    assert shopping_after["missing"] == [{"item": "Clean Water", "qty": 1}]
+
+
+def test_station_filters_apply_to_direct_planner_and_shopping_logic() -> None:
+    client = make_client()
+
+    client.post("/api/inventory/items/add", json={"item": "Clean Water", "qty": 1}).raise_for_status()
+    client.post("/api/inventory/items/add", json={"item": "Gravel Beetle", "qty": 1}).raise_for_status()
+
+    direct_alchemy = client.get("/api/results/direct?stations=Alchemy+Kit&limit=20").json()
+    direct_cooking = client.get("/api/results/direct?stations=Cooking+Pot&limit=20").json()
+    planner_cooking = client.post(
+        "/api/results/planner",
+        json={"target": "Cool Potion", "max_depth": 5, "stations": ["Cooking Pot"]},
+    ).json()
+    shopping_cooking = client.post(
+        "/api/results/shopping-list",
+        json={"targets": [{"item": "Cool Potion", "qty": 1}], "max_depth": 5, "stations": ["Cooking Pot"]},
+    ).json()
+
+    assert "Cool Potion" in result_map(direct_alchemy["items"])
+    assert "Cool Potion" not in result_map(direct_cooking["items"])
+    assert "Mineral Tea" in result_map(direct_cooking["items"])
+    assert planner_cooking["found"] is False
+    assert planner_cooking["missing"] == [{"item": "Cool Potion", "qty": 1}]
+    assert shopping_cooking["missing"] == [{"item": "Cool Potion", "qty": 1}]
+
+
+def test_missing_threshold_query_changes_near_results() -> None:
+    client = make_client()
+
+    client.post("/api/inventory/items/add", json={"item": "Gravel Beetle", "qty": 1}).raise_for_status()
+
+    near_one = client.get("/api/results/near?max_missing_slots=1").json()
+    near_two = client.get("/api/results/near?max_missing_slots=2").json()
+
+    assert near_two["count"] >= near_one["count"]
+    assert any(row["result"] == "Cool Potion" for row in near_one["items"])
+
+
+def test_metadata_exposes_recipe_database_groups_and_item_stats() -> None:
+    client = make_client()
+
+    metadata = client.get("/api/metadata").json()
+
+    assert metadata["recipes"]
+    assert metadata["ingredient_groups"]
+    assert metadata["item_stats"]

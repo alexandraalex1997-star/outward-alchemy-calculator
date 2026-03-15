@@ -24,6 +24,7 @@ def _load_recipes() -> pd.DataFrame:
     df = pd.read_csv(path)
     for column in ["recipe_id", "recipe_page", "section", "result", "station", "ingredients"]:
         df[column] = df[column].fillna("").astype(str).map(core.normalize)
+    df["station"] = df["station"].map(core.normalize_station)
     df["result_qty"] = df["result_qty"].fillna(1).astype(int)
     df["ingredient_list"] = df["ingredients"].apply(
         lambda raw: [core.normalize(token) for token in str(raw).split("|") if core.normalize(token)]
@@ -145,9 +146,10 @@ def recipe_sort_options() -> Dict[str, List[str]]:
 
 
 def order_craftable_results(craftable: pd.DataFrame, sort_mode: str) -> pd.DataFrame:
-    order_by = recipe_sort_options()[sort_mode]
+    selected_sort_mode = sort_mode if sort_mode in recipe_sort_options() else "Smart score"
+    order_by = recipe_sort_options()[selected_sort_mode]
     ascending = [False] * (len(order_by) - 1) + [True]
-    if sort_mode == "Result A-Z":
+    if selected_sort_mode == "Result A-Z":
         ascending = [True]
     return craftable.sort_values(order_by, ascending=ascending)
 
@@ -214,22 +216,36 @@ class CalculatorService:
         self.inventory_store.merge_items(imported)
         return self.get_inventory_response()
 
+    def _normalized_stations(self, stations: Optional[List[str]]) -> Optional[List[str]]:
+        if stations is None:
+            return None
+        cleaned = [core.normalize_station(station) for station in stations if core.normalize(station)]
+        return cleaned
+
     def filtered_recipes(self, stations: Optional[List[str]] = None) -> pd.DataFrame:
-        station_filter = stations or self.data.station_options
+        station_filter = self._normalized_stations(stations)
+        if station_filter is None:
+            return self.data.recipes_df.copy()
+        if not station_filter:
+            return self.data.recipes_df.iloc[0:0].copy()
         return self.data.recipes_df[self.data.recipes_df["station"].isin(station_filter)].copy()
 
-    def result_frames(self, stations: Optional[List[str]] = None) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    def result_frames(
+        self,
+        stations: Optional[List[str]] = None,
+        max_missing_slots: int = 2,
+    ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         filtered = self.filtered_recipes(stations)
         inventory = self.get_inventory()
         results = core.build_direct_results(filtered, inventory, self.data.groups, self.data.item_metadata)
         craftable = results[results["max_crafts"] > 0].copy()
-        near = results[(results["max_crafts"] == 0) & (results["missing_slots"] <= 2)].copy()
+        near = results[(results["max_crafts"] == 0) & (results["missing_slots"] <= max_missing_slots)].copy()
         return filtered, craftable, near
 
-    def overview(self, stations: Optional[List[str]] = None) -> dict:
+    def overview(self, stations: Optional[List[str]] = None, max_missing_slots: int = 2) -> dict:
         inventory = self.get_inventory()
         inventory_df = inventory_ops.inventory_table_df(inventory)
-        filtered, craftable, near = self.result_frames(stations)
+        filtered, craftable, near = self.result_frames(stations, max_missing_slots=max_missing_slots)
         top_heal = craftable.sort_values(["healing_total", "result"], ascending=[False, True]).head(1)
         top_stamina = craftable.sort_values(["stamina_total", "result"], ascending=[False, True]).head(1)
         top_mana = craftable.sort_values(["mana_total", "result"], ascending=[False, True]).head(1)
@@ -247,8 +263,14 @@ class CalculatorService:
             },
         }
 
-    def direct_crafts(self, stations: Optional[List[str]] = None, sort_mode: str = "Smart score", limit: Optional[int] = None) -> dict:
-        _, craftable, near = self.result_frames(stations)
+    def direct_crafts(
+        self,
+        stations: Optional[List[str]] = None,
+        sort_mode: str = "Smart score",
+        limit: Optional[int] = None,
+        max_missing_slots: int = 2,
+    ) -> dict:
+        _, craftable, near = self.result_frames(stations, max_missing_slots=max_missing_slots)
         ordered = order_craftable_results(craftable, sort_mode) if not craftable.empty else craftable
         if limit is not None:
             ordered = ordered.head(limit)
@@ -259,8 +281,13 @@ class CalculatorService:
             "items": _df_records(ordered),
         }
 
-    def near_crafts(self, stations: Optional[List[str]] = None, limit: Optional[int] = None) -> dict:
-        filtered, _, near = self.result_frames(stations)
+    def near_crafts(
+        self,
+        stations: Optional[List[str]] = None,
+        limit: Optional[int] = None,
+        max_missing_slots: int = 2,
+    ) -> dict:
+        filtered, _, near = self.result_frames(stations, max_missing_slots=max_missing_slots)
         ordered = near.sort_values(["missing_slots", "result"]) if not near.empty else near
         if limit is not None:
             ordered = ordered.head(limit)
@@ -270,23 +297,45 @@ class CalculatorService:
             "items": _df_records(ordered),
         }
 
-    def planner(self, target: str, max_depth: int) -> dict:
-        working_inventory = self.get_inventory()
-        plan = core.plan_item(target, working_inventory, self.data.groups, self.data.recipe_index, depth=0, max_depth=max_depth, stack=tuple())
+    def planner(self, target: str, max_depth: int, stations: Optional[List[str]] = None) -> dict:
+        base_inventory = self.get_inventory()
+        working_inventory = Counter(base_inventory)
+        filtered = self.filtered_recipes(stations)
+        recipe_index = core.build_recipe_index(filtered)
+        target_key = core.key(target)
+        missing_counts, plan = core.shopping_item_plan(
+            target,
+            working_inventory,
+            self.data.groups,
+            recipe_index,
+            depth=0,
+            max_depth=max_depth,
+            stack=tuple(),
+        )
+        found = not missing_counts
+        remaining_inventory = working_inventory if found else base_inventory
+        if found:
+            explanation = "A plan was found using the current inventory, planner depth, and station filters."
+        elif target_key in self.data.recipe_index and target_key not in recipe_index:
+            explanation = "No recipe for this target is available within the current station filters."
+        else:
+            explanation = "No complete plan was found. The planner is showing the closest branch and its missing leaves."
         return {
-            "target": target,
-            "found": plan is not None,
-            "lines": [] if plan is None else core.format_plan_lines(plan),
-            "remaining_inventory": _df_records(inventory_ops.inventory_table_df(working_inventory)),
+            "target": core.normalize(target),
+            "found": found,
+            "explanation": explanation,
+            "lines": core.format_plan_lines(plan),
+            "missing": _df_records(inventory_ops.inventory_table_df(missing_counts)),
+            "remaining_inventory": _df_records(inventory_ops.inventory_table_df(remaining_inventory)),
         }
 
-    def shopping_list(self, targets: List[dict], max_depth: int) -> dict:
+    def shopping_list(self, targets: List[dict], max_depth: int, stations: Optional[List[str]] = None) -> dict:
         target_counts = Counter({core.normalize(entry["item"]): int(entry["qty"]) for entry in targets if int(entry["qty"]) > 0})
         missing_counts, lines, final_inventory = core.build_shopping_list(
             target_counts,
             self.get_inventory(),
             self.data.groups,
-            self.data.recipe_index,
+            core.build_recipe_index(self.filtered_recipes(stations)),
             max_depth=max_depth,
         )
         return {
@@ -297,18 +346,23 @@ class CalculatorService:
         }
 
     def metadata(self) -> dict:
+        recipe_table = self.data.recipes_df.assign(
+            effects=self.data.recipes_df["result"].apply(lambda result: "; ".join(core.item_meta_for(result, self.data.item_metadata)["effects"])),
+            heal=self.data.recipes_df["result"].apply(lambda result: core.item_meta_for(result, self.data.item_metadata)["heal"]),
+            stamina=self.data.recipes_df["result"].apply(lambda result: core.item_meta_for(result, self.data.item_metadata)["stamina"]),
+            mana=self.data.recipes_df["result"].apply(lambda result: core.item_meta_for(result, self.data.item_metadata)["mana"]),
+            sale_value=self.data.recipes_df["result"].apply(lambda result: core.item_meta_for(result, self.data.item_metadata)["sale_value"]),
+            category=self.data.recipes_df["result"].apply(lambda result: core.item_meta_for(result, self.data.item_metadata)["category"]),
+        ).drop(columns=["result_key"])
         return {
             "ingredients": list(self.data.item_catalog),
             "categories": [{"name": name, "items": items} for name, items in self.data.catalog_by_category.items()],
             "stations": list(self.data.station_options),
             "recipe_count": int(len(self.data.recipes_df)),
-            "recipes": _df_records(
-                self.data.recipes_df.assign(
-                    effects=self.data.recipes_df["result"].apply(lambda result: "; ".join(core.item_meta_for(result, self.data.item_metadata)["effects"])),
-                    heal=self.data.recipes_df["result"].apply(lambda result: core.item_meta_for(result, self.data.item_metadata)["heal"]),
-                    stamina=self.data.recipes_df["result"].apply(lambda result: core.item_meta_for(result, self.data.item_metadata)["stamina"]),
-                    mana=self.data.recipes_df["result"].apply(lambda result: core.item_meta_for(result, self.data.item_metadata)["mana"]),
-                    sale_value=self.data.recipes_df["result"].apply(lambda result: core.item_meta_for(result, self.data.item_metadata)["sale_value"]),
-                ).drop(columns=["result_key"])
-            ),
+            "recipes": _df_records(recipe_table),
+            "ingredient_groups": [
+                {"group": group_name, "members": members, "member_count": len(members)}
+                for group_name, members in sorted(self.data.groups.items())
+            ],
+            "item_stats": _df_records(core.build_metadata_table(self.data.item_metadata)),
         }

@@ -68,18 +68,55 @@ export type CategoryGroup = {
   items: string[];
 };
 
+export type IngredientGroup = {
+  group: string;
+  members: string[];
+  member_count: number;
+};
+
+export type ItemStat = {
+  item: string;
+  category: string;
+  heal: number;
+  stamina: number;
+  mana: number;
+  sale_value: number;
+  effects: string;
+};
+
+export type RecipeDatabaseRecord = {
+  recipe_id: string;
+  recipe_page: string;
+  section: string;
+  result: string;
+  result_qty: number;
+  station: string;
+  ingredients: string;
+  ingredient_list: string[];
+  effects: string;
+  heal: number;
+  stamina: number;
+  mana: number;
+  sale_value: number;
+  category: string;
+};
+
 export type MetadataResponse = {
   ingredients: string[];
   categories: CategoryGroup[];
   stations: string[];
   recipe_count: number;
-  recipes: Array<Record<string, unknown>>;
+  recipes: RecipeDatabaseRecord[];
+  ingredient_groups: IngredientGroup[];
+  item_stats: ItemStat[];
 };
 
 export type PlannerResponse = {
   target: string;
   found: boolean;
+  explanation: string;
   lines: string[];
+  missing: InventoryItem[];
   remaining_inventory: InventoryItem[];
 };
 

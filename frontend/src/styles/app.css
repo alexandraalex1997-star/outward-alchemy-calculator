@@ -1,7 +1,7 @@
 .app-shell {
   width: min(1860px, calc(100vw - 2rem));
   margin: 0 auto;
-  padding: 1rem 0 1.4rem;
+  padding: 1.3rem 0 1.6rem;
   display: grid;
   grid-template-columns: var(--rail-width) minmax(0, 1fr) var(--results-width);
   gap: var(--shell-gap);
@@ -25,13 +25,13 @@
 
 .utility-rail {
   position: sticky;
-  top: 1rem;
+  top: 1.2rem;
   align-self: start;
 }
 
 .rail-scroll {
   display: grid;
-  gap: 0.6rem;
+  gap: 0.5rem;
 }
 
 .rail-toggle {
@@ -45,7 +45,7 @@
 }
 
 .rail-header {
-  padding: 0.2rem 0.2rem 0;
+  padding: 0.1rem 0.2rem 0.05rem;
 }
 
 .eyebrow {
@@ -75,8 +75,8 @@
 }
 
 .hero-card {
-  padding: 0.8rem 1rem;
-  margin-bottom: 0.7rem;
+  padding: 1.1rem 1.15rem 1rem;
+  margin-bottom: 0.85rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: linear-gradient(180deg, rgba(34, 19, 42, 0.92), rgba(24, 15, 31, 0.96));
@@ -88,7 +88,7 @@
 }
 
 .hero-card p:last-child {
-  margin-top: 0.3rem;
+  margin-top: 0.45rem;
   max-width: 60rem;
 }
 
@@ -97,6 +97,15 @@
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-bottom: 0.75rem;
+}
+
+.mode-note {
+  margin-bottom: 0.85rem;
+  padding: 0.62rem 0.78rem;
+  border: 1px solid rgba(255, 99, 191, 0.14);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--text-muted);
 }
 
 .nav-pill,
@@ -129,7 +138,7 @@
 .main-column,
 .results-rail {
   display: grid;
-  gap: 0.9rem;
+  gap: 0.85rem;
 }
 
 .panel {
@@ -147,12 +156,10 @@
 .panel-header {
   display: grid;
   gap: 0.2rem;
-  margin-bottom: 0.65rem;
+  margin-bottom: 0.62rem;
 }
 
 .inventory-overview-row,
-.quick-add-row,
-.toolbar-row,
 .inline-actions,
 .split-columns {
   display: flex;
@@ -162,6 +169,20 @@
 
 .inventory-overview-row {
   align-items: stretch;
+}
+
+.quick-add-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 6rem auto;
+  gap: 0.65rem;
+  align-items: end;
+}
+
+.toolbar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 0.8rem;
+  align-items: end;
 }
 
 .split-columns {
@@ -230,8 +251,6 @@
 }
 
 .toolbar-row {
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 0.75rem;
 }
 
@@ -245,6 +264,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
+  align-items: center;
 }
 
 .chip {
@@ -272,6 +292,10 @@
 
 .recipe-database-shell {
   max-height: 32rem;
+}
+
+.secondary-table-shell {
+  max-height: 20rem;
 }
 
 .data-table {
@@ -359,6 +383,11 @@
   gap: 0.35rem;
 }
 
+.mini-table {
+  display: grid;
+  gap: 0.32rem;
+}
+
 .helper-list li {
   margin-left: 1rem;
 }
@@ -367,6 +396,28 @@
 .code-block {
   min-height: 8rem;
   white-space: pre-wrap;
+}
+
+.compact-text {
+  min-height: 6.25rem;
+}
+
+.database-toolbar {
+  margin-bottom: 0.75rem;
+}
+
+.database-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.database-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 0.8rem;
 }
 
 @media (max-width: 1280px) {
@@ -379,10 +430,15 @@
     position: static;
   }
 
-  .split-columns,
-  .inventory-overview-row,
   .quick-add-row,
   .toolbar-row,
+  .database-filter-grid,
+  .database-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .split-columns,
+  .inventory-overview-row,
   .inline-actions {
     flex-direction: column;
     align-items: stretch;

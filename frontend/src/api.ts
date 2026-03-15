@@ -22,16 +22,23 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 export const api = {
   getMetadata: () => request<MetadataResponse>("/api/metadata"),
   getInventory: () => request<InventoryResponse>("/api/inventory"),
-  getOverview: (stations: string[]) => request<OverviewResponse>(`/api/results/overview${stations.length ? `?${new URLSearchParams(stations.map((station) => ["stations", station]))}` : ""}`),
-  getDirect: (sortMode: string, stations: string[], limit?: number) => {
+  getOverview: (stations: string[], maxMissingSlots = 2) => {
+    const params = new URLSearchParams();
+    params.set("max_missing_slots", String(maxMissingSlots));
+    stations.forEach((station) => params.append("stations", station));
+    return request<OverviewResponse>(`/api/results/overview?${params.toString()}`);
+  },
+  getDirect: (sortMode: string, stations: string[], limit?: number, maxMissingSlots = 2) => {
     const params = new URLSearchParams();
     params.set("sort_mode", sortMode);
+    params.set("max_missing_slots", String(maxMissingSlots));
     if (limit) params.set("limit", String(limit));
     stations.forEach((station) => params.append("stations", station));
     return request<DirectResponse>(`/api/results/direct?${params.toString()}`);
   },
-  getNear: (stations: string[], limit?: number) => {
+  getNear: (stations: string[], limit?: number, maxMissingSlots = 2) => {
     const params = new URLSearchParams();
+    params.set("max_missing_slots", String(maxMissingSlots));
     if (limit) params.set("limit", String(limit));
     stations.forEach((station) => params.append("stations", station));
     return request<NearResponse>(`/api/results/near?${params.toString()}`);
@@ -70,16 +77,16 @@ export const api = {
     body.append("file", file);
     return request<InventoryResponse>("/api/inventory/import/excel", { method: "POST", body });
   },
-  getPlanner: (target: string, maxDepth: number) =>
+  getPlanner: (target: string, maxDepth: number, stations: string[]) =>
     request<PlannerResponse>("/api/results/planner", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ target, max_depth: maxDepth }),
+      body: JSON.stringify({ target, max_depth: maxDepth, stations }),
     }),
-  getShoppingList: (targets: Array<{ item: string; qty: number }>, maxDepth: number) =>
+  getShoppingList: (targets: Array<{ item: string; qty: number }>, maxDepth: number, stations: string[]) =>
     request<ShoppingListResponse>("/api/results/shopping-list", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ targets, max_depth: maxDepth }),
+      body: JSON.stringify({ targets, max_depth: maxDepth, stations }),
     }),
 };

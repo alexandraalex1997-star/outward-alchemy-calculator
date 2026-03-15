@@ -7,35 +7,148 @@ from typing import Dict, List, Optional, Tuple
 import pandas as pd
 
 
+TEXT_REPAIRS = {
+    "â€“": "-",
+    "â€”": "-",
+    "â€™": "'",
+    "â€œ": '"',
+    "â€": '"',
+}
+
+CANONICAL_GROUPS: Dict[str, List[str]] = {
+    "water": ["Clean Water", "Salt Water", "Rancid Water", "Leyline Water"],
+    "egg": [
+        "Bird Egg",
+        "Cooked Bird Egg",
+        "Larva Egg",
+        "Cooked Larva Egg",
+        "Veaber's Egg",
+        "Boiled Veaber Egg",
+        "Torcrab Egg",
+        "Cooked Torcrab Egg",
+    ],
+    "fish": [
+        "Boiled Miasmapod",
+        "Miasmapod",
+        "Grilled Rainbow Trout",
+        "Grilled Salmon",
+        "Raw Rainbow Trout",
+        "Raw Salmon",
+        "Antique Eel",
+        "Grilled Eel",
+        "Manaheart Bass",
+        "Grilled Manaheart Bass",
+        "Pypherfish",
+        "Larva Egg",
+    ],
+    "meat": [
+        "Raw Meat",
+        "Cooked Meat",
+        "Raw Alpha Meat",
+        "Cooked Alpha Meat",
+        "Raw Jewel Meat",
+        "Cooked Jewel Meat",
+        "Boozu's Meat",
+        "Cooked Boozu's Meat",
+        "Raw Torcrab Meat",
+        "Grilled Torcrab Meat",
+    ],
+    "mushroom": [
+        "Blood Mushroom",
+        "Common Mushroom",
+        "Grilled Woolshroom",
+        "Nightmare Mushroom",
+        "Star Mushroom",
+        "Sulphuric Mushroom",
+        "Woolshroom",
+    ],
+    "vegetable": [
+        "Cactus Fruit",
+        "Boiled Cactus Fruit",
+        "Gaberries",
+        "Boiled Gaberries",
+        "Krimp Nut",
+        "Marshmelon",
+        "Grilled Marshmelon",
+        "Turmmip",
+        "Boiled Turmmip",
+        "Grilled Mushroom",
+        "Seared Root",
+        "Smoke Root",
+        "Dreamer's Root",
+        "Crawlberry",
+        "Purpkin",
+        "Golden Crescent",
+        "Ableroot",
+        "Rainbow Peach",
+        "Maize",
+    ],
+    "basic armor": ["Desert Tunic", "Makeshift Leather Attire"],
+    "basic boots": ["Makeshift Leather Boots"],
+    "basic helm": ["Makeshift Leather Hat"],
+    "bread (any)": ["Bread", "Bread Of The Wild", "Toast"],
+}
+
+
 def normalize(text: str) -> str:
-    return " ".join(str(text or "").strip().split())
+    value = str(text or "")
+    for broken, fixed in TEXT_REPAIRS.items():
+        value = value.replace(broken, fixed)
+    return " ".join(value.strip().split())
 
 
 def key(text: str) -> str:
     return normalize(text).casefold()
 
 
+def normalize_station(text: str) -> str:
+    station = normalize(text)
+    return station or "Manual Crafting"
+
+
 def sanitize_groups(recipes_df: pd.DataFrame, raw_groups: Dict[str, List[str]]) -> Dict[str, List[str]]:
     known_items = set()
+    ingredient_tokens = set()
+    result_keys = set()
     for _, row in recipes_df.iterrows():
         known_items.add(row["result"])
         known_items.update(row["ingredient_list"])
+        ingredient_tokens.update(key(token) for token in row["ingredient_list"])
+        result_keys.add(row["result_key"])
 
     cleaned: Dict[str, List[str]] = {}
-    for group_name, members in raw_groups.items():
+
+    def dedupe(members: List[str], *, allow_group_only_items: bool) -> List[str]:
         seen = set()
         filtered: List[str] = []
         for member in members:
             member = normalize(member)
-            if not member or member not in known_items or key(member) == group_name or key(member) in raw_groups:
-                continue
             member_key = key(member)
+            if not member or (member_key in raw_groups and member not in known_items):
+                continue
+            if not allow_group_only_items and member not in known_items:
+                continue
             if member_key in seen:
                 continue
             seen.add(member_key)
             filtered.append(member)
+        return filtered
+
+    for group_name, members in raw_groups.items():
+        if group_name not in ingredient_tokens or group_name in result_keys:
+            continue
+        if group_name in CANONICAL_GROUPS:
+            filtered = dedupe(CANONICAL_GROUPS[group_name], allow_group_only_items=True)
+        else:
+            filtered = dedupe(members, allow_group_only_items=False)
         if filtered:
             cleaned[group_name] = filtered
+
+    for group_name, members in CANONICAL_GROUPS.items():
+        if group_name in ingredient_tokens and group_name not in cleaned:
+            filtered = dedupe(members, allow_group_only_items=True)
+            if filtered:
+                cleaned[group_name] = filtered
     return cleaned
 
 
@@ -167,29 +280,60 @@ def max_crafts_for_recipe(recipe_ingredients: List[str], inventory: Counter, gro
     return dp(start_state)
 
 
+def _missing_label(token: str, groups: Dict[str, List[str]]) -> str:
+    token_key = key(token)
+    if token_key not in groups:
+        return token
+    options_preview = ", ".join(groups[token_key][:4])
+    suffix = "..." if len(groups[token_key]) > 4 else ""
+    return f"{token} ({options_preview}{suffix})"
+
+
 def count_missing_slots(recipe_ingredients: List[str], inventory: Counter, groups: Dict[str, List[str]]) -> Tuple[int, List[str]]:
-    trial = Counter(inventory)
-    missing: List[str] = []
-    for ingredient in recipe_ingredients:
-        ingredient_key = key(ingredient)
-        if ingredient_key in groups:
-            found = None
-            for candidate in groups[ingredient_key]:
-                if trial.get(candidate, 0) > 0:
-                    found = candidate
-                    break
-            if found is not None:
-                trial[found] -= 1
-            else:
-                options_preview = ", ".join(groups[ingredient_key][:4])
-                suffix = "..." if len(groups[ingredient_key]) > 4 else ""
-                missing.append(f"{ingredient} ({options_preview}{suffix})")
-        else:
-            if trial.get(ingredient, 0) > 0:
-                trial[ingredient] -= 1
-            else:
-                missing.append(ingredient)
-    return len(missing), missing
+    slot_options: List[Tuple[str, List[str]]] = []
+    universe: List[str] = []
+    seen_universe = set()
+    for token in recipe_ingredients:
+        token_name = normalize(token)
+        token_key = key(token_name)
+        options = groups[token_key][:] if token_key in groups else [token_name]
+        slot_options.append((token_name, options))
+        for option_name in options:
+            normalized_option = normalize(option_name)
+            if normalized_option and normalized_option not in seen_universe:
+                seen_universe.add(normalized_option)
+                universe.append(normalized_option)
+
+    if not slot_options:
+        return 0, []
+
+    item_index = {name: idx for idx, name in enumerate(universe)}
+    start_state = tuple(int(inventory.get(item_name, 0)) for item_name in universe)
+
+    @lru_cache(maxsize=None)
+    def dp(position: int, state: Tuple[int, ...]) -> Tuple[int, Tuple[str, ...]]:
+        if position == len(slot_options):
+            return 0, tuple()
+
+        token_name, options = slot_options[position]
+        best_matched, best_missing = dp(position + 1, state)
+        best_missing = (_missing_label(token_name, groups),) + best_missing
+
+        for option_name in options:
+            option_index = item_index[normalize(option_name)]
+            if state[option_index] <= 0:
+                continue
+            next_state = list(state)
+            next_state[option_index] -= 1
+            matched_rest, missing_rest = dp(position + 1, tuple(next_state))
+            candidate = (1 + matched_rest, missing_rest)
+            if candidate[0] > best_matched or (candidate[0] == best_matched and candidate[1] < best_missing):
+                best_matched, best_missing = candidate
+
+        return best_matched, best_missing
+
+    matched_slots, missing = dp(0, start_state)
+    return len(recipe_ingredients) - matched_slots, list(missing)
 
 
 def smart_score(row: pd.Series) -> float:

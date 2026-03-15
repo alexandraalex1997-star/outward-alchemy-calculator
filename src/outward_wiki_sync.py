@@ -20,7 +20,7 @@ DATA_DIR.mkdir(exist_ok=True)
 
 RECIPE_PAGES = ["Alchemy", "Cooking", "Crafting/Survival"]
 GROUP_PAGES = [
-    "Bread", "Egg", "Fish", "Meat", "Mushroom", "Ration Ingredient",
+    "Bread (Any)", "Egg", "Fish", "Meat", "Mushroom", "Ration Ingredient",
     "Vegetable", "Water", "Basic Armor", "Basic Boots", "Basic Helm",
 ]
 DLC_BADGES = {"The Soroboreans", "The Three Brothers", "Definitive Edition", "DLC"}
@@ -130,7 +130,7 @@ def parse_ingredient_cell(cell: Tag) -> List[str]:
 
 def parse_station_cell(cell: Tag) -> str:
     text = normalize(" ".join(clean_text_tokens(cell.stripped_strings)))
-    return text or "None"
+    return text or "Manual Crafting"
 
 
 

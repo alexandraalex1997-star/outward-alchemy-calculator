@@ -30,6 +30,7 @@ class TextImportRequest(BaseModel):
 class PlannerRequest(BaseModel):
     target: str
     max_depth: int = Field(default=5, ge=1, le=8)
+    stations: Optional[List[str]] = None
 
 
 class ShoppingTarget(BaseModel):
@@ -40,6 +41,7 @@ class ShoppingTarget(BaseModel):
 class ShoppingListRequest(BaseModel):
     targets: List[ShoppingTarget]
     max_depth: int = Field(default=5, ge=1, le=8)
+    stations: Optional[List[str]] = None
 
 
 class InventoryResponse(BaseModel):
@@ -56,4 +58,3 @@ class SnapshotResponse(BaseModel):
     best_heal: Optional[str]
     best_stamina: Optional[str]
     best_mana: Optional[str]
-
