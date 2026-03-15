@@ -183,6 +183,37 @@ def test_refresh_helper_stays_one_way_and_does_not_call_inventory_mutation_recur
     assert "handleInventoryMutation(" not in refresh_block
 
 
+def test_inventory_export_uses_the_round_trip_item_qty_csv_shape() -> None:
+    app_source = read_frontend("App.tsx")
+
+    assert '({ item: item.item, qty: item.qty })' in app_source
+    assert 'headers.join(",")' in app_source
+    assert 'JSON.stringify(row[header] ?? "")' in app_source
+
+
+def test_inventory_editor_reads_overview_and_table_from_live_inventory_state() -> None:
+    editor_source = read_frontend("components/InventoryEditor.tsx")
+
+    assert "inventory?.unique_items ?? 0" in editor_source
+    assert "inventory?.total_quantity ?? 0" in editor_source
+    assert "inventoryMap.get(row.item) ?? 0" in editor_source
+    assert "filteredCatalogRows.length" in editor_source
+
+
+def test_pills_and_buttons_keep_text_on_one_line_in_css() -> None:
+    css = read_frontend("styles/app.css")
+
+    assert ".nav-pill," in css
+    assert ".chip," in css
+    assert ".button {" in css
+    assert "display: inline-flex;" in css
+    assert "white-space: nowrap;" in css
+    assert "word-break: keep-all;" in css
+    assert "flex-shrink: 0;" in css
+    assert ".score-badge," in css
+    assert ".near-pill {" in css or ".near-pill" in css
+
+
 def test_craft_now_main_view_contains_the_full_craftable_table_and_sort_control() -> None:
     app_source = read_frontend("App.tsx")
 

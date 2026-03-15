@@ -206,17 +206,17 @@ class CalculatorService:
 
     def import_text_inventory(self, raw_text: str) -> dict:
         imported = inventory_ops.counts_from_text(raw_text)
-        self.inventory_store.merge_items(imported)
+        self.inventory_store.replace(imported)
         return self.get_inventory_response()
 
     def import_csv_inventory(self, file_bytes: bytes) -> dict:
         imported = inventory_ops.inventory_from_df(pd.read_csv(BytesIO(file_bytes)))
-        self.inventory_store.merge_items(imported)
+        self.inventory_store.replace(imported)
         return self.get_inventory_response()
 
     def import_excel_inventory(self, file_bytes: bytes) -> dict:
         imported = inventory_ops.inventory_from_df(pd.read_excel(BytesIO(file_bytes)))
-        self.inventory_store.merge_items(imported)
+        self.inventory_store.replace(imported)
         return self.get_inventory_response()
 
     def _normalized_stations(self, stations: Optional[List[str]]) -> Optional[List[str]]:

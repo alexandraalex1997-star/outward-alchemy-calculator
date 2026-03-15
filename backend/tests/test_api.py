@@ -17,6 +17,15 @@ def csv_bytes(rows: list[dict]) -> bytes:
     return pd.DataFrame(rows).to_csv(index=False).encode("utf-8")
 
 
+def exported_csv_bytes(rows: list[dict]) -> bytes:
+    headers = ["item", "qty"]
+    lines = [
+        ",".join(headers),
+        *[",".join([f'"{row["item"]}"', f'"{row["qty"]}"']) for row in rows],
+    ]
+    return "\n".join(lines).encode("utf-8")
+
+
 def excel_bytes(rows: list[dict]) -> bytes:
     buffer = BytesIO()
     pd.DataFrame(rows).to_excel(buffer, index=False)
@@ -62,6 +71,14 @@ def assert_import_propagation(client: TestClient) -> None:
     assert planner["found"] is True
     assert planner["missing"] == []
     assert shopping["missing"] == []
+
+
+def assert_inventory_is_exactly(client: TestClient, expected_items: list[dict]) -> None:
+    inventory = client.get("/api/inventory").json()
+
+    assert inventory["items"] == expected_items
+    assert inventory["unique_items"] == len(expected_items)
+    assert inventory["total_quantity"] == sum(row["qty"] for row in expected_items)
 
 
 def test_recipe_loading_uses_canonical_groups_and_manual_station_label() -> None:
@@ -167,6 +184,34 @@ def test_csv_import_propagates_to_dashboard_direct_near_planner_and_shopping() -
     )
     response.raise_for_status()
 
+    assert_import_propagation(client)
+
+
+def test_exported_csv_round_trips_back_into_the_same_canonical_inventory_state() -> None:
+    client = make_client()
+
+    client.post("/api/inventory/items/add", json={"item": "Greasy Fern", "qty": 4}).raise_for_status()
+    client.post("/api/inventory/items/add", json={"item": "Thick Oil", "qty": 2}).raise_for_status()
+
+    exported_rows = [
+        {"item": "Clean Water", "qty": 1},
+        {"item": "Gravel Beetle", "qty": 1},
+        {"item": "Turmmip", "qty": 1},
+    ]
+
+    response = client.post(
+        "/api/inventory/import/csv",
+        files={
+            "file": (
+                "outward_inventory.csv",
+                exported_csv_bytes(exported_rows),
+                "text/csv",
+            )
+        },
+    )
+    response.raise_for_status()
+
+    assert_inventory_is_exactly(client, exported_rows)
     assert_import_propagation(client)
 
 
