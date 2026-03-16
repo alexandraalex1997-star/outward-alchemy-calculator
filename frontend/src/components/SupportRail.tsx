@@ -135,29 +135,31 @@ export function SupportRail({
                 <small className="field-note">{stationFilterNote}</small>
               </label>
 
-              <label className="field">
-                <div className="field-head">
-                  <span>Planner depth</span>
-                  <small>Planner recursion</small>
-                </div>
-                <input type="range" min={1} max={8} value={plannerDepth} onChange={(event) => onPlannerDepthChange(Number(event.target.value))} />
-                <strong>{plannerDepth}</strong>
-              </label>
+              <div className="planning-range-grid">
+                <label className="compact-range-control">
+                  <div className="compact-range-head">
+                    <span>Planner depth</span>
+                    <strong className="compact-range-value">{plannerDepth}</strong>
+                  </div>
+                  <input type="range" min={1} max={8} value={plannerDepth} onChange={(event) => onPlannerDepthChange(Number(event.target.value))} />
+                  <small className="compact-range-note">Recursive route depth</small>
+                </label>
 
-              <label className="field">
-                <div className="field-head">
-                  <span>Near-craft threshold</span>
-                  <small>Missing ingredients only</small>
-                </div>
-                <input
-                  type="range"
-                  min={1}
-                  max={4}
-                  value={nearThreshold}
-                  onChange={(event) => onNearThresholdChange(Number(event.target.value))}
-                />
-                <strong>{nearThreshold} missing slot{nearThreshold === 1 ? "" : "s"}</strong>
-              </label>
+                <label className="compact-range-control">
+                  <div className="compact-range-head">
+                    <span>Missing slots</span>
+                    <strong className="compact-range-value">{nearThreshold}</strong>
+                  </div>
+                  <input
+                    type="range"
+                    min={1}
+                    max={4}
+                    value={nearThreshold}
+                    onChange={(event) => onNearThresholdChange(Number(event.target.value))}
+                  />
+                  <small className="compact-range-note">Almost-craftable cutoff</small>
+                </label>
+              </div>
             </div>
           </Panel>
 

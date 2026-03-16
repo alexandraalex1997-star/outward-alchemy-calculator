@@ -63,7 +63,7 @@ export function ResultsRail({
 }) {
   const [openSections, setOpenSections] = useState<Record<RightRailSectionId, boolean>>({
     craftable: true,
-    near: false,
+    near: true,
   });
 
   const toggleSection = (sectionId: RightRailSectionId) => {

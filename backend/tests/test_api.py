@@ -583,6 +583,37 @@ def test_recipe_debug_reports_consistent_astral_potion_visibility_across_surface
     assert planner["found"] is True
 
 
+def test_planner_and_debug_explain_when_the_target_is_already_owned_but_not_directly_craftable() -> None:
+    client = make_client()
+
+    client.put(
+        "/api/inventory/replace",
+        json={"items": [{"item": "Astral Potion", "qty": 1}]},
+    ).raise_for_status()
+
+    planner = client.post(
+        "/api/results/planner",
+        json={"target": "Astral Potion", "max_depth": 5, "stations": ["Alchemy Kit"]},
+    ).json()
+    direct = client.get("/api/results/direct?stations=Alchemy+Kit&sort_mode=Smart%20score&limit=50").json()
+    debug = client.get(
+        "/api/results/recipe-debug?result=Astral%20Potion&stations=Alchemy+Kit&max_missing_slots=2&planner_depth=5"
+    ).json()
+
+    assert planner["found"] is True
+    assert planner["mode"] == "use_existing_target"
+    assert planner["uses_existing_target"] is True
+    assert planner["craft_steps"] == 0
+    assert planner["explanation"].startswith("The target is already in your bag.")
+    assert not any(row["result"] == "Astral Potion" for row in direct["items"])
+    assert debug["target_owned_qty"] == 1
+    assert debug["craftable_now"] is False
+    assert debug["craftable_panel"] is False
+    assert debug["planner_found"] is True
+    assert debug["planner_mode"] == "use_existing_target"
+    assert "already in your bag" in debug["planner_alignment_reason"]
+
+
 def test_recipe_debug_reports_full_craftable_inclusion_and_sort_rank_for_lower_ranked_results() -> None:
     client = make_client()
 
@@ -631,6 +662,23 @@ def test_direct_sorting_changes_order_but_not_full_craftable_inclusion() -> None
     assert smart["count"] == mana["count"]
     assert {row["result"] for row in smart["items"]} == {row["result"] for row in mana["items"]}
     assert [row["result"] for row in smart["items"][:5]] != [row["result"] for row in mana["items"][:5]]
+
+
+def test_near_endpoint_threshold_changes_real_recipe_output_for_same_inventory() -> None:
+    client = make_client()
+
+    client.put(
+        "/api/inventory/replace",
+        json={"items": [{"item": "Gravel Beetle", "qty": 1}]},
+    ).raise_for_status()
+
+    near_one = client.get("/api/results/near?stations=Alchemy+Kit&max_missing_slots=1&limit=50").json()
+    near_two = client.get("/api/results/near?stations=Alchemy+Kit&max_missing_slots=2&limit=50").json()
+    near_three = client.get("/api/results/near?stations=Alchemy+Kit&max_missing_slots=3&limit=50").json()
+
+    assert [row["result"] for row in near_one["items"]] == ["Cool Potion"]
+    assert [row["result"] for row in near_two["items"]] == ["Cool Potion", "Life Potion", "Rage Potion"]
+    assert [row["result"] for row in near_three["items"]] == ["Cool Potion", "Life Potion", "Rage Potion", "Stoneflesh Elixir"]
 
 
 def test_recipe_debug_shows_near_threshold_changes_for_two_missing_slots() -> None:

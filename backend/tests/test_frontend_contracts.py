@@ -216,11 +216,16 @@ def test_inventory_table_tools_and_headers_use_the_new_layout_contract() -> None
 
     assert "inventory-manager-shell" in editor_source
     assert "inventory-manager-section" in editor_source
+    assert "inventory-editor-workspace" in editor_source
+    assert "inventory-subsection" in editor_source
+    assert "inventory-foot-stat" in editor_source
     assert 'className="inventory-summary-head"' in editor_source
     assert "summary-action-button" in editor_source
     assert 'className="inventory-table-tools"' in editor_source
     assert ".inventory-manager-shell {" in css
     assert ".inventory-manager-section {" in css
+    assert ".inventory-editor-workspace {" in css
+    assert ".inventory-subsection {" in css
     assert ".inventory-summary-head {" in css
     assert ".inventory-table-tools {" in css
     assert ".table-utility-button {" in css
@@ -233,11 +238,17 @@ def test_inventory_table_tools_and_headers_use_the_new_layout_contract() -> None
 
 
 def test_slider_and_select_styling_contracts_exist() -> None:
+    support_rail_source = read_frontend("components/SupportRail.tsx")
     css = read_frontend("styles/app.css")
 
     assert '.planning-stack input[type="range"] {' in css
     assert "::-webkit-slider-thumb" in css
     assert "::-moz-range-thumb" in css
+    assert 'className="planning-range-grid"' in support_rail_source
+    assert 'className="compact-range-control"' in support_rail_source
+    assert ".planning-range-grid {" in css
+    assert ".compact-range-control {" in css
+    assert ".compact-range-value {" in css
     assert ".panel-select select {" in css
     assert "appearance: none;" in css
 
@@ -284,7 +295,7 @@ def test_long_result_lists_use_internal_scroll_containers_without_changing_colum
     assert "max-height: clamp(16rem, 33vh, 22rem);" in css
     assert "overflow-y: auto;" in css
     assert ".results-preview--craftable {" in css
-    assert "max-height: clamp(24rem, 62vh, 42rem);" in css
+    assert "max-height: clamp(12rem, 34vh, 18rem);" in css
     assert ".right-column .results-preview:not(.results-preview--craftable)" in css
     assert "display: grid;" not in css[css.index(".utility-rail__scroll {"):css.index(".main-column,")]
     assert "grid-template-columns:" in css
@@ -333,7 +344,7 @@ def test_right_rail_cards_are_collapsible_and_can_stay_open_independently() -> N
 
     assert "type RightRailSectionId = " in results_source
     assert "openSections" in results_source
-    assert "near: false" in results_source
+    assert "near: true" in results_source
     assert "accordion-trigger" in results_source
     assert "accordion-panel" in results_source
     assert "rail-card__body" in results_source
@@ -373,10 +384,11 @@ def test_planner_view_surfaces_route_status_steps_and_honest_inventory_labels() 
     css = read_frontend("styles/app.css")
 
     assert "planner-status-strip" in app_source
-    assert "Complete route available" in app_source
-    assert "Partial route shown" in app_source
-    assert "Bag after route" in app_source
+    assert "Target already in bag" in app_source
+    assert "Complete route with intermediates" in app_source
+    assert "Bag after taking target" in app_source
     assert "Current bag" in app_source
+    assert "formatPlannerMode" in app_source
     assert "planner-step-list" in app_source
     assert "planner-step-chip" in app_source
     assert "planner-route-shell" in app_source
@@ -398,6 +410,9 @@ def test_recipe_database_includes_recipe_visibility_debug_and_calls_the_debug_en
     assert "executeRecipeDebug" in app_source
     assert "api.getRecipeDebug(" in app_source
     assert "getRecipeDebug: (result: string, stations: string[], maxMissingSlots: number, plannerDepth: number) =>" in api_source
+    assert "Target in bag" in app_source
+    assert "Planner mode" in app_source
+    assert "planner_alignment_reason" in app_source
     assert "Sort ranks" in app_source
     assert "Matching recipe rows" in app_source
     assert ".recipe-debug-panel .panel-body {" in css

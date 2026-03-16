@@ -128,6 +128,10 @@ export type PlannerResponse = {
   lines: string[];
   missing: InventoryItem[];
   remaining_inventory: InventoryItem[];
+  mode: string;
+  craft_steps: number;
+  uses_existing_target: boolean;
+  requires_crafting: boolean;
 };
 
 export type RecipeDebugMatch = {
@@ -151,6 +155,7 @@ export type RecipeDebugResponse = {
   selected_stations: string[];
   max_missing_slots: number;
   planner_depth: number;
+  target_owned_qty: number;
   recipe_database_rows: number;
   evaluated_recipe_rows: number;
   craftable_recipe_rows: number;
@@ -164,7 +169,11 @@ export type RecipeDebugResponse = {
   craftable_sort_reason: string;
   sort_positions: RecipeDebugSortPosition[];
   planner_found: boolean;
+  planner_mode: string;
+  planner_uses_existing_target: boolean;
+  planner_craft_steps: number;
   planner_reason: string;
+  planner_alignment_reason: string;
   planner_missing: InventoryItem[];
   matching_recipe: RecipeDebugMatch | null;
   evaluated_rows: RecipeResult[];

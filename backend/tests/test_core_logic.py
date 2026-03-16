@@ -787,6 +787,35 @@ def test_recipe_visibility_debug_reports_planner_depth_changes_for_deeper_target
     assert deep["planner_found"] is True
 
 
+def test_planner_marks_when_the_target_is_already_owned_instead_of_crafted() -> None:
+    service = make_service(
+        [
+            {
+                "recipe_id": "astral-like",
+                "recipe_page": "Unit",
+                "section": "Planner",
+                "result": "Astral Potion",
+                "result_qty": 1,
+                "station": "Alchemy Kit",
+                "ingredients": "Star Mushroom|Turmmip|Water",
+            },
+        ],
+        raw_groups={"water": core.CANONICAL_GROUPS["water"]},
+    )
+    service.replace_inventory([{"item": "Astral Potion", "qty": 1}])
+
+    planner = service.planner("Astral Potion", max_depth=5, stations=["Alchemy Kit"])
+    debug = service.recipe_visibility_debug("Astral Potion", stations=["Alchemy Kit"], max_missing_slots=2, planner_depth=5)
+
+    assert planner["found"] is True
+    assert planner["mode"] == "use_existing_target"
+    assert planner["uses_existing_target"] is True
+    assert planner["craft_steps"] == 0
+    assert debug["target_owned_qty"] == 1
+    assert debug["craftable_now"] is False
+    assert debug["planner_mode"] == "use_existing_target"
+
+
 def test_near_craft_filter_requires_at_least_one_matched_slot() -> None:
     service = make_service(
         [

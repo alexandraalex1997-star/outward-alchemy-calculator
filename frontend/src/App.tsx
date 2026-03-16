@@ -133,6 +133,23 @@ function formatDebugMetric(value: number | string | null | undefined): string {
   return value;
 }
 
+function formatPlannerMode(mode: string): string {
+  switch (mode) {
+    case "use_existing_target":
+      return "Already in bag";
+    case "direct_craft_route":
+      return "Direct craft";
+    case "recursive_craft_route":
+      return "Recursive craft";
+    case "station_filtered_out":
+      return "Station blocked";
+    case "partial_route":
+      return "Partial route";
+    default:
+      return "No route";
+  }
+}
+
 export default function App() {
   const [metadata, setMetadata] = useState<MetadataResponse | null>(null);
   const [inventory, setInventory] = useState<InventoryResponse | null>(null);
@@ -311,6 +328,70 @@ export default function App() {
     () => plannerStatusTone(plannerResult?.found ?? false, plannerSteps.length),
     [plannerResult, plannerSteps.length],
   );
+  const plannerStatusTitle = useMemo(() => {
+    if (!plannerResult) return "";
+    if (plannerResult.found && plannerResult.mode === "use_existing_target") {
+      return "Target already in bag";
+    }
+    if (plannerResult.found && plannerResult.mode === "recursive_craft_route") {
+      return "Complete route with intermediates";
+    }
+    if (plannerResult.found) {
+      return "Complete direct route";
+    }
+    if (plannerSteps.length) {
+      return "Partial route shown";
+    }
+    return "No route available";
+  }, [plannerResult, plannerSteps.length]);
+  const plannerStatusPill = useMemo(() => {
+    if (!plannerResult) return "";
+    if (plannerResult.found && plannerResult.mode === "use_existing_target") {
+      return "Already owned";
+    }
+    if (plannerResult.found && plannerResult.requires_crafting) {
+      return "Ready to craft";
+    }
+    if (plannerResult.found) {
+      return "Ready now";
+    }
+    if (plannerSteps.length) {
+      return "Needs items";
+    }
+    return "Blocked";
+  }, [plannerResult, plannerSteps.length]);
+  const plannerBagLabel = useMemo(() => {
+    if (!plannerResult) return "Current bag";
+    if (!plannerResult.found) return "Bag shown";
+    if (plannerResult.mode === "use_existing_target") return "Bag after taking target";
+    return "Bag after route";
+  }, [plannerResult]);
+  const plannerBagTitle = useMemo(() => {
+    if (!plannerResult) return "Current bag";
+    if (!plannerResult.found) return "Current bag";
+    if (plannerResult.mode === "use_existing_target") return "Bag after taking target";
+    return "Bag after route";
+  }, [plannerResult]);
+  const plannerBagNote = useMemo(() => {
+    if (!plannerResult) return "";
+    if (!plannerResult.found) {
+      return "Current inventory snapshot used for this partial result.";
+    }
+    if (plannerResult.mode === "use_existing_target") {
+      return "What remains after taking one existing copy from your bag.";
+    }
+    return "What remains after following the route.";
+  }, [plannerResult]);
+  const plannerRouteHint = useMemo(() => {
+    if (!plannerResult) return "";
+    if (plannerResult.found && plannerResult.mode === "use_existing_target") {
+      return "No crafting steps were needed.";
+    }
+    if (plannerResult.found) {
+      return "Follow these lines in order.";
+    }
+    return "Missing requirements are marked inline.";
+  }, [plannerResult]);
 
   const executePlanner = useCallback(async () => {
     if (!planTarget) return;
@@ -667,16 +748,12 @@ export default function App() {
                     <div className={classNames("planner-status-strip", `is-${plannerTone}`)}>
                       <div className="planner-status-copy">
                         <strong>
-                          {plannerResult.found
-                            ? "Complete route available"
-                            : plannerSteps.length
-                              ? "Partial route shown"
-                              : "No route available"}
+                          {plannerStatusTitle}
                         </strong>
                         <p>{plannerResult.explanation}</p>
                       </div>
                       <span className="planner-status-pill">
-                        {plannerResult.found ? "Ready to craft" : plannerSteps.length ? "Needs items" : "Blocked"}
+                        {plannerStatusPill}
                       </span>
                     </div>
 
@@ -687,10 +764,14 @@ export default function App() {
                         <span className="planner-summary-note">The route is centered on this craft goal.</span>
                       </div>
                       <div className="planner-summary-panel">
-                        <span className="planner-summary-label">Route lines</span>
-                        <strong className="planner-summary-value">{plannerSteps.length}</strong>
+                        <span className="planner-summary-label">Planner mode</span>
+                        <strong className="planner-summary-value">{formatPlannerMode(plannerResult.mode)}</strong>
                         <span className="planner-summary-note">
-                          {plannerSteps.length ? "Craft, use, and missing calls from the current route." : "No route lines were produced."}
+                          {plannerResult.uses_existing_target
+                            ? "The planner is consuming an item you already own."
+                            : plannerResult.craft_steps
+                              ? `${plannerResult.craft_steps} craft step${plannerResult.craft_steps === 1 ? "" : "s"} in this route.`
+                              : "No route lines were produced."}
                         </span>
                       </div>
                       <div className="planner-summary-panel">
@@ -703,15 +784,9 @@ export default function App() {
                         </span>
                       </div>
                       <div className="planner-summary-panel">
-                        <span className="planner-summary-label">
-                          {plannerResult.found ? "Bag after route" : "Bag shown"}
-                        </span>
+                        <span className="planner-summary-label">{plannerBagLabel}</span>
                         <strong className="planner-summary-value">{plannerRemainingTotal}</strong>
-                        <span className="planner-summary-note">
-                          {plannerResult.found
-                            ? "What remains after following the route."
-                            : "Current inventory snapshot used for this partial result."}
-                        </span>
+                        <span className="planner-summary-note">{plannerBagNote}</span>
                       </div>
                     </div>
 
@@ -722,11 +797,13 @@ export default function App() {
                         emptyMessage="You already have everything needed for this route."
                       />
                       <InventoryList
-                        title={plannerResult.found ? "Bag after route" : "Current bag"}
+                        title={plannerBagTitle}
                         items={plannerResult.remaining_inventory}
                         emptyMessage={
                           plannerResult.found
-                            ? "This route would use up every item you committed to the craft."
+                            ? plannerResult.mode === "use_existing_target"
+                              ? "This route would consume the tracked copy already in your bag."
+                              : "This route would use up every item you committed to the craft."
                             : "The planner did not need to reserve anything from the current bag."
                         }
                       />
@@ -734,11 +811,7 @@ export default function App() {
                     <div className="planner-route-shell">
                       <div className="planner-route-head">
                         <strong>Planner route</strong>
-                        <span>
-                          {plannerResult.found
-                            ? "Follow these lines in order."
-                            : "Missing requirements are marked inline."}
-                        </span>
+                        <span>{plannerRouteHint}</span>
                       </div>
                       {!plannerResult.found && plannerSteps.length ? (
                         <p className="planner-route-note">
@@ -927,6 +1000,11 @@ export default function App() {
                       <>
                         <div className="stat-grid two-up">
                           <StatCard
+                            label="Target in bag"
+                            value={recipeDebugResult.target_owned_qty}
+                            detail="Tracked copies of this exact result already in the live inventory"
+                          />
+                          <StatCard
                             label="Recipe rows"
                             value={recipeDebugResult.recipe_database_rows}
                             detail="Matching recipe rows under the current station filters"
@@ -967,6 +1045,17 @@ export default function App() {
                             detail={recipeDebugResult.planner_reason}
                           />
                           <StatCard
+                            label="Planner mode"
+                            value={formatPlannerMode(recipeDebugResult.planner_mode)}
+                            detail={
+                              recipeDebugResult.planner_uses_existing_target
+                                ? "Planner is using the target item already in the bag."
+                                : recipeDebugResult.planner_craft_steps
+                                  ? `${recipeDebugResult.planner_craft_steps} craft step${recipeDebugResult.planner_craft_steps === 1 ? "" : "s"} in the route`
+                                  : "No craft steps are available for this result yet."
+                            }
+                          />
+                          <StatCard
                             label="Smart score"
                             value={recipeDebugResult.smart_score != null ? recipeDebugResult.smart_score.toFixed(1) : "None"}
                             detail={
@@ -976,6 +1065,7 @@ export default function App() {
                             }
                           />
                         </div>
+                        <div className="info-strip">{recipeDebugResult.planner_alignment_reason}</div>
                         <div className="info-strip">{recipeDebugResult.craftable_sort_reason}</div>
                         <div className="debug-grid">
                           <section className="debug-section">

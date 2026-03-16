@@ -2,7 +2,7 @@
   {
     "id": "Craft now",
     "logic": "direct",
-    "summary": "Edit inventory, rank direct crafts, and review the shortlist plus full craftable list.",
+    "summary": "Edit inventory, rank the full craftable recipe set, and compare near-craft options.",
     "apis": ["GET /api/results/dashboard", "GET /api/results/direct"],
     "viewState": ["sortMode", "selectedStations", "inventory"]
   },
@@ -24,7 +24,7 @@
     "id": "Missing ingredients",
     "logic": "near",
     "summary": "See which recipes are close and what they still need.",
-    "apis": ["GET /api/results/dashboard"],
+    "apis": ["GET /api/results/dashboard", "GET /api/results/near"],
     "viewState": ["nearThreshold", "selectedStations"]
   },
   {

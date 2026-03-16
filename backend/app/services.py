@@ -301,6 +301,14 @@ class CalculatorService:
         result_key = core.key(result)
         return frame[frame["result"].map(core.key) == result_key].copy()
 
+    def _ordered_evaluated_matches(self, evaluated_matches: pd.DataFrame) -> pd.DataFrame:
+        if evaluated_matches.empty:
+            return evaluated_matches.copy()
+        return evaluated_matches.sort_values(
+            ["max_crafts", "matched_slots", "missing_slots", "smart_score", "result"],
+            ascending=[False, False, True, False, True],
+        ).reset_index(drop=True)
+
     def _craftable_sort_positions(self, craftable: pd.DataFrame, result: str) -> List[dict]:
         positions: List[dict] = []
         total = int(len(craftable))
@@ -326,6 +334,63 @@ class CalculatorService:
                 }
             )
         return positions
+
+    def _plan_summary(self, plan: dict, target: str, *, found: bool, station_filtered_out: bool) -> dict:
+        craft_steps = 0
+        use_steps = 0
+        missing_steps = 0
+        group_steps = 0
+        uses_existing_target = False
+        target_key = core.key(target)
+
+        def walk(step: dict, *, at_root: bool = False) -> None:
+            nonlocal craft_steps, use_steps, missing_steps, group_steps, uses_existing_target
+            step_type = step.get("type")
+            if step_type == "craft":
+                craft_steps += 1
+                for child in step.get("steps", []):
+                    walk(child)
+                return
+            if step_type == "use":
+                use_steps += 1
+                if at_root and core.key(step.get("item", "")) == target_key:
+                    uses_existing_target = True
+                return
+            if step_type == "group":
+                group_steps += 1
+                child = step.get("step")
+                if isinstance(child, dict):
+                    walk(child)
+                return
+            if step_type == "missing":
+                missing_steps += 1
+
+        if isinstance(plan, dict):
+            walk(plan, at_root=True)
+
+        if found:
+            if uses_existing_target:
+                mode = "use_existing_target"
+            elif craft_steps <= 1:
+                mode = "direct_craft_route"
+            else:
+                mode = "recursive_craft_route"
+        elif station_filtered_out:
+            mode = "station_filtered_out"
+        elif craft_steps > 0 or use_steps > 0 or group_steps > 0:
+            mode = "partial_route"
+        else:
+            mode = "no_route"
+
+        return {
+            "mode": mode,
+            "craft_steps": int(craft_steps),
+            "use_steps": int(use_steps),
+            "missing_steps": int(missing_steps),
+            "group_steps": int(group_steps),
+            "uses_existing_target": bool(uses_existing_target),
+            "requires_crafting": bool(craft_steps > 0),
+        }
 
     def result_frames(
         self,
@@ -516,8 +581,10 @@ class CalculatorService:
         near_matches = self._matching_result_rows(near_ranked, result_name)
 
         planner = self.planner(result_name, planner_depth, stations)
+        target_owned_qty = int(self.get_inventory().get(result_name, 0))
         best_smart_score = float(craftable_matches.iloc[0]["smart_score"]) if not craftable_matches.empty else None
-        best_matching_row = craftable_matches.iloc[0] if not craftable_matches.empty else (evaluated_matches.iloc[0] if not evaluated_matches.empty else None)
+        ordered_evaluated_matches = self._ordered_evaluated_matches(evaluated_matches)
+        best_matching_row = craftable_matches.iloc[0] if not craftable_matches.empty else (ordered_evaluated_matches.iloc[0] if not ordered_evaluated_matches.empty else None)
         sort_positions = self._craftable_sort_positions(frames.craftable, result_name)
 
         if filtered_matches.empty:
@@ -557,6 +624,24 @@ class CalculatorService:
                 "Other sort modes can move it, but they do not remove it from the craftable panel."
             )
 
+        planner_mode = str(planner["mode"])
+        if craftable_matches.empty and planner["found"] and planner_mode == "use_existing_target":
+            planner_alignment_reason = (
+                "Planner succeeds because the target itself is already in your bag. "
+                "The craftable panel still excludes it because no recipe row is craftable right now."
+            )
+        elif craftable_matches.empty and planner["found"] and planner_mode == "recursive_craft_route":
+            planner_alignment_reason = (
+                "Planner succeeds through intermediate crafting. "
+                "The craftable panel only shows recipe rows you can craft directly right now."
+            )
+        elif not craftable_matches.empty and planner["found"]:
+            planner_alignment_reason = "Planner and direct craft agree: at least one matching recipe row is directly craftable now."
+        elif craftable_matches.empty and not planner["found"]:
+            planner_alignment_reason = "Planner and direct craft agree that the current inventory and filters do not complete this result yet."
+        else:
+            planner_alignment_reason = "Planner and direct craft are using different route types for this result."
+
         matching_recipe = (
             {
                 "ingredients": str(best_matching_row["ingredients"]),
@@ -575,6 +660,7 @@ class CalculatorService:
             "selected_stations": selected_stations if selected_stations is not None else list(self.data.station_options),
             "max_missing_slots": int(max_missing_slots),
             "planner_depth": int(planner_depth),
+            "target_owned_qty": target_owned_qty,
             "recipe_database_rows": int(len(filtered_matches)),
             "evaluated_recipe_rows": int(len(evaluated_matches)),
             "craftable_recipe_rows": int(len(craftable_matches)),
@@ -588,10 +674,14 @@ class CalculatorService:
             "craftable_sort_reason": craftable_sort_reason,
             "sort_positions": sort_positions,
             "planner_found": bool(planner["found"]),
+            "planner_mode": planner_mode,
+            "planner_uses_existing_target": bool(planner["uses_existing_target"]),
+            "planner_craft_steps": int(planner["craft_steps"]),
             "planner_reason": planner["explanation"],
+            "planner_alignment_reason": planner_alignment_reason,
             "planner_missing": planner["missing"],
             "matching_recipe": matching_recipe,
-            "evaluated_rows": _df_records(evaluated_matches.head(8)),
+            "evaluated_rows": _df_records(ordered_evaluated_matches.head(8)),
             "craftable_rows": _df_records(craftable_matches.head(5)),
             "near_rows": _df_records(near_matches.head(5)),
         }
@@ -613,12 +703,22 @@ class CalculatorService:
         )
         found = not missing_counts
         remaining_inventory = working_inventory if found else base_inventory
-        if found:
+        station_filtered_out = target_key in self.data.recipe_index and target_key not in recipe_index
+        plan_summary = self._plan_summary(plan, target, found=found, station_filtered_out=station_filtered_out)
+        if found and plan_summary["mode"] == "use_existing_target":
             explanation = (
-                "Complete route found. The steps below can craft this target with the current inventory, "
+                "The target is already in your bag. No crafting route is needed unless you want to make another copy."
+            )
+        elif found and plan_summary["mode"] == "direct_craft_route":
+            explanation = (
+                "Complete route found. You can craft this target directly with the current inventory, planner depth, and station filters."
+            )
+        elif found:
+            explanation = (
+                "Complete route found. The planner can build this target through intermediate crafts with the current inventory, "
                 "planner depth, and station filters."
             )
-        elif target_key in self.data.recipe_index and target_key not in recipe_index:
+        elif station_filtered_out:
             explanation = (
                 "No recipe for this target is available with the current station filters. "
                 "Enable the needed station to build a route."
@@ -635,6 +735,10 @@ class CalculatorService:
             "lines": core.format_plan_lines(plan),
             "missing": _df_records(inventory_ops.inventory_table_df(missing_counts)),
             "remaining_inventory": _df_records(inventory_ops.inventory_table_df(remaining_inventory)),
+            "mode": plan_summary["mode"],
+            "craft_steps": plan_summary["craft_steps"],
+            "uses_existing_target": plan_summary["uses_existing_target"],
+            "requires_crafting": plan_summary["requires_crafting"],
         }
 
     def shopping_list(self, targets: List[dict], max_depth: int, stations: Optional[List[str]] = None) -> dict:
