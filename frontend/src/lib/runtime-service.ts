@@ -60,6 +60,19 @@ type ImportedInventoryRow = {
   qty: number;
 };
 
+type CanonicalizedInventoryImport = {
+  items: InventoryItem[];
+  unmatchedRows: ImportedInventoryRow[];
+};
+
+const IMPORT_NAME_ALIASES: Record<string, string> = {
+  "small sapphire": "Small Sapphire",
+  "waterskin (clean water)": "Clean Water",
+  "waterskin clean water": "Clean Water",
+  "waterskin (leyline water)": "Leyline Water",
+  "waterskin leyline water": "Leyline Water",
+};
+
 let metadataPromise: Promise<MetadataResponse> | null = null;
 let runtimeDataPromise: Promise<RuntimeData> | null = null;
 
@@ -138,26 +151,74 @@ function buildInventoryNameLookup(metadata: MetadataResponse) {
 function resolveImportedItemName(rawName: string, lookup: Map<string, string>) {
   const normalized = normalize(rawName);
   if (!normalized) return null;
+
+  for (const alias of inventoryLookupAliases(normalized)) {
+    const aliasedCanonical = IMPORT_NAME_ALIASES[alias];
+    if (aliasedCanonical) {
+      return aliasedCanonical;
+    }
+  }
+
   for (const alias of inventoryLookupAliases(normalized)) {
     const canonical = lookup.get(alias);
     if (canonical) return canonical;
   }
-  return normalized;
+  return null;
+}
+
+export function canonicalizeImportedInventoryRows(
+  metadata: MetadataResponse,
+  items: ImportedInventoryRow[],
+): CanonicalizedInventoryImport {
+  const lookup = buildInventoryNameLookup(metadata);
+  const canonicalRows: InventoryItem[] = [];
+  const unmatchedRows: ImportedInventoryRow[] = [];
+
+  items.forEach((entry) => {
+    const qty = Math.max(0, Math.trunc(Number(entry.qty) || 0));
+    if (qty <= 0) return;
+    const item = resolveImportedItemName(entry.item, lookup);
+    if (!item) {
+      unmatchedRows.push({ item: normalize(entry.item), qty });
+      return;
+    }
+    canonicalRows.push({ item, qty });
+  });
+
+  return {
+    items: counterToItems(counterFromItems(canonicalRows)),
+    unmatchedRows,
+  };
 }
 
 export function canonicalizeImportedInventoryItems(
   metadata: MetadataResponse,
   items: ImportedInventoryRow[],
 ): InventoryItem[] {
-  const lookup = buildInventoryNameLookup(metadata);
-  const canonicalRows = items
-    .map((entry) => {
-      const item = resolveImportedItemName(entry.item, lookup);
-      const qty = Math.max(0, Math.trunc(Number(entry.qty) || 0));
-      return item && qty > 0 ? { item, qty } : null;
-    })
-    .filter((entry): entry is InventoryItem => entry != null);
-  return counterToItems(counterFromItems(canonicalRows));
+  return canonicalizeImportedInventoryRows(metadata, items).items;
+}
+
+function importDetailMessage(
+  sourceLabel: string,
+  lineCount: number,
+  unmatchedRows: ImportedInventoryRow[],
+  exportedAtUtc?: string,
+) {
+  const matchedLineCount = lineCount - unmatchedRows.length;
+  const timing = exportedAtUtc ? ` exported at ${exportedAtUtc}` : "";
+  const unmatchedSummary = unmatchedRows.length
+    ? ` ${unmatchedRows.length} row${unmatchedRows.length === 1 ? " was" : "s were"} left unmatched: ${unmatchedRows
+        .map((row) => row.item)
+        .join(", ")}.`
+    : "";
+  return `Loaded ${matchedLineCount} recognized inventory line${matchedLineCount === 1 ? "" : "s"} from ${sourceLabel}${timing}.${unmatchedSummary}`;
+}
+
+function reportUnmatchedImportRows(sourceLabel: string, unmatchedRows: ImportedInventoryRow[]) {
+  if (!unmatchedRows.length || typeof console === "undefined") {
+    return;
+  }
+  console.warn(`[outward-crafting-helper] Unmatched ${sourceLabel} inventory rows:`, unmatchedRows);
 }
 
 async function loadMetadata() {
@@ -228,11 +289,14 @@ async function parseInventoryFile(file: File) {
   }
   const worksheet = workbook.Sheets[firstSheetName];
   const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: "" });
-  const items = canonicalizeImportedInventoryItems(await loadMetadata(), parseSheetRows(rows));
+  const parsedRows = parseSheetRows(rows);
+  const canonicalized = canonicalizeImportedInventoryRows(await loadMetadata(), parsedRows);
+  const items = canonicalized.items;
+  reportUnmatchedImportRows(file.name, canonicalized.unmatchedRows);
   if (!items.length) {
     throw new Error("No inventory rows were found in the selected file.");
   }
-  return items;
+  return { ...canonicalized, rawRowCount: parsedRows.length };
 }
 
 function decodeBase64Url(value: string) {
@@ -277,15 +341,15 @@ export function parseUrlInventoryPayloadValue(rawValue: string | null): UrlSyncS
       return { status: "invalid", message: "The mod sync link did not contain any usable inventory rows." };
     }
 
-    const source = {
-      kind: "url_sync" as const,
-      label: "Mod URL sync",
-      detail: payload.exportedAtUtc
-        ? `Loaded ${items.length} inventory lines from the mod link exported at ${payload.exportedAtUtc}.`
-        : `Loaded ${items.length} inventory lines from the mod link.`,
-      exportedAtUtc: payload.exportedAtUtc,
-    };
-    return { status: "applied", source };
+      const source = {
+        kind: "url_sync" as const,
+        label: "Mod URL sync",
+        detail: payload.exportedAtUtc
+          ? `Loaded ${items.length} inventory lines from the mod link exported at ${payload.exportedAtUtc}.`
+          : `Loaded ${items.length} inventory lines from the mod link.`,
+        exportedAtUtc: payload.exportedAtUtc,
+      };
+      return { status: "applied", source };
   } catch {
     return { status: "invalid", message: "The mod sync link could not be parsed. Check the URL payload and try again." };
   }
@@ -347,7 +411,8 @@ export async function applyUrlInventorySync(options: { clearUrl?: boolean } = {}
         })
         .filter((entry): entry is ImportedInventoryRow => entry != null);
 
-      const canonicalItems = canonicalizeImportedInventoryItems(await loadMetadata(), rawItems);
+      const canonicalized = canonicalizeImportedInventoryRows(await loadMetadata(), rawItems);
+      const canonicalItems = canonicalized.items;
       if (!canonicalItems.length) {
         if (options.clearUrl !== false) {
           stripSyncPayloadFromUrl();
@@ -357,12 +422,11 @@ export async function applyUrlInventorySync(options: { clearUrl?: boolean } = {}
           message: "The mod sync link was received, but none of its inventory items matched the bundled recipe data.",
         } satisfies UrlSyncStatus;
       }
+      reportUnmatchedImportRows("mod sync", canonicalized.unmatchedRows);
 
       const source = {
         ...result.source,
-        detail: payload.exportedAtUtc
-          ? `Loaded ${canonicalItems.length} inventory lines from the mod link exported at ${payload.exportedAtUtc}.`
-          : `Loaded ${canonicalItems.length} inventory lines from the mod link.`,
+        detail: importDetailMessage("the mod link", rawItems.length, canonicalized.unmatchedRows, payload.exportedAtUtc),
       };
       writeInventoryCounter(canonicalItems, source);
       if (options.clearUrl !== false) {
@@ -431,27 +495,29 @@ export const runtimeApi = {
   },
 
   async replaceInventory(items: Array<{ item: string; qty: number }>): Promise<InventoryResponse> {
-    const normalizedItems = canonicalizeImportedInventoryItems(await loadMetadata(), items);
+    const canonicalized = canonicalizeImportedInventoryRows(await loadMetadata(), items);
+    reportUnmatchedImportRows("inventory replace", canonicalized.unmatchedRows);
+    const normalizedItems = canonicalized.items;
     writeInventoryCounter(normalizedItems);
     return inventoryResponse(counterFromItems(normalizedItems));
   },
 
   async importCsv(file: File): Promise<InventoryResponse> {
-    const items = await parseInventoryFile(file);
+    const { items, unmatchedRows, rawRowCount } = await parseInventoryFile(file);
     writeInventoryCounter(items, {
       kind: "manual_upload",
       label: "Manual upload",
-      detail: `Imported ${file.name} into the browser inventory.`,
+      detail: importDetailMessage(file.name, rawRowCount, unmatchedRows),
     });
     return inventoryResponse(counterFromItems(items));
   },
 
   async importExcel(file: File): Promise<InventoryResponse> {
-    const items = await parseInventoryFile(file);
+    const { items, unmatchedRows, rawRowCount } = await parseInventoryFile(file);
     writeInventoryCounter(items, {
       kind: "manual_upload",
       label: "Manual upload",
-      detail: `Imported ${file.name} into the browser inventory.`,
+      detail: importDetailMessage(file.name, rawRowCount, unmatchedRows),
     });
     return inventoryResponse(counterFromItems(items));
   },

@@ -3,7 +3,12 @@ import { describe, expect, it } from "vitest";
 import calculatorData from "../../public/data/calculator-data.json";
 import type { MetadataResponse } from "../types";
 import { buildRuntimeData, calculateDirect, counterFromItems } from "./runtime-calculator";
-import { canonicalizeImportedInventoryItems, extractUrlInventoryPayload, parseUrlInventoryPayloadValue } from "./runtime-service";
+import {
+  canonicalizeImportedInventoryItems,
+  canonicalizeImportedInventoryRows,
+  extractUrlInventoryPayload,
+  parseUrlInventoryPayloadValue,
+} from "./runtime-service";
 
 function base64UrlEncode(value: string) {
   return btoa(value)
@@ -68,5 +73,24 @@ describe("runtime mod sync payloads", () => {
       { item: "Turmmip", qty: 1 },
     ]);
     expect(direct.items.some((row) => row.result === "Astral Potion")).toBe(true);
+  });
+
+  it("maps known export aliases and tracks unmatched import rows explicitly", () => {
+    const metadata = calculatorData as MetadataResponse;
+    const result = canonicalizeImportedInventoryRows(metadata, [
+      { item: "small sapphire", qty: 2 },
+      { item: "waterskin (clean water)", qty: 4 },
+      { item: "waterskin (leyline water)", qty: 5 },
+      { item: "Elemental Particle â€“ Ether", qty: 1 },
+      { item: "Totally Unknown Import Name", qty: 3 },
+    ]);
+
+    expect(result.items).toEqual([
+      { item: "Clean Water", qty: 4 },
+      { item: "Elemental Particle – Ether", qty: 1 },
+      { item: "Leyline Water", qty: 5 },
+      { item: "Small Sapphire", qty: 2 },
+    ]);
+    expect(result.unmatchedRows).toEqual([{ item: "Totally Unknown Import Name", qty: 3 }]);
   });
 });
