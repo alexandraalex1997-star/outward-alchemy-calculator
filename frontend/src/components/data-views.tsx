@@ -54,19 +54,21 @@ export function BestDirectCards({
           <div className="result-card-grid">
             <div className="result-card-content result-card-content--compact">
               <div className="result-card-topline">
-                <div className="result-card-title-block">
-                  <h3>{row.result}</h3>
+                <div className="result-card-header-cluster">
+                  <div className="result-card-title-block">
+                    <h3>{row.result}</h3>
+                  </div>
+                  <div className="result-card-meta result-card-meta--inline">
+                    <span className="result-card-pill">{row.station}</span>
+                    <span className="result-card-pill">Crafts {row.max_crafts}</span>
+                    <span className="result-card-pill">Total {row.max_total_output}</span>
+                  </div>
                 </div>
                 <div className="result-card-side">
                   <div className="score-badge" title="Real smart-score ranking">
                     {formatScore(row.smart_score)}
                   </div>
                 </div>
-              </div>
-              <div className="result-card-meta">
-                <span className="result-card-pill">{row.station}</span>
-                <span className="result-card-pill">Crafts {row.max_crafts}</span>
-                <span className="result-card-pill">Total {row.max_total_output}</span>
               </div>
               <div className="result-card-detail-grid">
                 <div className="result-card-detail">

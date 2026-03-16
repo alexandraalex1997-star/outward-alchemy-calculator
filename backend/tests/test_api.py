@@ -611,19 +611,66 @@ def test_planner_and_debug_explain_when_the_target_is_already_owned_but_not_dire
         "/api/results/recipe-debug?result=Astral%20Potion&stations=Alchemy+Kit&max_missing_slots=2&planner_depth=5"
     ).json()
 
-    assert planner["found"] is True
-    assert planner["mode"] == "use_existing_target"
-    assert planner["uses_existing_target"] is True
-    assert planner["craft_steps"] == 0
-    assert planner["explanation"].startswith("The target is already in your bag.")
+    assert planner["already_owned"] is True
+    assert planner["planning_goal"] == "craft_one_more"
+    assert planner["target_owned_qty"] == 1
+    assert planner["found"] is False
+    assert planner["mode"] == "partial_route"
+    assert planner["one_more_found"] is False
+    assert planner["baseline_found"] is True
+    assert planner["baseline_mode"] == "use_existing_target"
+    assert planner["owned_satisfies_target"] is True
+    assert planner["explanation"].startswith("You already have 1 copy of Astral Potion in your bag.")
     assert not any(row["result"] == "Astral Potion" for row in direct["items"])
     assert debug["target_owned_qty"] == 1
     assert debug["craftable_now"] is False
     assert debug["craftable_panel"] is False
     assert "already own this result" in debug["craftable_panel_reason"]
-    assert debug["planner_found"] is True
-    assert debug["planner_mode"] == "use_existing_target"
-    assert "already in your bag" in debug["planner_alignment_reason"]
+    assert debug["planner_goal"] == "craft_one_more"
+    assert debug["planner_found"] is False
+    assert debug["planner_mode"] == "partial_route"
+    assert debug["planner_baseline_found"] is True
+    assert debug["planner_baseline_mode"] == "use_existing_target"
+    assert "cannot produce one more copy yet" in debug["planner_alignment_reason"]
+
+
+def test_planner_when_target_is_owned_and_ingredients_exist_can_build_one_more_copy() -> None:
+    client = make_client()
+
+    client.put(
+        "/api/inventory/replace",
+        json={
+            "items": [
+                {"item": "Astral Potion", "qty": 1},
+                {"item": "Star Mushroom", "qty": 1},
+                {"item": "Turmmip", "qty": 1},
+                {"item": "Clean Water", "qty": 1},
+            ]
+        },
+    ).raise_for_status()
+
+    planner = client.post(
+        "/api/results/planner",
+        json={"target": "Astral Potion", "max_depth": 5, "stations": ["Alchemy Kit"]},
+    ).json()
+    direct = client.get("/api/results/direct?stations=Alchemy+Kit&sort_mode=Smart%20score&limit=50").json()
+    debug = client.get(
+        "/api/results/recipe-debug?result=Astral%20Potion&stations=Alchemy+Kit&max_missing_slots=2&planner_depth=5"
+    ).json()
+
+    assert planner["already_owned"] is True
+    assert planner["planning_goal"] == "craft_one_more"
+    assert planner["found"] is True
+    assert planner["mode"] == "direct_craft_route"
+    assert planner["one_more_found"] is True
+    assert planner["one_more_mode"] == "direct_craft_route"
+    assert planner["missing"] == []
+    assert any("Craft Astral Potion" in line for line in planner["lines"])
+    assert any(row["result"] == "Astral Potion" for row in direct["items"])
+    assert debug["planner_goal"] == "craft_one_more"
+    assert debug["planner_one_more_found"] is True
+    assert debug["planner_mode"] == "direct_craft_route"
+    assert "can make one more now" in debug["planner_alignment_reason"]
 
 
 def test_recipe_debug_reports_full_craftable_inclusion_and_sort_rank_for_lower_ranked_results() -> None:

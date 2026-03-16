@@ -26,14 +26,14 @@ This folder now contains the shared crafting/data layer for the current React + 
 
 - Frontend: React in `frontend/`
 - API: FastAPI in `backend/app/`
-- Shared crafting/data logic: this `src/` folder
+- Shared crafting/data logic: this `shared/` folder
 
 ## Refreshing data
 
 To refresh local recipe/wiki data, run:
 
 ```bash
-python src/outward_wiki_sync.py
+python shared/outward_wiki_sync.py
 ```
 
 ## Notes

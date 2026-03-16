@@ -5,7 +5,7 @@ from collections import Counter
 import pandas as pd
 
 from backend.app.services import CalculatorData, CalculatorService, InventoryStore
-from src import crafting_core as core
+from shared import crafting_core as core
 
 
 def recipes_df(rows: list[dict]) -> pd.DataFrame:
@@ -787,7 +787,7 @@ def test_recipe_visibility_debug_reports_planner_depth_changes_for_deeper_target
     assert deep["planner_found"] is True
 
 
-def test_planner_marks_when_the_target_is_already_owned_instead_of_crafted() -> None:
+def test_planner_switches_to_one_more_goal_when_the_target_is_already_owned() -> None:
     service = make_service(
         [
             {
@@ -807,13 +807,57 @@ def test_planner_marks_when_the_target_is_already_owned_instead_of_crafted() -> 
     planner = service.planner("Astral Potion", max_depth=5, stations=["Alchemy Kit"])
     debug = service.recipe_visibility_debug("Astral Potion", stations=["Alchemy Kit"], max_missing_slots=2, planner_depth=5)
 
-    assert planner["found"] is True
-    assert planner["mode"] == "use_existing_target"
-    assert planner["uses_existing_target"] is True
-    assert planner["craft_steps"] == 0
+    assert planner["already_owned"] is True
+    assert planner["planning_goal"] == "craft_one_more"
+    assert planner["target_owned_qty"] == 1
+    assert planner["baseline_found"] is True
+    assert planner["baseline_mode"] == "use_existing_target"
+    assert planner["found"] is False
+    assert planner["mode"] == "partial_route"
+    assert planner["one_more_found"] is False
     assert debug["target_owned_qty"] == 1
     assert debug["craftable_now"] is False
-    assert debug["planner_mode"] == "use_existing_target"
+    assert debug["planner_goal"] == "craft_one_more"
+    assert debug["planner_mode"] == "partial_route"
+    assert debug["planner_baseline_mode"] == "use_existing_target"
+
+
+def test_planner_one_more_goal_can_succeed_when_owned_target_has_ingredients_for_another_copy() -> None:
+    service = make_service(
+        [
+            {
+                "recipe_id": "astral-like",
+                "recipe_page": "Unit",
+                "section": "Planner",
+                "result": "Astral Potion",
+                "result_qty": 1,
+                "station": "Alchemy Kit",
+                "ingredients": "Star Mushroom|Turmmip|Water",
+            },
+        ],
+        raw_groups={"water": core.CANONICAL_GROUPS["water"]},
+    )
+    service.replace_inventory(
+        [
+            {"item": "Astral Potion", "qty": 1},
+            {"item": "Star Mushroom", "qty": 1},
+            {"item": "Turmmip", "qty": 1},
+            {"item": "Clean Water", "qty": 1},
+        ]
+    )
+
+    planner = service.planner("Astral Potion", max_depth=5, stations=["Alchemy Kit"])
+    debug = service.recipe_visibility_debug("Astral Potion", stations=["Alchemy Kit"], max_missing_slots=2, planner_depth=5)
+
+    assert planner["already_owned"] is True
+    assert planner["planning_goal"] == "craft_one_more"
+    assert planner["found"] is True
+    assert planner["mode"] == "direct_craft_route"
+    assert planner["one_more_found"] is True
+    assert any("Craft Astral Potion" in line for line in planner["lines"])
+    assert debug["planner_goal"] == "craft_one_more"
+    assert debug["planner_one_more_found"] is True
+    assert debug["planner_mode"] == "direct_craft_route"
 
 
 def test_near_craft_filter_requires_at_least_one_matched_slot() -> None:

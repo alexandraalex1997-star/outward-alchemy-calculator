@@ -38,6 +38,7 @@ import type {
   DashboardResponse,
   DirectResponse,
   InventoryResponse,
+  InventoryItem,
   MetadataResponse,
   NearResponse,
   PlannerResponse,
@@ -146,6 +147,15 @@ function formatPlannerMode(mode: string): string {
     default:
       return "No route";
   }
+}
+
+function sortInventoryPreview(items: InventoryItem[]): InventoryItem[] {
+  return [...items].sort((left, right) => {
+    if (right.qty !== left.qty) {
+      return right.qty - left.qty;
+    }
+    return left.item.localeCompare(right.item);
+  });
 }
 
 export default function App() {
@@ -319,24 +329,43 @@ export default function App() {
     () => (plannerResult?.missing ?? []).reduce((sum, item) => sum + item.qty, 0),
     [plannerResult],
   );
+  const plannerRemainingItems = useMemo(() => plannerResult?.remaining_inventory ?? [], [plannerResult]);
   const plannerRemainingTotal = useMemo(
-    () => (plannerResult?.remaining_inventory ?? []).reduce((sum, item) => sum + item.qty, 0),
-    [plannerResult],
+    () => plannerRemainingItems.reduce((sum, item) => sum + item.qty, 0),
+    [plannerRemainingItems],
+  );
+  const plannerOwnedQty = plannerResult?.target_owned_qty ?? 0;
+  const plannerRemainingUnique = plannerRemainingItems.length;
+  const plannerBagPreviewItems = useMemo(() => sortInventoryPreview(plannerRemainingItems).slice(0, 6), [plannerRemainingItems]);
+  const plannerHiddenBagCount = Math.max(0, plannerRemainingItems.length - plannerBagPreviewItems.length);
+  const plannerActionStepCount = useMemo(
+    () => plannerSteps.filter((step) => step.kind !== "note").length,
+    [plannerSteps],
   );
   const plannerTone = useMemo(
     () => plannerStatusTone(plannerResult?.found ?? false, plannerSteps.length),
     [plannerResult, plannerSteps.length],
   );
+  const plannerGoalLabel = useMemo(() => {
+    if (!plannerResult) return "Obtain target";
+    return plannerResult.planning_goal === "craft_one_more" ? "Craft one more" : "Obtain target";
+  }, [plannerResult]);
   const plannerStatusTitle = useMemo(() => {
     if (!plannerResult) return "";
-    if (plannerResult.found && plannerResult.mode === "use_existing_target") {
-      return "Target already in bag";
+    if (plannerResult.already_owned && plannerResult.found && plannerResult.mode === "direct_craft_route") {
+      return "Owned and can craft one more now";
     }
-    if (plannerResult.found && plannerResult.mode === "recursive_craft_route") {
-      return "Complete route with intermediates";
+    if (plannerResult.already_owned && plannerResult.found) {
+      return "Owned and one-more route found";
+    }
+    if (plannerResult.already_owned && plannerSteps.length) {
+      return "Owned but one-more route is partial";
+    }
+    if (plannerResult.already_owned) {
+      return "Owned but one-more route is blocked";
     }
     if (plannerResult.found) {
-      return "Complete direct route";
+      return plannerResult.mode === "recursive_craft_route" ? "Complete route with intermediates" : "Direct craft ready";
     }
     if (plannerSteps.length) {
       return "Partial route shown";
@@ -345,8 +374,11 @@ export default function App() {
   }, [plannerResult, plannerSteps.length]);
   const plannerStatusPill = useMemo(() => {
     if (!plannerResult) return "";
-    if (plannerResult.found && plannerResult.mode === "use_existing_target") {
-      return "Already owned";
+    if (plannerResult.already_owned && plannerResult.found) {
+      return "Can craft +1";
+    }
+    if (plannerResult.already_owned) {
+      return "Need items for +1";
     }
     if (plannerResult.found && plannerResult.requires_crafting) {
       return "Ready to craft";
@@ -359,38 +391,68 @@ export default function App() {
     }
     return "Blocked";
   }, [plannerResult, plannerSteps.length]);
-  const plannerBagLabel = useMemo(() => {
-    if (!plannerResult) return "Current bag";
-    if (!plannerResult.found) return "Bag shown";
-    if (plannerResult.mode === "use_existing_target") return "Bag after taking target";
-    return "Bag after route";
-  }, [plannerResult]);
   const plannerBagTitle = useMemo(() => {
     if (!plannerResult) return "Current bag";
-    if (!plannerResult.found) return "Current bag";
-    if (plannerResult.mode === "use_existing_target") return "Bag after taking target";
+    if (plannerResult.already_owned && plannerResult.planning_goal === "craft_one_more") {
+      return plannerResult.found ? "Bag after reserving +1" : "Current bag";
+    }
+    if (!plannerResult.found) return "Bag shown";
     return "Bag after route";
   }, [plannerResult]);
   const plannerBagNote = useMemo(() => {
     if (!plannerResult) return "";
+    if (plannerResult.already_owned && plannerResult.planning_goal === "craft_one_more") {
+      if (!plannerResult.found) {
+        return "Current bag snapshot while planning one additional copy.";
+      }
+      return "Owned copies are preserved while the planner reserves ingredients for one more.";
+    }
     if (!plannerResult.found) {
       return "Current inventory snapshot used for this partial result.";
-    }
-    if (plannerResult.mode === "use_existing_target") {
-      return "What remains after taking one existing copy from your bag.";
     }
     return "What remains after following the route.";
   }, [plannerResult]);
   const plannerRouteHint = useMemo(() => {
     if (!plannerResult) return "";
-    if (plannerResult.found && plannerResult.mode === "use_existing_target") {
-      return "No crafting steps were needed.";
+    if (plannerResult.already_owned && plannerResult.planning_goal === "craft_one_more") {
+      return plannerResult.found ? "Route for one additional copy." : "Closest branch toward one additional copy.";
     }
     if (plannerResult.found) {
       return "Follow these lines in order.";
     }
     return "Missing requirements are marked inline.";
   }, [plannerResult]);
+  const plannerBagEmptyMessage = useMemo(() => {
+    if (!plannerResult) return "No bag details available yet.";
+    if (plannerResult.already_owned && plannerResult.planning_goal === "craft_one_more") {
+      return plannerResult.found
+        ? "This one-more route would consume every tracked item it needs."
+        : "No bag items are reserved until the missing requirements are met.";
+    }
+    if (!plannerResult.found) return "The planner keeps the current bag unchanged when no full route is found.";
+    return "This route would use up every tracked item it needs.";
+  }, [plannerResult]);
+  const plannerStepNote = useMemo(() => {
+    if (!plannerResult) return "";
+    if (plannerResult.already_owned && plannerResult.planning_goal === "craft_one_more") {
+      if (!plannerActionStepCount) {
+        return plannerResult.found
+          ? "One more copy is immediately available with current ingredients."
+          : "No confirmed one-more route lines yet.";
+      }
+      if (plannerResult.craft_steps > 0) {
+        return `${plannerResult.craft_steps} craft action${plannerResult.craft_steps === 1 ? "" : "s"} to make one additional copy.`;
+      }
+      return `${plannerActionStepCount} one-more route step${plannerActionStepCount === 1 ? "" : "s"} traced by the planner.`;
+    }
+    if (!plannerActionStepCount) {
+      return plannerResult.found ? "The route is immediate with the current inventory." : "No confirmed route lines yet.";
+    }
+    if (plannerResult.craft_steps > 0) {
+      return `${plannerResult.craft_steps} craft action${plannerResult.craft_steps === 1 ? "" : "s"} inside ${plannerActionStepCount} route step${plannerActionStepCount === 1 ? "" : "s"}.`;
+    }
+    return `${plannerActionStepCount} route step${plannerActionStepCount === 1 ? "" : "s"} traced by the planner.`;
+  }, [plannerActionStepCount, plannerResult]);
 
   const executePlanner = useCallback(async () => {
     if (!planTarget) return;
@@ -714,7 +776,7 @@ export default function App() {
           ) : null}
 
           {activeSection === "Plan a target" ? (
-            <Panel title="Plan a target" description="Map the closest craft route for one target using the current inventory.">
+            <Panel title="Plan a target" description="Plan the next practical route for one target. If it is already owned, this focuses on one more copy.">
               <div className="view-stack">
                 <div className="inline-actions view-toolbar">
                   <label className="field grow">
@@ -756,6 +818,13 @@ export default function App() {
                       </span>
                     </div>
 
+                    {plannerResult.already_owned ? (
+                      <div className="info-strip planner-owned-strip">
+                        You currently own {plannerOwnedQty} {plannerOwnedQty === 1 ? "copy" : "copies"} of {plannerResult.target}. Planner goal:{" "}
+                        {plannerGoalLabel.toLowerCase()}.
+                      </div>
+                    ) : null}
+
                     <div className="planner-summary-grid">
                       <div className="planner-summary-panel">
                         <span className="planner-summary-label">Target item</span>
@@ -763,17 +832,31 @@ export default function App() {
                         <span className="planner-summary-note">The route is centered on this craft goal.</span>
                       </div>
                       <div className="planner-summary-panel">
-                        <span className="planner-summary-label">Planner mode</span>
-                        <strong className="planner-summary-value">{formatPlannerMode(plannerResult.mode)}</strong>
+                        <span className="planner-summary-label">Planner goal</span>
+                        <strong className="planner-summary-value">{plannerGoalLabel}</strong>
                         <span className="planner-summary-note">
-                          {plannerResult.uses_existing_target
-                            ? "The planner is consuming an item you already own."
-                            : plannerResult.craft_steps
-                              ? `${plannerResult.craft_steps} craft step${plannerResult.craft_steps === 1 ? "" : "s"} in this route.`
-                              : "No route lines were produced."}
+                          {plannerResult.already_owned
+                            ? "You keep owned copies while this plan checks if one more can be produced."
+                            : "The planner looks for one complete route for this target."}
                         </span>
                       </div>
                       <div className="planner-summary-panel">
+                        <span className="planner-summary-label">Route status</span>
+                        <strong className="planner-summary-value">{formatPlannerMode(plannerResult.mode)}</strong>
+                        <span className="planner-summary-note">
+                          {plannerResult.craft_steps
+                            ? `${plannerResult.craft_steps} craft step${plannerResult.craft_steps === 1 ? "" : "s"} in this route.`
+                            : plannerResult.found
+                              ? "No extra craft steps were needed."
+                              : "No complete route yet."}
+                        </span>
+                      </div>
+                      <div className="planner-summary-panel">
+                        <span className="planner-summary-label">Route steps</span>
+                        <strong className="planner-summary-value">{plannerActionStepCount}</strong>
+                        <span className="planner-summary-note">{plannerStepNote}</span>
+                      </div>
+                      <div className="planner-summary-panel planner-summary-panel-wide">
                         <span className="planner-summary-label">Still needed</span>
                         <strong className="planner-summary-value">{plannerMissingTotal}</strong>
                         <span className="planner-summary-note">
@@ -782,64 +865,92 @@ export default function App() {
                             : "Nothing else is required for this route."}
                         </span>
                       </div>
-                      <div className="planner-summary-panel">
-                        <span className="planner-summary-label">{plannerBagLabel}</span>
-                        <strong className="planner-summary-value">{plannerRemainingTotal}</strong>
-                        <span className="planner-summary-note">{plannerBagNote}</span>
-                      </div>
                     </div>
 
-                    <div className="split-columns planner-inventory-columns">
+                    <div className="planner-primary-grid">
+                      <div className="planner-route-shell">
+                        <div className="planner-route-head">
+                          <strong>{plannerResult.already_owned ? "Route for one more copy" : "Planner route"}</strong>
+                          <span>{plannerRouteHint}</span>
+                        </div>
+                        {plannerResult.already_owned ? (
+                          <p className="planner-route-note">
+                            You already own this target. The route below focuses on producing one additional copy with the current inventory and
+                            station filters.
+                          </p>
+                        ) : null}
+                        {!plannerResult.found && plannerSteps.length ? (
+                          <p className="planner-route-note">
+                            This is the closest route the planner could prove with the current bag and filters. It stops where required
+                            ingredients run out.
+                          </p>
+                        ) : null}
+                        {plannerSteps.length ? (
+                          <div className="planner-step-list">
+                            {plannerSteps.map((step, index) => (
+                              <div key={`${index}-${step.raw}`} className={classNames("planner-step", `is-${step.kind}`)}>
+                                <div className="planner-step-line" style={{ paddingLeft: `${step.indent * 1.1}rem` }}>
+                                  <span className={classNames("planner-step-chip", `is-${step.kind}`)}>
+                                    {plannerStepLabel(step.kind)}
+                                  </span>
+                                  <span className="planner-step-text">{step.text}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="empty-state">No additional route lines were needed for this target.</div>
+                        )}
+                      </div>
                       <InventoryList
                         title="Still needed"
                         items={plannerResult.missing}
                         emptyMessage="You already have everything needed for this route."
                       />
-                      <InventoryList
-                        title={plannerBagTitle}
-                        items={plannerResult.remaining_inventory}
-                        emptyMessage={
-                          plannerResult.found
-                            ? plannerResult.mode === "use_existing_target"
-                              ? "This route would consume the tracked copy already in your bag."
-                              : "This route would use up every item you committed to the craft."
-                            : "The planner did not need to reserve anything from the current bag."
-                        }
-                      />
                     </div>
-                    <div className="planner-route-shell">
-                      <div className="planner-route-head">
-                        <strong>Planner route</strong>
-                        <span>{plannerRouteHint}</span>
+
+                    <div className="planner-secondary-shell">
+                      <div className="planner-secondary-head">
+                        <div className="planner-secondary-copy">
+                          <strong>{plannerBagTitle}</strong>
+                          <p>{plannerBagNote}</p>
+                        </div>
+                        <div className="planner-secondary-metrics">
+                          <span>{plannerRemainingUnique} unique</span>
+                          <span>{plannerRemainingTotal} total qty</span>
+                        </div>
                       </div>
-                      {plannerResult.mode === "use_existing_target" ? (
-                        <p className="planner-route-note">
-                          This target is already in your bag. That counts as a successful planner route, but it does not make any recipe row
-                          directly craftable unless you also have the ingredients for another copy.
-                        </p>
-                      ) : null}
-                      {!plannerResult.found && plannerSteps.length ? (
-                        <p className="planner-route-note">
-                          This is the closest route the planner could prove with the current bag and filters. It stops where required
-                          ingredients run out.
-                        </p>
-                      ) : null}
-                      {plannerSteps.length ? (
-                        <div className="planner-step-list">
-                          {plannerSteps.map((step, index) => (
-                            <div key={`${index}-${step.raw}`} className={classNames("planner-step", `is-${step.kind}`)}>
-                              <div className="planner-step-line" style={{ paddingLeft: `${step.indent * 1.1}rem` }}>
-                                <span className={classNames("planner-step-chip", `is-${step.kind}`)}>
-                                  {plannerStepLabel(step.kind)}
-                                </span>
-                                <span className="planner-step-text">{step.text}</span>
-                              </div>
+
+                      {plannerBagPreviewItems.length ? (
+                        <div className="planner-bag-preview-list">
+                          {plannerBagPreviewItems.map((item) => (
+                            <div key={item.item} className="planner-bag-chip">
+                              <span>{item.item}</span>
+                              <strong>x{item.qty}</strong>
                             </div>
                           ))}
+                          {plannerHiddenBagCount ? (
+                            <div className="planner-bag-chip planner-bag-chip--muted">+{plannerHiddenBagCount} more item{plannerHiddenBagCount === 1 ? "" : "s"}</div>
+                          ) : null}
                         </div>
                       ) : (
-                        <div className="empty-state">No additional route lines were needed for this target.</div>
+                        <div className="empty-state planner-bag-empty">{plannerBagEmptyMessage}</div>
                       )}
+
+                      {plannerRemainingItems.length > plannerBagPreviewItems.length ? (
+                        <details className="planner-bag-details">
+                          <summary>Show full bag details</summary>
+                          <div className="planner-bag-scroll">
+                            <div className="mini-table planner-bag-table">
+                              {plannerRemainingItems.map((item) => (
+                                <div key={item.item}>
+                                  {item.item} x{item.qty}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </details>
+                      ) : null}
                     </div>
                   </div>
                 ) : (
@@ -1045,9 +1156,23 @@ export default function App() {
                             detail="Matching rows inside the current near-craft threshold"
                           />
                           <StatCard
-                            label="Planner target"
+                            label="Planner route"
                             value={recipeDebugResult.planner_found ? "Found" : "Not found"}
                             detail={recipeDebugResult.planner_reason}
+                          />
+                          <StatCard
+                            label="Planner goal"
+                            value={recipeDebugResult.planner_goal === "craft_one_more" ? "Craft one more" : "Obtain target"}
+                            detail={
+                              recipeDebugResult.planner_already_owned
+                                ? `Target already owned (${recipeDebugResult.planner_target_owned_qty}).`
+                                : "Target is not currently owned."
+                            }
+                          />
+                          <StatCard
+                            label="One-more route"
+                            value={recipeDebugResult.planner_one_more_found ? "Found" : "Not found"}
+                            detail={recipeDebugResult.planner_one_more_reason}
                           />
                           <StatCard
                             label="Planner mode"
@@ -1071,6 +1196,10 @@ export default function App() {
                           />
                         </div>
                         <div className="info-strip">{recipeDebugResult.planner_alignment_reason}</div>
+                        <div className="info-strip">
+                          Baseline route (obtain target): {formatPlannerMode(recipeDebugResult.planner_baseline_mode)} /{" "}
+                          {recipeDebugResult.planner_baseline_found ? "Found" : "Not found"}.
+                        </div>
                         <div className="info-strip">{recipeDebugResult.craftable_sort_reason}</div>
                         <div className="debug-grid">
                           <section className="debug-section">

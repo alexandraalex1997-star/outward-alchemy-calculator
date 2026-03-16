@@ -35,6 +35,8 @@ nosetests.xml
 coverage.xml
 *,cover
 .mypy_cache/
+shared/outward_crafting.xlsx
+shared/data/item_metadata.generated.json
 
 # --- OS / IDE Specific ---
 .DS_Store

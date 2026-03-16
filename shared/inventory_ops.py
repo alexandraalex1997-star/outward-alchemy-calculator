@@ -7,7 +7,7 @@ import pandas as pd
 
 try:
     from .crafting_core import key, normalize
-except ImportError:  # pragma: no cover - supports running src/app.py directly
+except ImportError:  # pragma: no cover - supports running this module as a standalone script
     from crafting_core import key, normalize
 
 

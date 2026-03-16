@@ -29,11 +29,12 @@ This project is built to be fast, readable, and beginner-friendly. The crafting 
 - **Almost craftable view**
   - Shows recipes that are close, based on the current missing-slot threshold
 - **Planner**
-  - Explains whether a target is:
-    - already in your bag
-    - directly craftable
-    - reachable through intermediate crafts
-    - blocked by missing ingredients or station filters
+  - Shows the practical next route for one target:
+    - direct route
+    - recursive route
+    - partial route
+    - blocked route
+  - If the target is already owned, it plans for crafting one more copy
 - **Shopping list builder**
   - Combines multiple targets into one missing-items list
 - **Recipe database + debug tools**
@@ -51,7 +52,7 @@ This project is built to be fast, readable, and beginner-friendly. The crafting 
 .
 |- frontend/        React UI
 |- backend/         FastAPI app and tests
-|- src/             Shared crafting logic, inventory helpers, and data tooling
+|- shared/          Shared crafting logic, inventory helpers, and data tooling
 |- run.cmd          Starts backend + frontend in separate terminals
 |- run_api.cmd      Starts the FastAPI server
 |- run_frontend.cmd Starts the Vite dev server
@@ -116,7 +117,8 @@ If that sync file is missing, you can still use **Upload CSV / Excel** as a manu
 - **Craft now**
   - Shows all directly craftable recipe rows under the current station filters
 - **Plan a target**
-  - Shows whether a target is already owned, directly craftable, or reachable through intermediate crafting
+  - Plans the next practical route for that target
+  - If already owned, it checks whether one more copy can be crafted now (or what is missing)
 - **Shopping list**
   - Builds one combined missing-items list for multiple outputs
 - **Missing ingredients**
@@ -141,21 +143,21 @@ npm run build
 
 ## Data and Recipe Tooling
 
-The shared crafting logic and local data tooling live in `src/`.
+The shared crafting logic and local data tooling live in `shared/`.
 
 Useful files:
 
-- `src/crafting_core.py`
-- `src/inventory_ops.py`
-- `src/outward_wiki_sync.py`
-- `src/data/recipes.csv`
-- `src/data/ingredient_groups.json`
-- `src/data/item_metadata.json`
+- `shared/crafting_core.py`
+- `shared/inventory_ops.py`
+- `shared/outward_wiki_sync.py`
+- `shared/data/recipes.csv`
+- `shared/data/ingredient_groups.json`
+- `shared/data/item_metadata.json`
 
 To refresh recipe/wiki data locally:
 
 ```powershell
-python src/outward_wiki_sync.py
+python shared/outward_wiki_sync.py
 ```
 
 ## Notes

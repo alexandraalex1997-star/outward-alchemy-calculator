@@ -400,7 +400,7 @@ def build_workbook(recipes_df: pd.DataFrame, groups: Dict[str, List[str]], out_p
     ws_info["A1"].font = Font(size=15, bold=True)
     ws_info["A3"] = "1) Run outward_wiki_sync.py to refresh recipe data from the wiki"
     ws_info["A4"] = "2) Fill your items into the Inventory sheet"
-    ws_info["A5"] = "3) Use app.py for the actual direct + multi-step crafting planner"
+    ws_info["A5"] = "3) Use the React + API app for the actual direct + multi-step crafting planner"
     ws_info["A7"] = "Wiki base URL"
     ws_info["B7"] = BASE_URL
     ws_info["A9"] = "Why the app is still important"

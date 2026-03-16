@@ -11,12 +11,12 @@ from typing import Dict, Iterable, List, Optional
 
 import pandas as pd
 
-from src import crafting_core as core
-from src import inventory_ops
+from shared import crafting_core as core
+from shared import inventory_ops
 
 
 BASE_DIR = Path(__file__).resolve().parents[2]
-DATA_DIR = BASE_DIR / "src" / "data"
+DATA_DIR = BASE_DIR / "shared" / "data"
 OUTWARD_SYNC_ENV_VAR = "OUTWARD_SYNC_INVENTORY_PATH"
 DEFAULT_OUTWARD_SYNC_SUBPATH = Path("Documents") / "OutwardCraftSync" / "current_inventory.csv"
 BEST_DIRECT_SHORTLIST_LIMIT = 8
@@ -402,6 +402,113 @@ class CalculatorService:
             "requires_crafting": bool(craft_steps > 0),
         }
 
+    def _planner_explanation(
+        self,
+        *,
+        target: str,
+        found: bool,
+        mode: str,
+        station_filtered_out: bool,
+        crafting_one_more: bool,
+        owned_qty: int,
+    ) -> str:
+        if crafting_one_more and owned_qty > 0:
+            owned_unit = "copy" if owned_qty == 1 else "copies"
+            owned_prefix = f"You already have {owned_qty} {owned_unit} of {target} in your bag. "
+            if found and mode == "direct_craft_route":
+                return owned_prefix + "You can craft one more directly with the current inventory, depth, and station filters."
+            if found and mode == "recursive_craft_route":
+                return owned_prefix + "You can craft one more by following an intermediate route."
+            if found:
+                return owned_prefix + "A one-more route is available."
+            if station_filtered_out:
+                return (
+                    owned_prefix
+                    + "You cannot craft one more with the current station filters. Enable the missing station to build a route."
+                )
+            return (
+                owned_prefix
+                + "No complete route for one more copy was found. The steps below show the closest branch and what is still missing."
+            )
+
+        if found and mode == "use_existing_target":
+            return "The target is already in your bag. No crafting route is needed unless you want to make another copy."
+        if found and mode == "direct_craft_route":
+            return "Complete route found. You can craft this target directly with the current inventory, planner depth, and station filters."
+        if found:
+            return (
+                "Complete route found. The planner can build this target through intermediate crafts with the current inventory, "
+                "planner depth, and station filters."
+            )
+        if station_filtered_out:
+            return "No recipe for this target is available with the current station filters. Enable the needed station to build a route."
+        return (
+            "No complete route was found. The steps below show the closest route the planner could build, "
+            "and the missing list shows what is still required."
+        )
+
+    def _planner_route(
+        self,
+        *,
+        target: str,
+        max_depth: int,
+        stations: Optional[List[str]],
+        base_inventory: Counter,
+        crafting_one_more: bool,
+        owned_qty: int,
+    ) -> dict:
+        target_name = core.normalize(target)
+        working_inventory = Counter(base_inventory)
+        if crafting_one_more and owned_qty > 0:
+            # Planning one more should not consume an already-owned copy to satisfy the target.
+            working_inventory.pop(target_name, None)
+
+        filtered = self.filtered_recipes(stations)
+        recipe_index = core.build_recipe_index(filtered)
+        target_key = core.key(target_name)
+        missing_counts, plan = core.shopping_item_plan(
+            target_name,
+            working_inventory,
+            self.data.groups,
+            recipe_index,
+            depth=0,
+            max_depth=max_depth,
+            stack=tuple(),
+        )
+        found = not missing_counts
+        station_filtered_out = target_key in self.data.recipe_index and target_key not in recipe_index
+        plan_summary = self._plan_summary(plan, target_name, found=found, station_filtered_out=station_filtered_out)
+
+        if found:
+            remaining_inventory = Counter(working_inventory)
+        else:
+            remaining_inventory = Counter(base_inventory)
+
+        if crafting_one_more and owned_qty > 0 and found:
+            remaining_inventory[target_name] += owned_qty
+
+        explanation = self._planner_explanation(
+            target=target_name,
+            found=found,
+            mode=str(plan_summary["mode"]),
+            station_filtered_out=station_filtered_out,
+            crafting_one_more=crafting_one_more,
+            owned_qty=owned_qty,
+        )
+        return {
+            "target": target_name,
+            "found": bool(found),
+            "explanation": explanation,
+            "lines": core.format_plan_lines(plan),
+            "missing": _df_records(inventory_ops.inventory_table_df(missing_counts)),
+            "remaining_inventory": _df_records(inventory_ops.inventory_table_df(remaining_inventory)),
+            "mode": plan_summary["mode"],
+            "craft_steps": plan_summary["craft_steps"],
+            "uses_existing_target": plan_summary["uses_existing_target"],
+            "requires_crafting": plan_summary["requires_crafting"],
+            "station_filtered_out": bool(station_filtered_out),
+        }
+
     def result_frames(
         self,
         stations: Optional[List[str]] = None,
@@ -596,10 +703,18 @@ class CalculatorService:
         ordered_evaluated_matches = self._ordered_evaluated_matches(evaluated_matches)
         best_matching_row = craftable_matches.iloc[0] if not craftable_matches.empty else (ordered_evaluated_matches.iloc[0] if not ordered_evaluated_matches.empty else None)
         sort_positions = self._craftable_sort_positions(frames.craftable, result_name)
+        planner_goal = str(planner.get("planning_goal", "obtain_target"))
+        planner_mode = str(planner["mode"])
+        planner_found = bool(planner["found"])
 
         if filtered_matches.empty:
             craftable_panel_reason = "No recipe rows for this result are available under the current station filters."
-        elif target_owned_qty > 0 and craftable_matches.empty and planner["found"] and planner["mode"] == "use_existing_target":
+        elif target_owned_qty > 0 and craftable_matches.empty and planner_goal == "craft_one_more" and planner_found:
+            craftable_panel_reason = (
+                "You already own this result. The craftable panel still excludes it because no recipe row is directly craftable now, "
+                "even though the planner can build one more copy through another route type."
+            )
+        elif target_owned_qty > 0 and craftable_matches.empty:
             craftable_panel_reason = (
                 "You already own this result, but none of its recipe rows are craftable from ingredients right now. "
                 "The craftable panel only shows recipe rows you can make now."
@@ -616,9 +731,14 @@ class CalculatorService:
             near_reason = "No recipe rows for this result are available under the current station filters."
         elif not craftable_matches.empty:
             near_reason = "This result is already craftable now, so it is intentionally excluded from Almost craftable."
-        elif target_owned_qty > 0 and planner["found"] and planner["mode"] == "use_existing_target":
+        elif target_owned_qty > 0 and planner_goal == "craft_one_more" and planner_found:
             near_reason = (
-                "You already own this result, but Almost craftable only tracks recipe rows that are close to craftable from ingredients."
+                "You already own this result, and the planner can build one more copy. "
+                "Almost craftable still only tracks direct recipe rows that are close to craftable from ingredients."
+            )
+        elif target_owned_qty > 0:
+            near_reason = (
+                "You already own this result, but Almost craftable only tracks direct recipe rows that are close to craftable from ingredients."
             )
         elif not near_matches.empty:
             near_reason = (
@@ -643,20 +763,32 @@ class CalculatorService:
                 "Other sort modes can move it, but they do not remove it from the craftable panel."
             )
 
-        planner_mode = str(planner["mode"])
-        if craftable_matches.empty and planner["found"] and planner_mode == "use_existing_target":
-            planner_alignment_reason = (
-                "Planner succeeds because the target itself is already in your bag. "
-                "The craftable panel still excludes it because no recipe row is craftable right now."
-            )
-        elif craftable_matches.empty and planner["found"] and planner_mode == "recursive_craft_route":
+        if target_owned_qty > 0 and planner_goal == "craft_one_more":
+            if not craftable_matches.empty and planner_found:
+                planner_alignment_reason = (
+                    "You already own this target, and both planner and direct craft agree you can make one more now."
+                )
+            elif craftable_matches.empty and planner_found:
+                planner_alignment_reason = (
+                    "You already own this target. Planner can produce one more copy through a non-direct route, "
+                    "while the craftable panel still requires a directly craftable row."
+                )
+            elif craftable_matches.empty and not planner_found:
+                planner_alignment_reason = (
+                    "You already own this target, but planner and direct craft agree you cannot produce one more copy yet."
+                )
+            else:
+                planner_alignment_reason = (
+                    "Planner and direct craft are using different route types for the one-more copy analysis."
+                )
+        elif craftable_matches.empty and planner_found and planner_mode == "recursive_craft_route":
             planner_alignment_reason = (
                 "Planner succeeds through intermediate crafting. "
                 "The craftable panel only shows recipe rows you can craft directly right now."
             )
-        elif not craftable_matches.empty and planner["found"]:
+        elif not craftable_matches.empty and planner_found:
             planner_alignment_reason = "Planner and direct craft agree: at least one matching recipe row is directly craftable now."
-        elif craftable_matches.empty and not planner["found"]:
+        elif craftable_matches.empty and not planner_found:
             planner_alignment_reason = "Planner and direct craft agree that the current inventory and filters do not complete this result yet."
         else:
             planner_alignment_reason = "Planner and direct craft are using different route types for this result."
@@ -694,6 +826,16 @@ class CalculatorService:
             "sort_positions": sort_positions,
             "planner_found": bool(planner["found"]),
             "planner_mode": planner_mode,
+            "planner_goal": planner_goal,
+            "planner_target_owned_qty": int(planner.get("target_owned_qty", target_owned_qty)),
+            "planner_already_owned": bool(planner.get("already_owned", target_owned_qty > 0)),
+            "planner_owned_satisfies_target": bool(planner.get("owned_satisfies_target", False)),
+            "planner_one_more_found": bool(planner.get("one_more_found", planner_found)),
+            "planner_one_more_mode": str(planner.get("one_more_mode", planner_mode)),
+            "planner_one_more_reason": str(planner.get("one_more_reason", planner.get("explanation", ""))),
+            "planner_one_more_missing": list(planner.get("one_more_missing", planner.get("missing", []))),
+            "planner_baseline_found": bool(planner.get("baseline_found", planner_found)),
+            "planner_baseline_mode": str(planner.get("baseline_mode", planner_mode)),
             "planner_uses_existing_target": bool(planner["uses_existing_target"]),
             "planner_craft_steps": int(planner["craft_steps"]),
             "planner_reason": planner["explanation"],
@@ -706,58 +848,60 @@ class CalculatorService:
         }
 
     def planner(self, target: str, max_depth: int, stations: Optional[List[str]] = None) -> dict:
+        target_name = core.normalize(target)
         base_inventory = self.get_inventory()
-        working_inventory = Counter(base_inventory)
-        filtered = self.filtered_recipes(stations)
-        recipe_index = core.build_recipe_index(filtered)
-        target_key = core.key(target)
-        missing_counts, plan = core.shopping_item_plan(
-            target,
-            working_inventory,
-            self.data.groups,
-            recipe_index,
-            depth=0,
+        target_owned_qty = int(base_inventory.get(target_name, 0))
+
+        baseline_route = self._planner_route(
+            target=target_name,
             max_depth=max_depth,
-            stack=tuple(),
+            stations=stations,
+            base_inventory=base_inventory,
+            crafting_one_more=False,
+            owned_qty=target_owned_qty,
         )
-        found = not missing_counts
-        remaining_inventory = working_inventory if found else base_inventory
-        station_filtered_out = target_key in self.data.recipe_index and target_key not in recipe_index
-        plan_summary = self._plan_summary(plan, target, found=found, station_filtered_out=station_filtered_out)
-        if found and plan_summary["mode"] == "use_existing_target":
-            explanation = (
-                "The target is already in your bag. No crafting route is needed unless you want to make another copy."
+
+        if target_owned_qty > 0:
+            one_more_route = self._planner_route(
+                target=target_name,
+                max_depth=max_depth,
+                stations=stations,
+                base_inventory=base_inventory,
+                crafting_one_more=True,
+                owned_qty=target_owned_qty,
             )
-        elif found and plan_summary["mode"] == "direct_craft_route":
-            explanation = (
-                "Complete route found. You can craft this target directly with the current inventory, planner depth, and station filters."
-            )
-        elif found:
-            explanation = (
-                "Complete route found. The planner can build this target through intermediate crafts with the current inventory, "
-                "planner depth, and station filters."
-            )
-        elif station_filtered_out:
-            explanation = (
-                "No recipe for this target is available with the current station filters. "
-                "Enable the needed station to build a route."
-            )
+            effective_route = one_more_route
+            planning_goal = "craft_one_more"
         else:
-            explanation = (
-                "No complete route was found. The steps below show the closest route the planner could build, "
-                "and the missing list shows what is still required."
-            )
+            one_more_route = baseline_route
+            effective_route = baseline_route
+            planning_goal = "obtain_target"
+
         return {
-            "target": core.normalize(target),
-            "found": found,
-            "explanation": explanation,
-            "lines": core.format_plan_lines(plan),
-            "missing": _df_records(inventory_ops.inventory_table_df(missing_counts)),
-            "remaining_inventory": _df_records(inventory_ops.inventory_table_df(remaining_inventory)),
-            "mode": plan_summary["mode"],
-            "craft_steps": plan_summary["craft_steps"],
-            "uses_existing_target": plan_summary["uses_existing_target"],
-            "requires_crafting": plan_summary["requires_crafting"],
+            "target": target_name,
+            "found": bool(effective_route["found"]),
+            "explanation": str(effective_route["explanation"]),
+            "lines": list(effective_route["lines"]),
+            "missing": list(effective_route["missing"]),
+            "remaining_inventory": list(effective_route["remaining_inventory"]),
+            "mode": str(effective_route["mode"]),
+            "craft_steps": int(effective_route["craft_steps"]),
+            "uses_existing_target": bool(effective_route["uses_existing_target"]),
+            "requires_crafting": bool(effective_route["requires_crafting"]),
+            "target_owned_qty": target_owned_qty,
+            "already_owned": target_owned_qty > 0,
+            "planning_goal": planning_goal,
+            "baseline_found": bool(baseline_route["found"]),
+            "baseline_mode": str(baseline_route["mode"]),
+            "baseline_reason": str(baseline_route["explanation"]),
+            "baseline_missing": list(baseline_route["missing"]),
+            "one_more_found": bool(one_more_route["found"]),
+            "one_more_mode": str(one_more_route["mode"]),
+            "one_more_reason": str(one_more_route["explanation"]),
+            "one_more_missing": list(one_more_route["missing"]),
+            "one_more_craft_steps": int(one_more_route["craft_steps"]),
+            "one_more_requires_crafting": bool(one_more_route["requires_crafting"]),
+            "owned_satisfies_target": bool(target_owned_qty > 0 and baseline_route["found"] and baseline_route["mode"] == "use_existing_target"),
         }
 
     def shopping_list(self, targets: List[dict], max_depth: int, stations: Optional[List[str]] = None) -> dict:

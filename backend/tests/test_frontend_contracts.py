@@ -250,9 +250,13 @@ def test_slider_and_select_styling_contracts_exist() -> None:
     assert "::-moz-range-thumb" in css
     assert 'className="planning-range-grid"' in support_rail_source
     assert 'className="compact-range-control"' in support_rail_source
+    assert "Route depth" in support_rail_source
+    assert "Missing slots" in support_rail_source
+    assert "planning-range-note" in support_rail_source
     assert ".planning-range-grid {" in css
     assert ".compact-range-control {" in css
     assert ".compact-range-value {" in css
+    assert ".planning-range-note {" in css
     assert ".panel-select select {" in css
     assert "appearance: none;" in css
 
@@ -285,7 +289,8 @@ def test_craft_now_main_view_contains_the_full_craftable_card_panel_and_sort_con
     assert "Showing all" in results_source
     assert "Sorting changes order, not inclusion." in results_source
     assert 'className="result-card-topline"' in views_source
-    assert 'className="result-card-meta"' in views_source
+    assert 'className="result-card-header-cluster"' in views_source
+    assert 'className="result-card-meta result-card-meta--inline"' in views_source
     assert 'className="result-card-detail-grid"' in views_source
 
 
@@ -296,16 +301,20 @@ def test_long_result_lists_use_internal_scroll_containers_without_changing_colum
     results_source = read_frontend("components/ResultsRail.tsx")
 
     assert ".results-preview {" in css
-    assert "max-height: clamp(16rem, 33vh, 22rem);" in css
+    assert "max-height: clamp(11rem, 26vh, 16rem);" in css
     assert "overflow-y: auto;" in css
     assert ".results-preview--craftable {" in css
-    assert "max-height: clamp(12rem, 34vh, 18rem);" in css
+    assert "max-height: clamp(10.5rem, 24vh, 14.75rem);" in css
     assert ".right-column .results-preview:not(.results-preview--craftable)" in css
+    assert "grid-template-areas: \"left center right\";" in css
+    assert "@media (max-width: 1520px)" in css
+    assert "\"left center\"" in css
+    assert "\"left right\"" in css
     assert "display: grid;" not in css[css.index(".utility-rail__scroll {"):css.index(".main-column,")]
     assert "grid-template-columns:" in css
-    assert "clamp(250px, 18vw, 290px)" in css
-    assert "minmax(680px, 1.35fr)" in css
-    assert "minmax(360px, 1.05fr)" in css
+    assert "clamp(236px, 17vw, 280px)" in css
+    assert "minmax(620px, 1.22fr)" in css
+    assert "minmax(330px, 0.96fr)" in css
     assert 'className="app-page page-shell"' in app_source
     assert 'className={classNames("app-shell", "page-main", leftCollapsed && "left-collapsed")}' in app_source
     assert 'className="utility-rail__scroll"' in support_rail_source
@@ -388,18 +397,29 @@ def test_planner_view_surfaces_route_status_steps_and_honest_inventory_labels() 
     css = read_frontend("styles/app.css")
 
     assert "planner-status-strip" in app_source
-    assert "Target already in bag" in app_source
+    assert "Owned and can craft one more now" in app_source
     assert "Complete route with intermediates" in app_source
-    assert "Bag after taking target" in app_source
+    assert "Craft one more" in app_source
     assert "Current bag" in app_source
     assert "formatPlannerMode" in app_source
-    assert "does not make any recipe row" in app_source
-    assert "directly craftable unless you also have the ingredients for another copy." in app_source
+    assert "Route for one more copy" in app_source
+    assert "planner-owned-strip" in app_source
+    assert "Route steps" in app_source
+    assert "planner-primary-grid" in app_source
+    assert "planner-secondary-shell" in app_source
+    assert "planner-bag-preview-list" in app_source
+    assert "planner-bag-details" in app_source
+    assert "Show full bag details" in app_source
     assert "planner-step-list" in app_source
     assert "planner-step-chip" in app_source
     assert "planner-route-shell" in app_source
     assert ".planner-status-strip {" in css
+    assert ".planner-owned-strip {" in css
     assert ".planner-summary-grid {" in css
+    assert ".planner-summary-panel-wide {" in css
+    assert ".planner-primary-grid {" in css
+    assert ".planner-secondary-shell {" in css
+    assert ".planner-bag-scroll {" in css
     assert ".planner-step-list {" in css
     assert ".planner-step-chip.is-missing {" in css
 
@@ -417,8 +437,11 @@ def test_recipe_database_includes_recipe_visibility_debug_and_calls_the_debug_en
     assert "api.getRecipeDebug(" in app_source
     assert "getRecipeDebug: (result: string, stations: string[], maxMissingSlots: number, plannerDepth: number) =>" in api_source
     assert "Target in bag" in app_source
+    assert "Planner goal" in app_source
+    assert "One-more route" in app_source
     assert "Planner mode" in app_source
     assert "planner_alignment_reason" in app_source
+    assert "planner_baseline_mode" in app_source
     assert "Sort ranks" in app_source
     assert "Matching recipe rows" in app_source
     assert ".recipe-debug-panel .panel-body {" in css

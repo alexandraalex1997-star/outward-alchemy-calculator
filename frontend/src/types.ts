@@ -133,6 +133,20 @@ export type PlannerResponse = {
   craft_steps: number;
   uses_existing_target: boolean;
   requires_crafting: boolean;
+  target_owned_qty: number;
+  already_owned: boolean;
+  planning_goal: "obtain_target" | "craft_one_more";
+  baseline_found: boolean;
+  baseline_mode: string;
+  baseline_reason: string;
+  baseline_missing: InventoryItem[];
+  one_more_found: boolean;
+  one_more_mode: string;
+  one_more_reason: string;
+  one_more_missing: InventoryItem[];
+  one_more_craft_steps: number;
+  one_more_requires_crafting: boolean;
+  owned_satisfies_target: boolean;
 };
 
 export type RecipeDebugMatch = {
@@ -171,6 +185,16 @@ export type RecipeDebugResponse = {
   sort_positions: RecipeDebugSortPosition[];
   planner_found: boolean;
   planner_mode: string;
+  planner_goal: string;
+  planner_target_owned_qty: number;
+  planner_already_owned: boolean;
+  planner_owned_satisfies_target: boolean;
+  planner_one_more_found: boolean;
+  planner_one_more_mode: string;
+  planner_one_more_reason: string;
+  planner_one_more_missing: InventoryItem[];
+  planner_baseline_found: boolean;
+  planner_baseline_mode: string;
   planner_uses_existing_target: boolean;
   planner_craft_steps: number;
   planner_reason: string;

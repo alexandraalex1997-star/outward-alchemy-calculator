@@ -138,11 +138,10 @@ export function SupportRail({
               <div className="planning-range-grid">
                 <label className="compact-range-control">
                   <div className="compact-range-head">
-                    <span>Planner depth</span>
+                    <span>Route depth</span>
                     <strong className="compact-range-value">{plannerDepth}</strong>
                   </div>
                   <input type="range" min={1} max={8} value={plannerDepth} onChange={(event) => onPlannerDepthChange(Number(event.target.value))} />
-                  <small className="compact-range-note">Recursive route depth</small>
                 </label>
 
                 <label className="compact-range-control">
@@ -157,9 +156,9 @@ export function SupportRail({
                     value={nearThreshold}
                     onChange={(event) => onNearThresholdChange(Number(event.target.value))}
                   />
-                  <small className="compact-range-note">Almost-craftable cutoff</small>
                 </label>
               </div>
+              <small className="planning-range-note">Depth affects recursive planner routes. Missing slots affects Almost craftable.</small>
             </div>
           </Panel>
 
