@@ -1,16 +1,16 @@
 .app-page {
-  width: min(1860px, calc(100vw - 1.8rem));
+  width: min(1920px, calc(100vw - 1.4rem));
   margin: 0 auto;
   min-height: 100vh;
-  padding: 0.72rem 0 0.86rem;
+  padding: 0.9rem 0 1.2rem;
   display: flex;
   flex-direction: column;
-  gap: 0.76rem;
+  gap: 0.9rem;
 }
 
 .page-shell {
   min-height: 100vh;
-  height: 100dvh;
+  height: auto;
 }
 
 .page-hero {
@@ -19,9 +19,9 @@
 }
 
 .page-main {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   min-height: 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .app-banner {
@@ -103,18 +103,18 @@
   display: grid;
   grid-template-areas: "left center right";
   grid-template-columns:
-    clamp(232px, 16vw, 280px)
-    minmax(0, 1.24fr)
-    minmax(352px, 0.98fr);
-  gap: 0.84rem;
-  align-items: stretch;
-  height: 100%;
-  min-height: 0;
+    clamp(236px, 16vw, 286px)
+    minmax(0, 1.28fr)
+    minmax(360px, 1fr);
+  gap: 0.9rem;
+  align-items: start;
+  height: auto;
+  min-height: auto;
   transition: grid-template-columns 180ms ease, gap 180ms ease;
 }
 
 .app-shell.left-collapsed {
-  grid-template-columns: var(--rail-collapsed-width) minmax(0, 1.24fr) minmax(352px, 0.98fr);
+  grid-template-columns: var(--rail-collapsed-width) minmax(0, 1.28fr) minmax(360px, 1fr);
 }
 
 .left-column,
@@ -122,7 +122,8 @@
 .right-column {
   min-width: 0;
   min-height: 0;
-  height: 100%;
+  height: auto;
+  align-self: start;
 }
 
 .left-column {
@@ -139,11 +140,11 @@
 
 .utility-rail {
   position: sticky;
-  top: 0;
+  top: 0.25rem;
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 100%;
+  height: auto;
   min-width: 0;
   min-height: 0;
   align-self: start;
@@ -156,17 +157,15 @@
 }
 
 .utility-rail__scroll {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: 0.7rem;
   width: 100%;
   min-width: 0;
   min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  overscroll-behavior: contain;
-  padding-right: 0.08rem;
+  overflow: visible;
+  padding-right: 0;
 }
 
 .utility-rail__scroll--collapsed {
@@ -183,23 +182,18 @@
 }
 
 .main-column {
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-right: 0.1rem;
-  scrollbar-gutter: auto;
+  overflow: visible;
+  padding-right: 0;
 }
 
 .results-rail {
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-right: 0.06rem;
-  scrollbar-gutter: auto;
-  overscroll-behavior: contain;
+  overflow: visible;
+  padding-right: 0;
 }
 
 .main-column > .panel,
 .results-rail > .panel {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -217,7 +211,7 @@
 .panel-body > .missing-workspace,
 .panel-body > .database-view,
 .panel-body > .view-stack {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   min-height: 0;
 }
 
@@ -950,7 +944,7 @@
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01)),
     rgba(24, 14, 30, 0.88);
-  height: 100%;
+  height: auto;
   min-height: 0;
   overflow: hidden;
 }
@@ -1218,9 +1212,9 @@
 }
 
 .ingredient-table-shell {
-  max-height: none;
+  max-height: 42rem;
   min-height: 0;
-  height: 100%;
+  height: auto;
   border-color: rgba(255, 173, 229, 0.1);
   box-shadow: none;
   background: rgba(24, 14, 30, 0.62);
@@ -1258,11 +1252,11 @@
 }
 
 .craft-table-shell {
-  max-height: 26rem;
+  max-height: 38rem;
 }
 
 .near-table-shell {
-  max-height: 24rem;
+  max-height: 32rem;
 }
 
 .missing-workspace-panel {
@@ -1281,7 +1275,7 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 0.58rem;
-  height: 100%;
+  height: auto;
   min-height: 0;
 }
 
@@ -1311,12 +1305,12 @@
 
 .recipe-database-shell {
   max-height: none;
-  min-height: clamp(22rem, 48vh, 36rem);
-  height: 100%;
+  min-height: clamp(28rem, 58vh, 44rem);
+  height: auto;
 }
 
 .secondary-table-shell {
-  max-height: 18.5rem;
+  max-height: 14rem;
 }
 
 .data-table {
@@ -1696,7 +1690,7 @@
 .planner-step-list {
   display: grid;
   gap: 0.3rem;
-  max-height: clamp(12rem, 31vh, 20rem);
+  max-height: clamp(16rem, 40vh, 28rem);
   overflow: auto;
   padding-right: 0.08rem;
   overscroll-behavior: contain;
@@ -1771,7 +1765,7 @@
 }
 
 .planner-needed-list {
-  max-height: clamp(8rem, 18vh, 11rem);
+  max-height: clamp(10rem, 24vh, 16rem);
   overflow: auto;
   padding-right: 0.08rem;
 }
@@ -1890,7 +1884,7 @@
 }
 
 .planner-bag-scroll {
-  max-height: 10rem;
+  max-height: 15rem;
   overflow: auto;
   padding: 0.24rem 0.28rem;
   border: 1px solid rgba(255, 173, 229, 0.12);
@@ -1932,13 +1926,13 @@
 
 .database-panel .panel-body {
   display: flex;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   min-height: 0;
 }
 
 .database-view {
-  flex: 1 1 auto;
-  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+  flex: 0 0 auto;
+  grid-template-rows: auto auto auto auto auto;
   min-height: 0;
 }
 
@@ -2259,7 +2253,7 @@
   display: grid;
   gap: 0.42rem;
   min-height: 0;
-  max-height: clamp(8rem, 20vh, 12rem);
+  max-height: clamp(14rem, 34vh, 24rem);
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-gutter: auto;
@@ -2268,13 +2262,13 @@
 }
 
 .results-preview--craftable {
-  min-height: 10rem;
-  max-height: clamp(11rem, 28vh, 18rem);
+  min-height: 14rem;
+  max-height: clamp(18rem, 42vh, 30rem);
 }
 
 .results-rail .craft-table-shell {
   min-height: 0;
-  max-height: clamp(18rem, 34vh, 24rem);
+  max-height: clamp(20rem, 42vh, 30rem);
 }
 
 .craft-table-controls {
@@ -2305,7 +2299,7 @@
   padding: 0;
   min-height: 0;
   overflow: hidden;
-  height: 100%;
+  height: auto;
 }
 
 .results-workspace .panel-header-row {
@@ -2323,12 +2317,12 @@
 
 .results-workspace-body {
   display: flex;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   flex-direction: column;
   gap: 0;
   min-width: 0;
   min-height: 0;
-  min-block-size: clamp(34rem, 66vh, 52rem);
+  min-block-size: clamp(40rem, 74vh, 58rem);
 }
 
 .results-workspace-section {
@@ -2395,7 +2389,7 @@
 .right-column .craft-table-shell,
 .right-column .near-table-shell {
   min-height: 0;
-  max-height: clamp(8rem, 19vh, 11rem);
+  max-height: none;
 }
 
 .results-rail .results-workspace .results-preview,
@@ -2751,17 +2745,17 @@
 
 @media (max-width: 1520px) {
   .app-page {
-    width: min(100vw - 1.1rem, 1640px);
+    width: min(100vw - 1rem, 1720px);
   }
 
   .app-shell,
   .app-shell.left-collapsed {
     grid-template-areas: "left center right";
-    grid-template-columns: clamp(214px, 18vw, 258px) minmax(0, 1.14fr) minmax(320px, 0.95fr);
+    grid-template-columns: clamp(220px, 18vw, 266px) minmax(0, 1.18fr) minmax(332px, 0.96fr);
   }
 
   .app-shell.left-collapsed {
-    grid-template-columns: var(--rail-collapsed-width) minmax(0, 1.14fr) minmax(320px, 0.95fr);
+    grid-template-columns: var(--rail-collapsed-width) minmax(0, 1.18fr) minmax(332px, 0.96fr);
   }
 }
 

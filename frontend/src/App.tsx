@@ -270,14 +270,24 @@ export default function App() {
         const meta = await api.getMetadata();
         const defaults = deriveMetadataDefaults(meta);
         const savedSource = await getRuntimeInventorySource();
+        const [dashboardData, craftNowData, nearData] = await Promise.all([
+          api.getDashboard(defaults.stations, nearThreshold),
+          api.getDirect(sortMode, defaults.stations, undefined, nearThreshold),
+          api.getNear(defaults.stations, undefined, nearThreshold),
+        ]);
 
-        setMetadata(meta);
-        setSelectedStations(defaults.stations);
-        setSelectedCategories(defaults.inventoryCategories);
-        setDatabaseStations(defaults.stations);
-        setDatabaseCategories(defaults.recipeCategories);
-        setPlanTarget(defaults.recipeTargets[0] ?? "");
-        setDebugRecipe(meta.recipes.some((recipe) => recipe.result === "Astral Potion") ? "Astral Potion" : defaults.recipeTargets[0] ?? "");
+        startTransition(() => {
+          setMetadata(meta);
+          setSelectedStations(defaults.stations);
+          setSelectedCategories(defaults.inventoryCategories);
+          setDatabaseStations(defaults.stations);
+          setDatabaseCategories(defaults.recipeCategories);
+          setPlanTarget(defaults.recipeTargets[0] ?? "");
+          setDebugRecipe(meta.recipes.some((recipe) => recipe.result === "Astral Potion") ? "Astral Potion" : defaults.recipeTargets[0] ?? "");
+          applyDashboard(dashboardData);
+          setCraftNow(craftNowData);
+          setNear(nearData);
+        });
 
         if (urlSyncStatus.status === "applied") {
           setImportStatus(importStatusFromSource(urlSyncStatus.source));
@@ -302,7 +312,7 @@ export default function App() {
     }
 
     void bootstrap();
-  }, []);
+  }, [applyDashboard, nearThreshold, sortMode]);
 
   useEffect(() => {
     if (!hasBootstrapped || !metadata) return;

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { extractUrlInventoryPayload, parseUrlInventoryPayloadValue } from "./runtime-service";
+import calculatorData from "../../public/data/calculator-data.json";
+import type { MetadataResponse } from "../types";
+import { buildRuntimeData, calculateDirect, counterFromItems } from "./runtime-calculator";
+import { canonicalizeImportedInventoryItems, extractUrlInventoryPayload, parseUrlInventoryPayloadValue } from "./runtime-service";
 
 function base64UrlEncode(value: string) {
   return btoa(value)
@@ -46,5 +49,24 @@ describe("runtime mod sync payloads", () => {
     if (result.status === "invalid") {
       expect(result.message).toContain("could not be parsed");
     }
+  });
+
+  it("canonicalizes mod-style item names into the same calculator inventory used by direct crafting", () => {
+    const metadata = calculatorData as MetadataResponse;
+    const runtimeData = buildRuntimeData(metadata);
+    const items = canonicalizeImportedInventoryItems(metadata, [
+      { item: "star_mushroom", qty: 1 },
+      { item: "turmmip", qty: 1 },
+      { item: "clean_water", qty: 1 },
+    ]);
+
+    const direct = calculateDirect(runtimeData, counterFromItems(items), "Smart score", ["Alchemy Kit"], 2);
+
+    expect(items).toEqual([
+      { item: "Clean Water", qty: 1 },
+      { item: "Star Mushroom", qty: 1 },
+      { item: "Turmmip", qty: 1 },
+    ]);
+    expect(direct.items.some((row) => row.result === "Astral Potion")).toBe(true);
   });
 });

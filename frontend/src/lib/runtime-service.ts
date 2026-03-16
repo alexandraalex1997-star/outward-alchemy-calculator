@@ -22,6 +22,7 @@ import {
   counterFromItems,
   counterToItems,
   inventoryResponse,
+  key,
   normalize,
   type RuntimeData,
 } from "./runtime-calculator";
@@ -54,6 +55,11 @@ type UrlInventoryPayload = {
   }>;
 };
 
+type ImportedInventoryRow = {
+  item: string;
+  qty: number;
+};
+
 let metadataPromise: Promise<MetadataResponse> | null = null;
 let runtimeDataPromise: Promise<RuntimeData> | null = null;
 
@@ -75,6 +81,83 @@ function writeJsonStorage(key: string, value: unknown) {
     return;
   }
   window.localStorage.setItem(key, JSON.stringify(value));
+}
+
+function inventoryLookupAliases(value: string) {
+  const normalized = normalize(value);
+  if (!normalized) return [];
+
+  const softened = normalized
+    .replace(/[_/]+/g, " ")
+    .replace(/[’']/g, "")
+    .replace(/[–—-]/g, " ")
+    .replace(/[^a-zA-Z0-9 ]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const aliases = new Set<string>();
+  aliases.add(key(normalized));
+  if (softened) {
+    aliases.add(key(softened));
+    aliases.add(softened.toLocaleLowerCase().replace(/\s+/g, ""));
+  }
+  aliases.add(normalized.toLocaleLowerCase().replace(/\s+/g, ""));
+  return [...aliases].filter(Boolean);
+}
+
+function buildInventoryNameLookup(metadata: MetadataResponse) {
+  const lookup = new Map<string, string>();
+
+  const register = (candidate: string | null | undefined, canonical: string | null | undefined) => {
+    const canonicalName = normalize(canonical);
+    const candidateName = normalize(candidate);
+    if (!canonicalName || !candidateName) return;
+    inventoryLookupAliases(candidateName).forEach((alias) => {
+      if (!lookup.has(alias)) {
+        lookup.set(alias, canonicalName);
+      }
+    });
+  };
+
+  metadata.ingredients.forEach((item) => register(item, item));
+  metadata.item_stats.forEach((row) => register(row.item, row.item));
+  metadata.categories.forEach((category) => {
+    category.items.forEach((item) => register(item, item));
+  });
+  metadata.ingredient_groups.forEach((group) => {
+    group.members.forEach((member) => register(member, member));
+  });
+  metadata.recipes.forEach((recipe) => {
+    register(recipe.result, recipe.result);
+    recipe.ingredient_list.forEach((ingredient) => register(ingredient, ingredient));
+  });
+
+  return lookup;
+}
+
+function resolveImportedItemName(rawName: string, lookup: Map<string, string>) {
+  const normalized = normalize(rawName);
+  if (!normalized) return null;
+  for (const alias of inventoryLookupAliases(normalized)) {
+    const canonical = lookup.get(alias);
+    if (canonical) return canonical;
+  }
+  return normalized;
+}
+
+export function canonicalizeImportedInventoryItems(
+  metadata: MetadataResponse,
+  items: ImportedInventoryRow[],
+): InventoryItem[] {
+  const lookup = buildInventoryNameLookup(metadata);
+  const canonicalRows = items
+    .map((entry) => {
+      const item = resolveImportedItemName(entry.item, lookup);
+      const qty = Math.max(0, Math.trunc(Number(entry.qty) || 0));
+      return item && qty > 0 ? { item, qty } : null;
+    })
+    .filter((entry): entry is InventoryItem => entry != null);
+  return counterToItems(counterFromItems(canonicalRows));
 }
 
 async function loadMetadata() {
@@ -124,7 +207,7 @@ function resolveColumn(record: Record<string, unknown>, aliases: string[]) {
 }
 
 function parseSheetRows(rows: Record<string, unknown>[]) {
-  const items: InventoryItem[] = [];
+  const items: ImportedInventoryRow[] = [];
   for (const row of rows) {
     const itemValue = resolveColumn(row, ["item", "ingredient", "name"]) ?? Object.values(row)[0];
     const qtyValue = resolveColumn(row, ["qty", "quantity", "count"]) ?? Object.values(row)[1] ?? 1;
@@ -133,7 +216,7 @@ function parseSheetRows(rows: Record<string, unknown>[]) {
     if (!item || qty <= 0) continue;
     items.push({ item, qty });
   }
-  return counterToItems(counterFromItems(items));
+  return items;
 }
 
 async function parseInventoryFile(file: File) {
@@ -145,7 +228,7 @@ async function parseInventoryFile(file: File) {
   }
   const worksheet = workbook.Sheets[firstSheetName];
   const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(worksheet, { defval: "" });
-  const items = parseSheetRows(rows);
+  const items = canonicalizeImportedInventoryItems(await loadMetadata(), parseSheetRows(rows));
   if (!items.length) {
     throw new Error("No inventory rows were found in the selected file.");
   }
@@ -194,16 +277,14 @@ export function parseUrlInventoryPayloadValue(rawValue: string | null): UrlSyncS
       return { status: "invalid", message: "The mod sync link did not contain any usable inventory rows." };
     }
 
-    const mergedItems = counterToItems(counterFromItems(items));
     const source = {
       kind: "url_sync" as const,
       label: "Mod URL sync",
       detail: payload.exportedAtUtc
-        ? `Loaded ${mergedItems.length} inventory lines from the mod link exported at ${payload.exportedAtUtc}.`
-        : `Loaded ${mergedItems.length} inventory lines from the mod link.`,
+        ? `Loaded ${items.length} inventory lines from the mod link exported at ${payload.exportedAtUtc}.`
+        : `Loaded ${items.length} inventory lines from the mod link.`,
       exportedAtUtc: payload.exportedAtUtc,
     };
-    writeInventoryCounter(mergedItems, source);
     return { status: "applied", source };
   } catch {
     return { status: "invalid", message: "The mod sync link could not be parsed. Check the URL payload and try again." };
@@ -246,7 +327,58 @@ export async function applyUrlInventorySync(options: { clearUrl?: boolean } = {}
   if (typeof window === "undefined") {
     return { status: "none" } satisfies UrlSyncStatus;
   }
-  const result = parseUrlInventoryPayloadValue(extractUrlInventoryPayload(window.location.search, window.location.hash));
+  const rawValue = extractUrlInventoryPayload(window.location.search, window.location.hash);
+  const result = parseUrlInventoryPayloadValue(rawValue);
+  if (result.status === "applied" && rawValue) {
+    try {
+      const payloadText = rawValue.startsWith("{")
+        ? rawValue
+        : rawValue.startsWith("b64:")
+          ? decodeBase64Url(rawValue.slice(4))
+          : decodeBase64Url(rawValue);
+      const payload = JSON.parse(payloadText) as UrlInventoryPayload;
+      const rawItems = payload.items
+        .map((entry) => {
+          const primaryName = normalize(entry.canonicalName ?? entry.name ?? "");
+          const fallbackName = normalize(entry.name ?? entry.canonicalName ?? "");
+          const item = primaryName || fallbackName;
+          const qty = Math.max(0, Math.trunc(Number(entry.quantity ?? entry.qty ?? 0) || 0));
+          return item && qty > 0 ? { item, qty } : null;
+        })
+        .filter((entry): entry is ImportedInventoryRow => entry != null);
+
+      const canonicalItems = canonicalizeImportedInventoryItems(await loadMetadata(), rawItems);
+      if (!canonicalItems.length) {
+        if (options.clearUrl !== false) {
+          stripSyncPayloadFromUrl();
+        }
+        return {
+          status: "invalid",
+          message: "The mod sync link was received, but none of its inventory items matched the bundled recipe data.",
+        } satisfies UrlSyncStatus;
+      }
+
+      const source = {
+        ...result.source,
+        detail: payload.exportedAtUtc
+          ? `Loaded ${canonicalItems.length} inventory lines from the mod link exported at ${payload.exportedAtUtc}.`
+          : `Loaded ${canonicalItems.length} inventory lines from the mod link.`,
+      };
+      writeInventoryCounter(canonicalItems, source);
+      if (options.clearUrl !== false) {
+        stripSyncPayloadFromUrl();
+      }
+      return { status: "applied", source } satisfies UrlSyncStatus;
+    } catch {
+      if (options.clearUrl !== false) {
+        stripSyncPayloadFromUrl();
+      }
+      return {
+        status: "invalid",
+        message: "The mod sync link could not be parsed. Check the URL payload and try again.",
+      } satisfies UrlSyncStatus;
+    }
+  }
   if (options.clearUrl !== false && result.status !== "none") {
     stripSyncPayloadFromUrl();
   }
@@ -299,7 +431,7 @@ export const runtimeApi = {
   },
 
   async replaceInventory(items: Array<{ item: string; qty: number }>): Promise<InventoryResponse> {
-    const normalizedItems = counterToItems(counterFromItems(items));
+    const normalizedItems = canonicalizeImportedInventoryItems(await loadMetadata(), items);
     writeInventoryCounter(normalizedItems);
     return inventoryResponse(counterFromItems(normalizedItems));
   },

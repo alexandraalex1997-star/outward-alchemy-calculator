@@ -1,0 +1,6 @@
+name = "outward-alchemy-calculator"
+compatibility_date = "2026-03-16"
+
+[assets]
+directory = "./frontend/dist"
+not_found_handling = "single-page-application"
