@@ -609,6 +609,7 @@ def test_planner_and_debug_explain_when_the_target_is_already_owned_but_not_dire
     assert debug["target_owned_qty"] == 1
     assert debug["craftable_now"] is False
     assert debug["craftable_panel"] is False
+    assert "already own this result" in debug["craftable_panel_reason"]
     assert debug["planner_found"] is True
     assert debug["planner_mode"] == "use_existing_target"
     assert "already in your bag" in debug["planner_alignment_reason"]

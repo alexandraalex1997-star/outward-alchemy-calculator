@@ -813,6 +813,12 @@ export default function App() {
                         <strong>Planner route</strong>
                         <span>{plannerRouteHint}</span>
                       </div>
+                      {plannerResult.mode === "use_existing_target" ? (
+                        <p className="planner-route-note">
+                          This target is already in your bag. That counts as a successful planner route, but it does not make any recipe row
+                          directly craftable unless you also have the ingredients for another copy.
+                        </p>
+                      ) : null}
                       {!plannerResult.found && plannerSteps.length ? (
                         <p className="planner-route-note">
                           This is the closest route the planner could prove with the current bag and filters. It stops where required

@@ -589,6 +589,11 @@ class CalculatorService:
 
         if filtered_matches.empty:
             craftable_panel_reason = "No recipe rows for this result are available under the current station filters."
+        elif target_owned_qty > 0 and craftable_matches.empty and planner["found"] and planner["mode"] == "use_existing_target":
+            craftable_panel_reason = (
+                "You already own this result, but none of its recipe rows are craftable from ingredients right now. "
+                "The craftable panel only shows recipe rows you can make now."
+            )
         elif craftable_matches.empty:
             craftable_panel_reason = "This result has recipe rows, but none of them are craftable now."
         else:
@@ -601,6 +606,10 @@ class CalculatorService:
             near_reason = "No recipe rows for this result are available under the current station filters."
         elif not craftable_matches.empty:
             near_reason = "This result is already craftable now, so it is intentionally excluded from Almost craftable."
+        elif target_owned_qty > 0 and planner["found"] and planner["mode"] == "use_existing_target":
+            near_reason = (
+                "You already own this result, but Almost craftable only tracks recipe rows that are close to craftable from ingredients."
+            )
         elif not near_matches.empty:
             near_reason = (
                 f"The closest matching row is inside the near-craft threshold at {int(near_matches.iloc[0]['missing_slots'])} missing slot(s)."

@@ -389,6 +389,8 @@ def test_planner_view_surfaces_route_status_steps_and_honest_inventory_labels() 
     assert "Bag after taking target" in app_source
     assert "Current bag" in app_source
     assert "formatPlannerMode" in app_source
+    assert "does not make any recipe row" in app_source
+    assert "directly craftable unless you also have the ingredients for another copy." in app_source
     assert "planner-step-list" in app_source
     assert "planner-step-chip" in app_source
     assert "planner-route-shell" in app_source
