@@ -1304,7 +1304,7 @@
 }
 
 .recipe-database-shell {
-  max-height: none;
+  max-height: 42rem;
   min-height: clamp(28rem, 58vh, 44rem);
   height: auto;
 }
