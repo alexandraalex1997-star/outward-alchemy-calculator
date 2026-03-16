@@ -171,15 +171,26 @@ export function NearCraftTable({
         {rows.map((row) => (
           <article key={`${row.result}-${row.station}-${row.ingredients}`} className="near-card">
             <div className="near-card-grid">
-              <div className="near-card-content">
+              <div className="near-card-content near-card-content--compact">
                 <div className="near-card-topline">
-                  <div className="near-card-title-block">
-                    <h3>{row.result}</h3>
-                    <p>{row.station}</p>
+                  <div className="result-card-header-cluster">
+                    <div className="near-card-title-block">
+                      <h3>{row.result}</h3>
+                    </div>
+                    <div className="result-card-meta result-card-meta--inline">
+                      <span className="result-card-pill">{row.station}</span>
+                      <span className="result-card-pill">{slotLabel(row.missing_slots)}</span>
+                    </div>
                   </div>
                   <div className="near-card-side">
-                    <span className="near-pill">{slotLabel(row.missing_slots)}</span>
+                    <span className="near-pill">Missing</span>
                   </div>
+                </div>
+                <div className="near-card-detail">
+                  <span className="near-card-detail-label">Recipe</span>
+                  <span className="result-card-detail-value" title={recipeSummary(row)}>
+                    {recipeSummary(row)}
+                  </span>
                 </div>
                 <div className="near-card-detail">
                   <span className="near-card-detail-label">Still missing</span>

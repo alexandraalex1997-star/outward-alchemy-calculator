@@ -1,79 +1,116 @@
 # Alie's Outward Crafting
 
-A local React + FastAPI companion app for **Outward** that helps you manage inventory, see what you can craft right now, plan target items, and build shopping lists from the ingredients you already have.
+A frontend-only Outward crafting helper built with React + TypeScript.
 
-This project is built to be fast, readable, and beginner-friendly. The crafting logic lives in shared Python code, while the UI is a React app that talks to a small FastAPI backend.
+The player-facing app now runs entirely in the browser:
 
-## Features
+- inventory tracking
+- craftable recipes
+- almost-craftable results
+- planner / one-more route checks
+- shopping lists
+- recipe database + visibility debug
 
-- **One-click Outward inventory sync**
-  - Loads the latest exported inventory from:
-    - `%USERPROFILE%\Documents\OutwardCraftSync\current_inventory.csv`
-  - You can override this with:
-    - `OUTWARD_SYNC_INVENTORY_PATH`
-- **Manual CSV / Excel import fallback**
-  - Import inventory files without changing the sync workflow
-- **Live inventory manager**
-  - Search, add, edit, remove, filter, and export tracked ingredients
-- **Craftable recipes panel**
-  - Shows every recipe row you can craft right now
-  - Supports sorting by:
-    - Smart score
-    - Best healing
-    - Best stamina
-    - Best mana
-    - Max crafts
-    - Max total output
-    - Sale value
-    - Result A-Z
-- **Almost craftable view**
-  - Shows recipes that are close, based on the current missing-slot threshold
-- **Planner**
-  - Shows the practical next route for one target:
-    - direct route
-    - recursive route
-    - partial route
-    - blocked route
-  - If the target is already owned, it plans for crafting one more copy
-- **Shopping list builder**
-  - Combines multiple targets into one missing-items list
-- **Recipe database + debug tools**
-  - Browse recipe data, grouped ingredients, item metadata, and recipe-surface visibility/debug information
+The old backend runtime is no longer required for normal use. Recipe data is bundled as static JSON, and the browser app does all calculations locally.
 
-## Tech Stack
+## Runtime model
 
-- **Frontend:** React + TypeScript + Vite
-- **Backend:** FastAPI
-- **Shared logic/data:** Python + pandas
+### Normal player runtime
 
-## Project Layout
+- `frontend/` is the runtime app
+- it can be hosted as a static site
+- it does **not** need a backend
+- it keeps inventory state in browser storage
+
+### Offline tooling
+
+- `tools/scrape_outward_wiki.py`
+  - optional one-time / occasional data scrape
+- `tools/build_frontend_data.py`
+  - turns the shared source data into `frontend/public/data/calculator-data.json`
+- `shared/`
+  - offline Python data helpers, recipe data, and scrape support
+
+## Main features
+
+- Manual CSV / Excel inventory import
+- Browser-side live inventory manager
+- Full craftable recipe list with sorting
+- Almost-craftable list using the missing-slot threshold
+- Planner that answers whether you can make one more copy and what is still needed
+- Shopping list builder for multiple targets
+- Recipe database with optional visibility debug
+- Mod URL sync support for frontend-only inventory loading
+
+## Mod URL sync
+
+Because a static browser app cannot read `Documents\\OutwardCraftSync\\current_inventory.csv` directly, the browser-shareable sync flow is now:
+
+1. The mod exports inventory data.
+2. The mod opens the app with a URL payload.
+3. The frontend reads that payload on load and populates the same inventory state used by manual imports.
+
+Supported sync params:
+
+- query: `?sync=...`
+- query: `?modSync=...`
+- query: `?inventory=...`
+- hash: `#sync=...`
+
+Preferred format:
+
+- a single base64url JSON payload
+- example shape:
+
+```json
+{
+  "source": "Outward mod",
+  "exportedAtUtc": "2026-03-16T12:00:00Z",
+  "inventoryType": "bag",
+  "items": [
+    { "canonicalName": "Star Mushroom", "quantity": 1 },
+    { "canonicalName": "Turmmip", "quantity": 1 },
+    { "canonicalName": "Clean Water", "quantity": 1 }
+  ]
+}
+```
+
+Why base64url instead of many raw query params:
+
+- easier for the mod to generate
+- easier for the frontend to validate
+- keeps one clear transport field
+- works better with hash-based links
+
+Important limitation:
+
+- browser URL length is **not unlimited**
+- hash payloads are usually safer than large raw query strings
+- very large inventories can still hit browser or launcher URL limits
+
+## Project layout
 
 ```text
 .
-|- frontend/        React UI
-|- backend/         FastAPI app and tests
-|- shared/          Shared crafting logic, inventory helpers, and data tooling
-|- run.cmd          Starts backend + frontend in separate terminals
-|- run_api.cmd      Starts the FastAPI server
-|- run_frontend.cmd Starts the Vite dev server
+|- frontend/          Static React app
+|- shared/            Offline Python recipe/data helpers
+|- tools/             One-time scrape + data-build commands
+|- run.cmd            Starts the frontend dev server
+|- run_frontend.cmd   Starts the Vite dev server
 ```
 
-## Quick Start
+## Quick start
 
 ### Requirements
 
-- Python 3.10+
 - Node.js 18+
 - npm
 
-### 1. Install backend dependencies
+Optional for offline data tooling:
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\pip install -r backend\requirements.txt
-```
+- Python 3.10+
 
-### 2. Install frontend dependencies
+### Install the frontend
 
 ```powershell
 cd frontend
@@ -81,99 +118,97 @@ npm install
 cd ..
 ```
 
-### 3. Run the app
-
-You can use the included Windows helper scripts:
+### Run the app locally
 
 ```powershell
 .\run.cmd
 ```
 
-Or run each side manually:
+Or:
 
 ```powershell
-.\run_api.cmd
 .\run_frontend.cmd
 ```
 
-### 4. Open the app
+Open:
 
-- Frontend: `http://127.0.0.1:5173`
-- Backend API: `http://127.0.0.1:8000`
+- `http://127.0.0.1:5173`
 
-## Using the App
+## Using the app
 
-### Recommended inventory workflow
+### Recommended inventory flow
 
-1. Export your inventory from the Outward mod to:
-   - `%USERPROFILE%\Documents\OutwardCraftSync\current_inventory.csv`
-2. Open the app
-3. Click **Load latest Outward inventory**
+1. Open the app normally or from the Outward mod sync link.
+2. If the mod link is valid, the app will load inventory automatically.
+3. If you are not using the mod link, use **Upload CSV / Excel**.
+4. All crafting results update locally in the browser.
 
-If that sync file is missing, you can still use **Upload CSV / Excel** as a manual fallback.
-
-### What the main views do
+### What the tabs do
 
 - **Craft now**
-  - Shows all directly craftable recipe rows under the current station filters
+  - manage inventory and browse all craftable recipe rows
 - **Plan a target**
-  - Plans the next practical route for that target
-  - If already owned, it checks whether one more copy can be crafted now (or what is missing)
+  - see whether you can make one more copy, what is missing, and what steps come next
 - **Shopping list**
-  - Builds one combined missing-items list for multiple outputs
+  - combine multiple targets into one missing-items checklist
 - **Missing ingredients**
-  - Shows recipes close to craftable under the current missing-slot threshold
+  - see recipes that are close to craftable under the current threshold
 - **Recipe database**
-  - Lets you inspect recipes, ingredient groups, metadata, and visibility/debug details
+  - search recipe rows and optionally open the visibility debug inspector
 
-## Tests
+## Static build / sharing
 
-Run the backend and frontend contract tests with:
-
-```powershell
-.\.venv\Scripts\python.exe -m pytest backend\tests\test_api.py backend\tests\test_core_logic.py backend\tests\test_frontend_contracts.py
-```
-
-Build the frontend with:
+Build the static app with:
 
 ```powershell
 cd frontend
 npm run build
 ```
 
-## Data and Recipe Tooling
+The output goes to:
 
-The shared crafting logic and local data tooling live in `shared/`.
+- `frontend/dist/`
 
-Useful files:
+This is suitable for static hosting such as:
 
-- `shared/crafting_core.py`
-- `shared/inventory_ops.py`
-- `shared/outward_wiki_sync.py`
-- `shared/data/recipes.csv`
-- `shared/data/ingredient_groups.json`
-- `shared/data/item_metadata.json`
+- GitHub Pages
+- Netlify
+- Cloudflare Pages
+- any simple static file host
 
-To refresh recipe/wiki data locally:
+## Offline data refresh
+
+If you want to refresh the bundled recipe data:
 
 ```powershell
-python shared/outward_wiki_sync.py
+python -m venv .venv
+.\.venv\Scripts\pip install -r tools\requirements.txt
+.\.venv\Scripts\python.exe tools\scrape_outward_wiki.py
+.\.venv\Scripts\python.exe tools\build_frontend_data.py
+```
+
+Normal players do **not** need to run this.
+
+## Tests
+
+Frontend tests:
+
+```powershell
+cd frontend
+npm test
+```
+
+Typecheck:
+
+```powershell
+cd frontend
+npx tsc --noEmit -p tsconfig.json
 ```
 
 ## Notes
 
-- The app is currently designed for local use.
-- The default one-click Outward sync path is resolved on the backend as:
-  - `%USERPROFILE%\Documents\OutwardCraftSync\current_inventory.csv`
-- You can override it by setting:
-  - `OUTWARD_SYNC_INVENTORY_PATH`
-- The frontend reads the active sync path from backend metadata, so the path is no longer duplicated in multiple places.
-
-## Status
-
-This is an actively iterated personal project focused on:
-
-- stable crafting logic
-- clean inventory workflow
-- clearer planner/debug behavior
-- practical quality-of-life improvements for actual Outward play
+- The player-facing runtime is now frontend-only.
+- The old fixed local filesystem sync path is intentionally not used in the static browser build.
+- Manual CSV / Excel import still works.
+- The bundled data file lives at `frontend/public/data/calculator-data.json`.
+- Offline scrape/build tooling stays in Python so the browser app stays simple for players.

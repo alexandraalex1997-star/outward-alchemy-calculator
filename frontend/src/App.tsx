@@ -1,11 +1,10 @@
 import { startTransition, useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 
-import { api } from "./api";
+import { api, applyUrlInventorySync, getRuntimeInventorySource } from "./api";
 import {
   NAV_ITEMS,
   SORT_MODES,
-  VIEW_CONFIG,
   VIEW_SUMMARIES,
 } from "./lib/app-config";
 import {
@@ -18,8 +17,6 @@ import {
   deriveMetadataDefaults,
   filterCatalogRows,
   filterDatabaseRecipes,
-  filterIngredientGroups,
-  filterItemStats,
 } from "./lib/app-selectors";
 import { downloadCsv, inventoryRows, parseShoppingTargets, toggleSelection } from "./lib/app-utils";
 import { InventoryEditor } from "./components/InventoryEditor";
@@ -28,12 +25,11 @@ import { SupportRail } from "./components/SupportRail";
 import { TopBanner } from "./components/TopBanner";
 import {
   DatabaseTable,
-  IngredientGroupsTable,
   InventoryList,
-  ItemStatsTable,
   NearCraftTable,
 } from "./components/data-views";
 import { Panel, StatCard, classNames } from "./components/ui";
+import type { RuntimeInventorySource } from "./lib/runtime-service";
 import type {
   DashboardResponse,
   DirectResponse,
@@ -47,14 +43,12 @@ import type {
 } from "./types";
 import type { NavItem, RailSectionId } from "./lib/app-config";
 
-type InventoryImportSource = "Outward sync" | "Manual upload";
-
 type InventoryImportStatus = {
   tone: "idle" | "success" | "error";
   title: string;
   detail: string;
   lastLoadedSource: string;
-  lastAttemptedSource: InventoryImportSource | null;
+  lastAttemptedSource: string | null;
 };
 
 type InventoryMutationResult = { ok: true } | { ok: false; message: string };
@@ -68,11 +62,41 @@ type PlannerDisplayStep = {
 
 const INITIAL_IMPORT_STATUS: InventoryImportStatus = {
   tone: "idle",
-  title: "Ready to sync inventory.",
-  detail: "Use Outward sync to pull the newest mod export.",
+  title: "No inventory loaded yet.",
+  detail: "Open a mod sync link from the Outward mod or upload CSV / Excel.",
   lastLoadedSource: "Not loaded yet",
   lastAttemptedSource: null,
 };
+
+function importStatusFromSource(source: RuntimeInventorySource): InventoryImportStatus {
+  if (source.kind === "url_sync") {
+    return {
+      tone: "success",
+      title: "Inventory loaded from mod sync.",
+      detail: source.detail,
+      lastLoadedSource: source.label,
+      lastAttemptedSource: source.label,
+    };
+  }
+
+  if (source.kind === "manual_upload") {
+    return {
+      tone: "success",
+      title: "Manual inventory import succeeded.",
+      detail: source.detail,
+      lastLoadedSource: source.label,
+      lastAttemptedSource: source.label,
+    };
+  }
+
+  return {
+    tone: "success",
+    title: "Using saved browser inventory.",
+    detail: source.detail,
+    lastLoadedSource: source.label,
+    lastAttemptedSource: null,
+  };
+}
 
 function parsePlannerSteps(lines: string[]): PlannerDisplayStep[] {
   return lines
@@ -242,8 +266,10 @@ export default function App() {
   useEffect(() => {
     async function bootstrap() {
       try {
+        const urlSyncStatus = await applyUrlInventorySync();
         const meta = await api.getMetadata();
         const defaults = deriveMetadataDefaults(meta);
+        const savedSource = await getRuntimeInventorySource();
 
         setMetadata(meta);
         setSelectedStations(defaults.stations);
@@ -252,6 +278,21 @@ export default function App() {
         setDatabaseCategories(defaults.recipeCategories);
         setPlanTarget(defaults.recipeTargets[0] ?? "");
         setDebugRecipe(meta.recipes.some((recipe) => recipe.result === "Astral Potion") ? "Astral Potion" : defaults.recipeTargets[0] ?? "");
+
+        if (urlSyncStatus.status === "applied") {
+          setImportStatus(importStatusFromSource(urlSyncStatus.source));
+          setStatusMessage("Inventory loaded from the mod sync link.");
+        } else if (urlSyncStatus.status === "invalid") {
+          setImportStatus({
+            tone: "error",
+            title: "Mod sync link could not be loaded.",
+            detail: urlSyncStatus.message,
+            lastLoadedSource: savedSource?.label ?? "Not loaded yet",
+            lastAttemptedSource: "Mod URL sync",
+          });
+        } else if (savedSource) {
+          setImportStatus(importStatusFromSource(savedSource));
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load app data.");
       } finally {
@@ -311,19 +352,7 @@ export default function App() {
   const filteredDatabaseRecipes = useMemo(() => {
     return filterDatabaseRecipes(metadata?.recipes, deferredDatabaseSearch, databaseStations, databaseCategories);
   }, [databaseCategories, databaseStations, deferredDatabaseSearch, metadata]);
-
-  const filteredIngredientGroups = useMemo(() => {
-    return filterIngredientGroups(metadata?.ingredient_groups, deferredDatabaseSearch);
-  }, [deferredDatabaseSearch, metadata]);
-
-  const filteredItemStats = useMemo(() => {
-    return filterItemStats(metadata?.item_stats, deferredDatabaseSearch);
-  }, [deferredDatabaseSearch, metadata]);
-
-  const activeView = VIEW_CONFIG.find((entry) => entry.id === activeSection);
   const activeSummary = VIEW_SUMMARIES[activeSection] ?? "";
-  const activeApiSummary = activeView?.apis?.join(" | ") ?? "";
-  const outwardSyncPath = metadata?.outward_sync_path ?? String.raw`Documents\OutwardCraftSync\current_inventory.csv`;
   const stationFilterNote = createStationFilterNote(selectedStations);
   const plannerSteps = useMemo(() => parsePlannerSteps(plannerResult?.lines ?? []), [plannerResult]);
   const plannerMissingTotal = useMemo(
@@ -618,7 +647,7 @@ export default function App() {
       setImportStatus({
         tone: "success",
         title: "Manual inventory import succeeded.",
-        detail: `Imported ${file.name} into the live inventory.`,
+        detail: `Imported ${file.name} into the browser inventory.`,
         lastLoadedSource: `Manual upload (${file.name})`,
         lastAttemptedSource: "Manual upload",
       });
@@ -632,38 +661,6 @@ export default function App() {
       detail: imported.message,
       lastAttemptedSource: "Manual upload",
     }));
-  };
-
-  const handleLatestOutwardInventory = async () => {
-    const imported = await handleInventoryMutation(api.importLatestOutwardInventory());
-    if (imported.ok) {
-      setImportStatus({
-        tone: "success",
-        title: "Latest Outward inventory loaded.",
-        detail: "Imported the newest mod export from your Documents sync folder.",
-        lastLoadedSource: "Outward sync",
-        lastAttemptedSource: "Outward sync",
-      });
-      setStatusMessage("Latest Outward inventory loaded.");
-      return;
-    }
-    setImportStatus((current) => ({
-      ...current,
-      tone: "error",
-      title: "Latest Outward inventory load failed.",
-      detail: imported.message,
-      lastAttemptedSource: "Outward sync",
-    }));
-  };
-
-  const handleCopyOutwardSyncPath = async () => {
-    try {
-      await navigator.clipboard.writeText(outwardSyncPath);
-      setError(null);
-      setStatusMessage("Outward sync path copied.");
-    } catch {
-      setError("Could not copy the Outward sync path. You can still select it manually.");
-    }
   };
 
   if (isLoading) {
@@ -699,10 +696,7 @@ export default function App() {
           onNearThresholdChange={setNearThreshold}
           stationFilterNote={stationFilterNote}
           importStatus={importStatus}
-          outwardSyncPath={outwardSyncPath}
           onBulkFile={(file) => void handleBulkFile(file)}
-          onLoadLatestOutwardInventory={() => void handleLatestOutwardInventory()}
-          onCopyOutwardSyncPath={() => void handleCopyOutwardSyncPath()}
         />
 
         <section className="main-column center-column">
@@ -722,11 +716,6 @@ export default function App() {
 
             <div className="mode-note">
               <div>{activeSummary}</div>
-              {activeApiSummary ? (
-                <span className="mode-info" title={`API: ${activeApiSummary}`}>
-                  i
-                </span>
-              ) : null}
             </div>
           </section>
 
@@ -777,7 +766,7 @@ export default function App() {
           ) : null}
 
           {activeSection === "Plan a target" ? (
-            <Panel title="Plan a target" description="Plan the next practical route for one target. If it is already owned, this focuses on one more copy.">
+            <Panel title="Plan a target" description="Check whether you can make one more copy, what is still missing, and which craft steps come next.">
               <div className="view-stack">
                 <div className="inline-actions view-toolbar">
                   <label className="field grow">
@@ -819,13 +808,6 @@ export default function App() {
                       </div>
                     </div>
 
-                    {plannerResult.already_owned ? (
-                      <div className="info-strip planner-owned-strip">
-                        You currently own {plannerOwnedQty} {plannerOwnedQty === 1 ? "copy" : "copies"} of {plannerResult.target}. Planner goal:{" "}
-                        {plannerGoalLabel.toLowerCase()}.
-                      </div>
-                    ) : null}
-
                     <div className="planner-summary-row">
                       <div className="planner-summary-chip">
                         <span>Planner goal</span>
@@ -845,43 +827,13 @@ export default function App() {
                       </div>
                     </div>
 
-                    <section className="planner-route-shell planner-route-shell--primary">
-                      <div className="planner-route-head">
-                        <strong>{plannerResult.already_owned ? "How to craft one more" : "Route steps"}</strong>
-                        <span>{plannerRouteHint}</span>
+                    {plannerResult.already_owned ? (
+                      <div className="info-strip planner-owned-strip">
+                        You already own {plannerOwnedQty} {plannerOwnedQty === 1 ? "copy" : "copies"} of {plannerResult.target}. This planner run is focused on one more copy.
                       </div>
-                      <p className="planner-route-note">{plannerStepNote}</p>
-                      {plannerResult.already_owned ? (
-                        <p className="planner-route-note">
-                          You already own this target. These steps focus on producing one additional copy using the current inventory and station
-                          filters.
-                        </p>
-                      ) : null}
-                      {!plannerResult.found && plannerSteps.length ? (
-                        <p className="planner-route-note">
-                          This is the closest route the planner could prove with the current bag and filters. It stops where required ingredients
-                          run out.
-                        </p>
-                      ) : null}
-                      {plannerSteps.length ? (
-                        <div className="planner-step-list">
-                          {plannerSteps.map((step, index) => (
-                            <div key={`${index}-${step.raw}`} className={classNames("planner-step", `is-${step.kind}`)}>
-                              <div className="planner-step-line" style={{ paddingLeft: `${step.indent * 1.1}rem` }}>
-                                <span className={classNames("planner-step-chip", `is-${step.kind}`)}>
-                                  {plannerStepLabel(step.kind)}
-                                </span>
-                                <span className="planner-step-text">{step.text}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="empty-state">No additional route lines were needed for this target.</div>
-                      )}
-                    </section>
+                    ) : null}
 
-                    <section className="planner-needed-shell planner-needed-shell--primary">
+                    <section className="planner-needed-shell planner-needed-shell--priority">
                       <div className="planner-route-head">
                         <strong>Still needed</strong>
                         <span>
@@ -900,6 +852,39 @@ export default function App() {
                         </div>
                       ) : (
                         <div className="empty-state">You already have everything needed for this route.</div>
+                      )}
+                    </section>
+
+                    <section className="planner-route-shell planner-route-shell--primary">
+                      <div className="planner-route-head">
+                        <strong>{plannerResult.already_owned ? "How to craft one more" : "Next route"}</strong>
+                        <span>{plannerRouteHint}</span>
+                      </div>
+                      <p className="planner-route-note">{plannerStepNote}</p>
+                      {!plannerResult.found && plannerSteps.length ? (
+                        <p className="planner-route-note">
+                          This is the closest route the planner could prove with the current bag and filters. It stops where required ingredients run out.
+                        </p>
+                      ) : null}
+                      {plannerSteps.length ? (
+                        <div className="planner-step-list">
+                          {plannerSteps.map((step, index) => (
+                            <div key={`${index}-${step.raw}`} className={classNames("planner-step", `is-${step.kind}`)}>
+                              <div className="planner-step-line" style={{ paddingLeft: `${step.indent * 1.1}rem` }}>
+                                <span className={classNames("planner-step-chip", `is-${step.kind}`)}>
+                                  {plannerStepLabel(step.kind)}
+                                </span>
+                                <span className="planner-step-text">{step.text}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="empty-state">
+                          {plannerResult.found
+                            ? "No extra craft steps are needed beyond what is already in your bag."
+                            : "No route steps could be confirmed for this target yet."}
+                        </div>
                       )}
                     </section>
 
@@ -961,17 +946,17 @@ export default function App() {
 
           {activeSection === "Shopping list" ? (
             <Panel title="Shopping list" description="Build a missing-items list for multiple targets.">
-              <div className="view-stack">
-                <textarea
-                  className="bulk-text"
-                  value={shoppingText}
-                  onChange={(event) => setShoppingText(event.target.value)}
-                  placeholder={"Life Potion,3\nWarm Potion,2"}
-                />
-                <div className="inline-actions view-toolbar">
+              <div className="view-stack shopping-layout">
+                <div className="shopping-builder">
+                  <textarea
+                    className="bulk-text"
+                    value={shoppingText}
+                    onChange={(event) => setShoppingText(event.target.value)}
+                    placeholder={"Life Potion,3\nWarm Potion,2"}
+                  />
                   <button
                     type="button"
-                    className="button primary"
+                    className="button primary shopping-build-button"
                     onClick={() => {
                       setShoppingRequested(true);
                       void executeShoppingList();
@@ -980,24 +965,27 @@ export default function App() {
                     Build list
                   </button>
                 </div>
-                <div className="info-strip">Targets are combined first. Stations and planner depth decide which extra crafts can cover the gaps.</div>
+                <div className="info-strip">Targets are combined first. Stations and planner depth decide whether intermediate crafts can cover part of the gap.</div>
                 {shoppingResult ? (
                   <>
-                    <div className="split-columns">
+                    <InventoryList
+                      title="Still needed"
+                      items={shoppingResult.missing}
+                      emptyMessage="You already have enough to cover this build."
+                    />
+                    <div className="split-columns shopping-secondary-panels">
                       <InventoryList title="Requested outputs" items={shoppingResult.targets} emptyMessage="No targets were parsed." />
                       <InventoryList
-                        title="Still needed"
-                        items={shoppingResult.missing}
-                        emptyMessage="You already have enough to cover this build."
+                        title="Left after the build"
+                        items={shoppingResult.remaining_inventory}
+                        emptyMessage="This build would use up every tracked item."
                       />
                     </div>
-                    <InventoryList
-                      title="Left after the build"
-                      items={shoppingResult.remaining_inventory}
-                      emptyMessage="This build would use up every tracked item."
-                    />
-                    <div className="info-strip">Use this route as your gather-and-craft checklist for the requested items.</div>
-                    <pre className="code-block">{shoppingResult.lines.join("\n") || "No extra shopping steps were needed."}</pre>
+                    <details className="shopping-route-details">
+                      <summary>Show craft route details</summary>
+                      <div className="info-strip">Use this route as your gather-and-craft checklist for the requested items.</div>
+                      <pre className="code-block">{shoppingResult.lines.join("\n") || "No extra shopping steps were needed."}</pre>
+                    </details>
                   </>
                 ) : (
                   <div className="empty-state">Paste one or more `item,qty` targets and build the shopping list.</div>
@@ -1029,11 +1017,11 @@ export default function App() {
           ) : null}
 
           {activeSection === "Recipe database" ? (
-            <Panel title="Recipe database" description="Search recipes, grouped ingredients, and item metadata." className="database-panel">
+            <Panel title="Recipe database" description="Search and browse the full recipe rows bundled with the app." className="database-panel">
               <div className="database-view">
                 <div className="database-toolbar database-toolbar--with-debug">
                   <label className="field grow">
-                    <span>Search recipes, groups, or stats</span>
+                    <span>Search recipe rows</span>
                     <input
                       value={databaseSearch}
                       onChange={(event) => setDatabaseSearch(event.target.value)}
@@ -1089,6 +1077,7 @@ export default function App() {
                 <div className="info-strip">
                   Recipe matches: {filteredDatabaseRecipes.length} of {metadata?.recipe_count ?? 0}.
                 </div>
+                <DatabaseTable rows={filteredDatabaseRecipes} />
                 <Panel
                   title="Recipe visibility debug"
                   description="Inspector: check how one result is classified across craftable, near, and planner logic."
@@ -1288,15 +1277,6 @@ export default function App() {
                     )}
                   </div>
                 </Panel>
-                <DatabaseTable rows={filteredDatabaseRecipes} />
-                <div className="database-columns">
-                  <Panel title="Ingredient groups" description="Canonical grouped-ingredient slots used by the recipe logic." className="sub-panel">
-                    <IngredientGroupsTable groups={filteredIngredientGroups} />
-                  </Panel>
-                  <Panel title="Item metadata" description="Stats and effects used by the ranking views." className="sub-panel">
-                    <ItemStatsTable rows={filteredItemStats} />
-                  </Panel>
-                </div>
               </div>
             </Panel>
           ) : null}

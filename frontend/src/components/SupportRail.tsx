@@ -20,10 +20,7 @@ export function SupportRail({
   onNearThresholdChange,
   stationFilterNote,
   importStatus,
-  outwardSyncPath,
   onBulkFile,
-  onLoadLatestOutwardInventory,
-  onCopyOutwardSyncPath,
 }: {
   leftCollapsed: boolean;
   onToggleRail: () => void;
@@ -45,15 +42,8 @@ export function SupportRail({
     lastLoadedSource: string;
     lastAttemptedSource: string | null;
   };
-  outwardSyncPath: string;
   onBulkFile: (file: File | null) => void;
-  onLoadLatestOutwardInventory: () => void;
-  onCopyOutwardSyncPath: () => void;
 }) {
-  const compactWatchedPath = outwardSyncPath.includes("OutwardCraftSync")
-    ? outwardSyncPath.slice(outwardSyncPath.indexOf("OutwardCraftSync"))
-    : outwardSyncPath;
-
   return (
     <aside className="utility-rail left-column">
       <div className="utility-rail__header">
@@ -176,7 +166,7 @@ export function SupportRail({
 
           <Panel
             title="Inventory sync"
-            description="Primary: pull the newest Outward export. Fallback: upload a file yourself."
+            description="Best flow: open a mod sync link from the game. Fallback: upload a file yourself."
             className="panel-section accordion-item"
             collapsible
             collapsed={!railSections.bulk}
@@ -185,12 +175,8 @@ export function SupportRail({
             <div className="upload-stack sync-stack">
               <div className="sync-callout">
                 <span className="sync-recommendation">Recommended</span>
-                <p className="sync-helper">Pull the newest mod export from Documents.</p>
+                <p className="sync-helper">Open the browser link from the Outward mod to load inventory automatically in this tab.</p>
               </div>
-
-              <button type="button" className="button primary bulk-upload-button sync-primary-button" onClick={onLoadLatestOutwardInventory}>
-                Load latest Outward inventory
-              </button>
 
               <div className={classNames("sync-status-card", `is-${importStatus.tone}`)} aria-live="polite">
                 <div className="sync-status-head">
@@ -201,21 +187,9 @@ export function SupportRail({
                 </div>
                 <p>{importStatus.detail}</p>
                 <div className="sync-status-meta">
-                  <span>Last loaded: {importStatus.lastLoadedSource}</span>
+                  <span>Current source: {importStatus.lastLoadedSource}</span>
                   <span>Last attempt: {importStatus.lastAttemptedSource ?? "None yet"}</span>
                 </div>
-              </div>
-
-              <div className="sync-path-block">
-                <div className="sync-path-head">
-                  <span className="sync-path-label">Watched file</span>
-                  <button type="button" className="button subtle tiny path-copy-button" onClick={onCopyOutwardSyncPath}>
-                    Copy path
-                  </button>
-                </div>
-                <code className="sync-path-text" title={outwardSyncPath}>
-                  {compactWatchedPath}
-                </code>
               </div>
 
               <div className="sync-fallback">
@@ -226,9 +200,9 @@ export function SupportRail({
                     type="file"
                     accept=".csv,.xlsx"
                     onChange={(event: ChangeEvent<HTMLInputElement>) => onBulkFile(event.target.files?.[0] ?? null)}
-                  />
+                    />
                 </label>
-                <small className="field-note">Use this if the sync file is missing or you want to import a different file.</small>
+                <small className="field-note">Use this if the mod did not open the app with a sync link or you want to import a file manually.</small>
               </div>
             </div>
           </Panel>

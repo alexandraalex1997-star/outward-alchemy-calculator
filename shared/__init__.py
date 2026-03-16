@@ -1,1 +1,1 @@
-# Makes shared logic importable for the FastAPI backend and tests.
+# Makes shared offline data helpers importable for tooling scripts.

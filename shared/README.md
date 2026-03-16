@@ -1,41 +1,35 @@
-# Data tooling
+# Shared Offline Data Helpers
 
-This folder now contains the shared crafting/data layer for the current React + FastAPI app.
+This folder is no longer part of the normal player runtime.
+
+It exists for offline data work only:
+
+- recipe parsing helpers
+- grouped-ingredient logic
+- metadata helpers
+- scrape support
 
 ## Main files
 
 - `crafting_core.py`
-  Core recipe logic, ranking helpers, planner logic, shopping-list helpers, and metadata-table builders.
-
+  - recipe normalization, craftability helpers, planner helpers, smart scoring
 - `inventory_ops.py`
-  Inventory parsing and table helpers used by tests and data tooling.
-
+  - inventory parsing helpers for offline tools
 - `outward_wiki_sync.py`
-  Pulls recipe and metadata source data into local project files.
-
+  - scrape/update source data from the community wikis
 - `data/recipes.csv`
-  Current recipe dataset used by the backend service layer.
-
+  - recipe source data consumed by the offline data builder
 - `data/ingredient_groups.json`
-  Canonical grouped-ingredient definitions.
-
+  - grouped ingredient definitions
 - `data/item_metadata.json`
-  Manual item metadata overrides and curated item stats/effects.
+  - curated item stats/effects and overrides
 
-## Current app architecture
+## How it is used now
 
-- Frontend: React in `frontend/`
-- API: FastAPI in `backend/app/`
-- Shared crafting/data logic: this `shared/` folder
+1. `tools/scrape_outward_wiki.py` optionally refreshes source data.
+2. `tools/build_frontend_data.py` converts that source data into static JSON for the frontend.
+3. The frontend consumes the generated JSON at runtime.
 
-## Refreshing data
+## Player runtime note
 
-To refresh local recipe/wiki data, run:
-
-```bash
-python shared/outward_wiki_sync.py
-```
-
-## Notes
-
-- The old legacy Streamlit UI files were removed because the project now uses the React + FastAPI app exclusively.
+The browser app does not import these Python files directly.

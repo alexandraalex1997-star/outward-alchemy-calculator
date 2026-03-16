@@ -115,7 +115,6 @@ export type MetadataResponse = {
   ingredients: string[];
   categories: CategoryGroup[];
   stations: string[];
-  outward_sync_path: string;
   recipe_count: number;
   recipes: RecipeDatabaseRecord[];
   ingredient_groups: IngredientGroup[];

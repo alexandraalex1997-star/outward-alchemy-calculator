@@ -65,7 +65,7 @@ export function InventoryEditor({
         <header className="inventory-band inventory-band--summary">
           <div className="inventory-summary-head">
             <div className="inventory-summary-copy">
-              <h3>Inventory overview</h3>
+              <span className="inventory-band-label">Inventory overview</span>
               <p>
                 {inventory?.items.length
                   ? "Live totals used by the craft, planner, and shopping views."
@@ -159,7 +159,7 @@ export function InventoryEditor({
         <section className="inventory-band inventory-band--table">
           <div className="inventory-table-head">
             <div className="inventory-table-copy">
-              <strong>Ingredient table</strong>
+              <span className="inventory-band-label">Ingredient table</span>
               <span>Toggle items on quickly, edit quantities, then save or remove the row.</span>
             </div>
             <div className="inventory-table-tools">
