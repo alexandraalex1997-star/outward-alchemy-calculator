@@ -111,9 +111,9 @@ export function SupportRail({
             collapsed={!railSections.planning}
             onToggle={() => onToggleSection("planning")}
           >
-            <div className="planning-stack">
-              <label className="field">
-                <div className="field-head">
+            <div className="planning-tools-layout">
+              <section className="planning-group planning-group--stations">
+                <div className="planning-group-head">
                   <span>Stations</span>
                   <small>Craft, Near, Plan, Shop</small>
                 </div>
@@ -133,32 +133,44 @@ export function SupportRail({
                   })}
                 </div>
                 <small className="field-note">{stationFilterNote}</small>
-              </label>
+              </section>
 
-              <div className="planning-range-grid">
-                <label className="compact-range-control">
-                  <div className="compact-range-head">
-                    <span>Route depth</span>
-                    <strong className="compact-range-value">{plannerDepth}</strong>
-                  </div>
-                  <input type="range" min={1} max={8} value={plannerDepth} onChange={(event) => onPlannerDepthChange(Number(event.target.value))} />
-                </label>
+              <section className="planning-group planning-group--ranges">
+                <div className="planning-group-head planning-group-head--range">
+                  <span>Planner controls</span>
+                  <small>Route depth and missing slots update results live.</small>
+                </div>
+                <div className="planning-range-grid">
+                  <label className="compact-range-control">
+                    <div className="compact-range-head">
+                      <span>Route depth</span>
+                      <strong className="compact-range-value">{plannerDepth}</strong>
+                    </div>
+                    <input
+                      type="range"
+                      min={1}
+                      max={8}
+                      value={plannerDepth}
+                      onChange={(event) => onPlannerDepthChange(Number(event.target.value))}
+                    />
+                  </label>
 
-                <label className="compact-range-control">
-                  <div className="compact-range-head">
-                    <span>Missing slots</span>
-                    <strong className="compact-range-value">{nearThreshold}</strong>
-                  </div>
-                  <input
-                    type="range"
-                    min={1}
-                    max={4}
-                    value={nearThreshold}
-                    onChange={(event) => onNearThresholdChange(Number(event.target.value))}
-                  />
-                </label>
-              </div>
-              <small className="planning-range-note">Depth affects recursive planner routes. Missing slots affects Almost craftable.</small>
+                  <label className="compact-range-control">
+                    <div className="compact-range-head">
+                      <span>Missing slots</span>
+                      <strong className="compact-range-value">{nearThreshold}</strong>
+                    </div>
+                    <input
+                      type="range"
+                      min={1}
+                      max={4}
+                      value={nearThreshold}
+                      onChange={(event) => onNearThresholdChange(Number(event.target.value))}
+                    />
+                  </label>
+                </div>
+              </section>
+              <small className="planning-range-note">Route depth affects planner recursion. Missing slots affects Almost craftable.</small>
             </div>
           </Panel>
 

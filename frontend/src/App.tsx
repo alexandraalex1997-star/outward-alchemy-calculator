@@ -189,6 +189,7 @@ export default function App() {
   const [draftQuantities, setDraftQuantities] = useState<Record<string, string>>({});
   const [plannerRequested, setPlannerRequested] = useState(false);
   const [debugRequested, setDebugRequested] = useState(false);
+  const [debugPanelExpanded, setDebugPanelExpanded] = useState(false);
   const [shoppingRequested, setShoppingRequested] = useState(false);
   const [databaseSearch, setDatabaseSearch] = useState("");
   const [databaseStations, setDatabaseStations] = useState<string[]>([]);
@@ -805,17 +806,17 @@ export default function App() {
                   </button>
                 </div>
                 {plannerResult ? (
-                  <div className="planner-view-stack">
+                  <div className="planner-flow">
                     <div className={classNames("planner-status-strip", `is-${plannerTone}`)}>
                       <div className="planner-status-copy">
-                        <strong>
-                          {plannerStatusTitle}
-                        </strong>
+                        <span className="planner-status-kicker">Target: {plannerResult.target || planTarget}</span>
+                        <strong>{plannerStatusTitle}</strong>
                         <p>{plannerResult.explanation}</p>
                       </div>
-                      <span className="planner-status-pill">
-                        {plannerStatusPill}
-                      </span>
+                      <div className="planner-status-meta">
+                        <span className="planner-status-pill">{plannerStatusPill}</span>
+                        <span className="planner-mode-pill">{formatPlannerMode(plannerResult.mode)}</span>
+                      </div>
                     </div>
 
                     {plannerResult.already_owned ? (
@@ -825,133 +826,129 @@ export default function App() {
                       </div>
                     ) : null}
 
-                    <div className="planner-summary-grid">
-                      <div className="planner-summary-panel">
-                        <span className="planner-summary-label">Target item</span>
-                        <strong className="planner-summary-value">{plannerResult.target || planTarget}</strong>
-                        <span className="planner-summary-note">The route is centered on this craft goal.</span>
+                    <div className="planner-summary-row">
+                      <div className="planner-summary-chip">
+                        <span>Planner goal</span>
+                        <strong>{plannerGoalLabel}</strong>
                       </div>
-                      <div className="planner-summary-panel">
-                        <span className="planner-summary-label">Planner goal</span>
-                        <strong className="planner-summary-value">{plannerGoalLabel}</strong>
-                        <span className="planner-summary-note">
-                          {plannerResult.already_owned
-                            ? "You keep owned copies while this plan checks if one more can be produced."
-                            : "The planner looks for one complete route for this target."}
-                        </span>
+                      <div className="planner-summary-chip">
+                        <span>Route steps</span>
+                        <strong>{plannerActionStepCount}</strong>
                       </div>
-                      <div className="planner-summary-panel">
-                        <span className="planner-summary-label">Route status</span>
-                        <strong className="planner-summary-value">{formatPlannerMode(plannerResult.mode)}</strong>
-                        <span className="planner-summary-note">
-                          {plannerResult.craft_steps
-                            ? `${plannerResult.craft_steps} craft step${plannerResult.craft_steps === 1 ? "" : "s"} in this route.`
-                            : plannerResult.found
-                              ? "No extra craft steps were needed."
-                              : "No complete route yet."}
-                        </span>
+                      <div className="planner-summary-chip">
+                        <span>Craft steps</span>
+                        <strong>{plannerResult.craft_steps}</strong>
                       </div>
-                      <div className="planner-summary-panel">
-                        <span className="planner-summary-label">Route steps</span>
-                        <strong className="planner-summary-value">{plannerActionStepCount}</strong>
-                        <span className="planner-summary-note">{plannerStepNote}</span>
-                      </div>
-                      <div className="planner-summary-panel planner-summary-panel-wide">
-                        <span className="planner-summary-label">Still needed</span>
-                        <strong className="planner-summary-value">{plannerMissingTotal}</strong>
-                        <span className="planner-summary-note">
-                          {plannerResult.missing.length
-                            ? `${plannerResult.missing.length} missing item${plannerResult.missing.length === 1 ? "" : "s"}`
-                            : "Nothing else is required for this route."}
-                        </span>
+                      <div className="planner-summary-chip planner-summary-chip--missing">
+                        <span>Still needed</span>
+                        <strong>{plannerMissingTotal}</strong>
                       </div>
                     </div>
 
-                    <div className="planner-primary-grid">
-                      <div className="planner-route-shell">
-                        <div className="planner-route-head">
-                          <strong>{plannerResult.already_owned ? "Route for one more copy" : "Planner route"}</strong>
-                          <span>{plannerRouteHint}</span>
-                        </div>
-                        {plannerResult.already_owned ? (
-                          <p className="planner-route-note">
-                            You already own this target. The route below focuses on producing one additional copy with the current inventory and
-                            station filters.
-                          </p>
-                        ) : null}
-                        {!plannerResult.found && plannerSteps.length ? (
-                          <p className="planner-route-note">
-                            This is the closest route the planner could prove with the current bag and filters. It stops where required
-                            ingredients run out.
-                          </p>
-                        ) : null}
-                        {plannerSteps.length ? (
-                          <div className="planner-step-list">
-                            {plannerSteps.map((step, index) => (
-                              <div key={`${index}-${step.raw}`} className={classNames("planner-step", `is-${step.kind}`)}>
-                                <div className="planner-step-line" style={{ paddingLeft: `${step.indent * 1.1}rem` }}>
-                                  <span className={classNames("planner-step-chip", `is-${step.kind}`)}>
-                                    {plannerStepLabel(step.kind)}
-                                  </span>
-                                  <span className="planner-step-text">{step.text}</span>
-                                </div>
+                    <section className="planner-route-shell planner-route-shell--primary">
+                      <div className="planner-route-head">
+                        <strong>{plannerResult.already_owned ? "How to craft one more" : "Route steps"}</strong>
+                        <span>{plannerRouteHint}</span>
+                      </div>
+                      <p className="planner-route-note">{plannerStepNote}</p>
+                      {plannerResult.already_owned ? (
+                        <p className="planner-route-note">
+                          You already own this target. These steps focus on producing one additional copy using the current inventory and station
+                          filters.
+                        </p>
+                      ) : null}
+                      {!plannerResult.found && plannerSteps.length ? (
+                        <p className="planner-route-note">
+                          This is the closest route the planner could prove with the current bag and filters. It stops where required ingredients
+                          run out.
+                        </p>
+                      ) : null}
+                      {plannerSteps.length ? (
+                        <div className="planner-step-list">
+                          {plannerSteps.map((step, index) => (
+                            <div key={`${index}-${step.raw}`} className={classNames("planner-step", `is-${step.kind}`)}>
+                              <div className="planner-step-line" style={{ paddingLeft: `${step.indent * 1.1}rem` }}>
+                                <span className={classNames("planner-step-chip", `is-${step.kind}`)}>
+                                  {plannerStepLabel(step.kind)}
+                                </span>
+                                <span className="planner-step-text">{step.text}</span>
                               </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="empty-state">No additional route lines were needed for this target.</div>
-                        )}
-                      </div>
-                      <InventoryList
-                        title="Still needed"
-                        items={plannerResult.missing}
-                        emptyMessage="You already have everything needed for this route."
-                      />
-                    </div>
-
-                    <div className="planner-secondary-shell">
-                      <div className="planner-secondary-head">
-                        <div className="planner-secondary-copy">
-                          <strong>{plannerBagTitle}</strong>
-                          <p>{plannerBagNote}</p>
-                        </div>
-                        <div className="planner-secondary-metrics">
-                          <span>{plannerRemainingUnique} unique</span>
-                          <span>{plannerRemainingTotal} total qty</span>
-                        </div>
-                      </div>
-
-                      {plannerBagPreviewItems.length ? (
-                        <div className="planner-bag-preview-list">
-                          {plannerBagPreviewItems.map((item) => (
-                            <div key={item.item} className="planner-bag-chip">
-                              <span>{item.item}</span>
-                              <strong>x{item.qty}</strong>
                             </div>
                           ))}
-                          {plannerHiddenBagCount ? (
-                            <div className="planner-bag-chip planner-bag-chip--muted">+{plannerHiddenBagCount} more item{plannerHiddenBagCount === 1 ? "" : "s"}</div>
-                          ) : null}
                         </div>
                       ) : (
-                        <div className="empty-state planner-bag-empty">{plannerBagEmptyMessage}</div>
+                        <div className="empty-state">No additional route lines were needed for this target.</div>
                       )}
+                    </section>
 
-                      {plannerRemainingItems.length > plannerBagPreviewItems.length ? (
-                        <details className="planner-bag-details">
-                          <summary>Show full bag details</summary>
-                          <div className="planner-bag-scroll">
-                            <div className="mini-table planner-bag-table">
-                              {plannerRemainingItems.map((item) => (
+                    <section className="planner-needed-shell planner-needed-shell--primary">
+                      <div className="planner-route-head">
+                        <strong>Still needed</strong>
+                        <span>
+                          {plannerResult.missing.length
+                            ? `${plannerResult.missing.length} missing item${plannerResult.missing.length === 1 ? "" : "s"}`
+                            : "Nothing missing"}
+                        </span>
+                      </div>
+                      {plannerResult.missing.length ? (
+                        <div className="mini-table planner-needed-list">
+                          {plannerResult.missing.map((item) => (
+                            <div key={item.item}>
+                              {item.item} x{item.qty}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="empty-state">You already have everything needed for this route.</div>
+                      )}
+                    </section>
+
+                    <details className="planner-secondary-shell planner-bag-details">
+                      <summary className="planner-secondary-summary">
+                        <span className="planner-secondary-summary-copy">
+                          <strong>{plannerBagTitle}</strong>
+                          <small>{plannerBagNote}</small>
+                        </span>
+                        <span className="planner-secondary-summary-meta">
+                          {plannerRemainingUnique} unique | {plannerRemainingTotal} total qty
+                        </span>
+                      </summary>
+
+                      <div className="planner-secondary-content">
+                        {plannerBagPreviewItems.length ? (
+                          <div className="planner-bag-preview-list">
+                            {plannerBagPreviewItems.map((item) => (
+                              <div key={item.item} className="planner-bag-chip">
+                                <span>{item.item}</span>
+                                <strong>x{item.qty}</strong>
+                              </div>
+                            ))}
+                            {plannerHiddenBagCount ? (
+                              <div className="planner-bag-chip planner-bag-chip--muted">
+                                +{plannerHiddenBagCount} more item{plannerHiddenBagCount === 1 ? "" : "s"}
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : (
+                          <div className="empty-state planner-bag-empty">{plannerBagEmptyMessage}</div>
+                        )}
+
+                        <div className="planner-bag-details-note">Show full bag details</div>
+                        <div className="planner-bag-scroll">
+                          <div className="mini-table planner-bag-table">
+                            {plannerRemainingItems.length ? (
+                              plannerRemainingItems.map((item) => (
                                 <div key={item.item}>
                                   {item.item} x{item.qty}
                                 </div>
-                              ))}
-                            </div>
+                              ))
+                            ) : (
+                              <div>{plannerBagEmptyMessage}</div>
+                            )}
                           </div>
-                        </details>
-                      ) : null}
-                    </div>
+                        </div>
+                      </div>
+                    </details>
                   </div>
                 ) : (
                   <div className="empty-state">
@@ -1010,18 +1007,31 @@ export default function App() {
           ) : null}
 
           {activeSection === "Missing ingredients" ? (
-            <Panel title="Missing ingredients" description="Closest valid recipes and the ingredient group still blocking each one.">
-              <div className="info-strip">
-                Up to {nearThreshold} missing slot{nearThreshold === 1 ? "" : "s"} with the current station filters.
+            <Panel
+              title="Missing ingredients"
+              description="Closest valid recipes and the ingredient group still blocking each one."
+              className="missing-workspace-panel"
+            >
+              <div className="missing-workspace">
+                <div className="missing-workspace-head">
+                  <div className="info-strip">
+                    Up to {nearThreshold} missing slot{nearThreshold === 1 ? "" : "s"} with the current station filters.
+                  </div>
+                  <span className="missing-workspace-count">
+                    Showing {near?.count ?? 0} near-craft recipe row{(near?.count ?? 0) === 1 ? "" : "s"}.
+                  </span>
+                </div>
+                <div className="missing-results-shell">
+                  <NearCraftTable rows={near?.items ?? []} emptyMessage="Nothing falls inside the current near-craft threshold." />
+                </div>
               </div>
-              <NearCraftTable rows={near?.items ?? []} emptyMessage="Nothing falls inside the current near-craft threshold." />
             </Panel>
           ) : null}
 
           {activeSection === "Recipe database" ? (
-            <Panel title="Recipe database" description="Search recipes, grouped ingredients, and item metadata.">
+            <Panel title="Recipe database" description="Search recipes, grouped ingredients, and item metadata." className="database-panel">
               <div className="database-view">
-                <div className="database-toolbar">
+                <div className="database-toolbar database-toolbar--with-debug">
                   <label className="field grow">
                     <span>Search recipes, groups, or stats</span>
                     <input
@@ -1030,6 +1040,13 @@ export default function App() {
                       placeholder="Search result names, ingredients, effects, pages, or metadata..."
                     />
                   </label>
+                  <button
+                    type="button"
+                    className="button subtle database-debug-toggle"
+                    onClick={() => setDebugPanelExpanded((current) => !current)}
+                  >
+                    {debugPanelExpanded ? "Hide debug" : "Open debug"}
+                  </button>
                 </div>
                 <div className="database-filter-grid">
                   <div className="toolbar-categories">
@@ -1074,8 +1091,11 @@ export default function App() {
                 </div>
                 <Panel
                   title="Recipe visibility debug"
-                  description="Check how one result is classified across the craftable, near, and planner logic."
-                  className="sub-panel recipe-debug-panel"
+                  description="Inspector: check how one result is classified across craftable, near, and planner logic."
+                  className="sub-panel recipe-debug-panel recipe-debug-panel--drawer"
+                  collapsible
+                  collapsed={!debugPanelExpanded}
+                  onToggle={() => setDebugPanelExpanded((current) => !current)}
                 >
                   <div className="view-stack">
                     <div className="inline-actions view-toolbar">
@@ -1101,6 +1121,7 @@ export default function App() {
                         type="button"
                         className="button subtle"
                         onClick={() => {
+                          setDebugPanelExpanded(true);
                           setDebugRequested(true);
                           void executeRecipeDebug();
                         }}

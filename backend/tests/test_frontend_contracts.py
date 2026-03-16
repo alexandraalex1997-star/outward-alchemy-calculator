@@ -78,9 +78,9 @@ def test_direct_result_sections_are_clearly_distinguished() -> None:
     results_source = read_frontend("components/ResultsRail.tsx")
     app_source = read_frontend("App.tsx")
 
-    assert 'title="Craftable recipes"' in results_source
-    assert 'title="Almost craftable"' in results_source
-    assert results_source.index('title="Craftable recipes"') < results_source.index('title="Almost craftable"')
+    assert "<h3>Craftable recipes</h3>" in results_source
+    assert "<h3>Almost craftable</h3>" in results_source
+    assert results_source.index("<h3>Craftable recipes</h3>") < results_source.index("<h3>Almost craftable</h3>")
     assert 'title="Best direct options"' not in results_source
     assert 'title="Full craftable list"' not in results_source
     assert 'if (!hasBootstrapped || !metadata || activeSection !== "Craft now") return;' not in app_source
@@ -219,17 +219,19 @@ def test_inventory_table_tools_and_headers_use_the_new_layout_contract() -> None
     css = read_frontend("styles/app.css")
 
     assert "inventory-manager-shell" in editor_source
-    assert "inventory-manager-section" in editor_source
-    assert "inventory-editor-workspace" in editor_source
-    assert "inventory-subsection" in editor_source
+    assert "inventory-band" in editor_source
+    assert "inventory-band--controls" in editor_source
+    assert "inventory-band--table" in editor_source
+    assert "inventory-categories-row" in editor_source
     assert "inventory-foot-stat" in editor_source
     assert 'className="inventory-summary-head"' in editor_source
     assert "summary-action-button" in editor_source
     assert 'className="inventory-table-tools"' in editor_source
     assert ".inventory-manager-shell {" in css
-    assert ".inventory-manager-section {" in css
-    assert ".inventory-editor-workspace {" in css
-    assert ".inventory-subsection {" in css
+    assert ".inventory-band {" in css
+    assert ".inventory-band--controls {" in css
+    assert ".inventory-band--table {" in css
+    assert ".inventory-categories-row {" in css
     assert ".inventory-summary-head {" in css
     assert ".inventory-table-tools {" in css
     assert ".table-utility-button {" in css
@@ -245,11 +247,14 @@ def test_slider_and_select_styling_contracts_exist() -> None:
     support_rail_source = read_frontend("components/SupportRail.tsx")
     css = read_frontend("styles/app.css")
 
-    assert '.planning-stack input[type="range"] {' in css
+    assert '.planning-tools-layout input[type="range"] {' in css
     assert "::-webkit-slider-thumb" in css
     assert "::-moz-range-thumb" in css
     assert 'className="planning-range-grid"' in support_rail_source
     assert 'className="compact-range-control"' in support_rail_source
+    assert 'className="planning-tools-layout"' in support_rail_source
+    assert 'className="planning-group planning-group--stations"' in support_rail_source
+    assert 'className="planning-group planning-group--ranges"' in support_rail_source
     assert "Route depth" in support_rail_source
     assert "Missing slots" in support_rail_source
     assert "planning-range-note" in support_rail_source
@@ -281,9 +286,9 @@ def test_craft_now_main_view_contains_the_full_craftable_card_panel_and_sort_con
 
     assert "<CraftResultsTable" not in results_source
     assert "<BestDirectCards" in results_source
-    assert 'title="Craftable recipes"' in results_source
+    assert "<h3>Craftable recipes</h3>" in results_source
     assert '<span>Sort craftable recipes</span>' in results_source
-    assert 'className="result-panel-stack"' in results_source
+    assert 'className="results-section-content"' in results_source
     assert 'className="craftable-card-toolbar"' in results_source
     assert 'className="results-preview results-preview--craftable"' in results_source
     assert "Showing all" in results_source
@@ -301,20 +306,21 @@ def test_long_result_lists_use_internal_scroll_containers_without_changing_colum
     results_source = read_frontend("components/ResultsRail.tsx")
 
     assert ".results-preview {" in css
-    assert "max-height: clamp(11rem, 26vh, 16rem);" in css
+    assert "max-height: clamp(8rem, 20vh, 12rem);" in css
     assert "overflow-y: auto;" in css
     assert ".results-preview--craftable {" in css
-    assert "max-height: clamp(10.5rem, 24vh, 14.75rem);" in css
+    assert "max-height: clamp(11rem, 28vh, 18rem);" in css
     assert ".right-column .results-preview:not(.results-preview--craftable)" in css
     assert "grid-template-areas: \"left center right\";" in css
     assert "@media (max-width: 1520px)" in css
+    assert "@media (max-width: 1340px)" in css
     assert "\"left center\"" in css
     assert "\"left right\"" in css
     assert "display: grid;" not in css[css.index(".utility-rail__scroll {"):css.index(".main-column,")]
     assert "grid-template-columns:" in css
-    assert "clamp(236px, 17vw, 280px)" in css
-    assert "minmax(620px, 1.22fr)" in css
-    assert "minmax(330px, 0.96fr)" in css
+    assert "clamp(228px, 17vw, 276px)" in css
+    assert "minmax(0, 1.16fr)" in css
+    assert "minmax(306px, 0.92fr)" in css
     assert 'className="app-page page-shell"' in app_source
     assert 'className={classNames("app-shell", "page-main", leftCollapsed && "left-collapsed")}' in app_source
     assert 'className="utility-rail__scroll"' in support_rail_source
@@ -358,12 +364,12 @@ def test_right_rail_cards_are_collapsible_and_can_stay_open_independently() -> N
     assert "type RightRailSectionId = " in results_source
     assert "openSections" in results_source
     assert "near: true" in results_source
-    assert "accordion-trigger" in results_source
-    assert "accordion-panel" in results_source
-    assert "rail-card__body" in results_source
-    assert ".accordion-trigger {" in css
-    assert ".right-column .accordion-panel {" in css
-    assert ".rail-card {" in css
+    assert "results-section-head" in results_source
+    assert "results-section-content" in results_source
+    assert "results-section-toggle" in results_source
+    assert ".results-workspace {" in css
+    assert ".results-workspace-section {" in css
+    assert ".results-section-head {" in css
     assert "Show more" not in results_source
     assert 'className="result-card-topline"' in views_source
     assert 'className="result-card-side"' in views_source
@@ -402,10 +408,11 @@ def test_planner_view_surfaces_route_status_steps_and_honest_inventory_labels() 
     assert "Craft one more" in app_source
     assert "Current bag" in app_source
     assert "formatPlannerMode" in app_source
-    assert "Route for one more copy" in app_source
+    assert "How to craft one more" in app_source
     assert "planner-owned-strip" in app_source
     assert "Route steps" in app_source
-    assert "planner-primary-grid" in app_source
+    assert "planner-flow" in app_source
+    assert "planner-summary-row" in app_source
     assert "planner-secondary-shell" in app_source
     assert "planner-bag-preview-list" in app_source
     assert "planner-bag-details" in app_source
@@ -415,9 +422,9 @@ def test_planner_view_surfaces_route_status_steps_and_honest_inventory_labels() 
     assert "planner-route-shell" in app_source
     assert ".planner-status-strip {" in css
     assert ".planner-owned-strip {" in css
-    assert ".planner-summary-grid {" in css
-    assert ".planner-summary-panel-wide {" in css
-    assert ".planner-primary-grid {" in css
+    assert ".planner-summary-row {" in css
+    assert ".planner-summary-chip {" in css
+    assert ".planner-flow {" in css
     assert ".planner-secondary-shell {" in css
     assert ".planner-bag-scroll {" in css
     assert ".planner-step-list {" in css
