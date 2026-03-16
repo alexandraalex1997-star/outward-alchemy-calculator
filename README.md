@@ -8,7 +8,7 @@ This project is built to be fast, readable, and beginner-friendly. The crafting 
 
 - **One-click Outward inventory sync**
   - Loads the latest exported inventory from:
-    - `C:\Users\Alexandra\Documents\OutwardCraftSync\current_inventory.csv`
+    - `Documents\OutwardCraftSync\current_inventory.csv`
 - **Manual CSV / Excel import fallback**
   - Import inventory files without changing the sync workflow
 - **Live inventory manager**
