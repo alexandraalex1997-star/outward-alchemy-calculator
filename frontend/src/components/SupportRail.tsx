@@ -128,7 +128,7 @@ export function SupportRail({
               <section className="planning-group planning-group--ranges">
                 <div className="planning-group-head planning-group-head--range">
                   <span>Planner controls</span>
-                  <small>Route depth and missing slots update results live.</small>
+                  <small>Live results</small>
                 </div>
                 <div className="planning-range-grid">
                   <label className="compact-range-control">
@@ -160,24 +160,18 @@ export function SupportRail({
                   </label>
                 </div>
               </section>
-              <small className="planning-range-note">Route depth affects planner recursion. Missing slots affects Almost craftable.</small>
             </div>
           </Panel>
 
           <Panel
             title="Inventory sync"
-            description="Best flow: open a mod sync link from the game. Fallback: upload a file yourself."
+            description="Load your inventory to see what you can craft."
             className="panel-section accordion-item"
             collapsible
             collapsed={!railSections.bulk}
             onToggle={() => onToggleSection("bulk")}
           >
             <div className="upload-stack sync-stack">
-              <div className="sync-callout">
-                <span className="sync-recommendation">Recommended</span>
-                <p className="sync-helper">Open the browser link from the Outward mod to load inventory automatically in this tab.</p>
-              </div>
-
               <div className={classNames("sync-status-card", `is-${importStatus.tone}`)} aria-live="polite">
                 <div className="sync-status-head">
                   <strong>{importStatus.title}</strong>
@@ -193,16 +187,19 @@ export function SupportRail({
               </div>
 
               <div className="sync-fallback">
-                <span className="sync-fallback-label">Manual fallback</span>
                 <label className="button subtle file-button bulk-upload-button sync-secondary-button">
                   Upload CSV / Excel
                   <input
                     type="file"
                     accept=".csv,.xlsx"
-                    onChange={(event: ChangeEvent<HTMLInputElement>) => onBulkFile(event.target.files?.[0] ?? null)}
+                    onChange={(event: ChangeEvent<HTMLInputElement>) => {
+                      const file = event.target.files?.[0] ?? null;
+                      onBulkFile(file);
+                      // Clear the input value to allow re-selecting the same file
+                      event.target.value = "";
+                    }}
                     />
                 </label>
-                <small className="field-note">Use this if the mod did not open the app with a sync link or you want to import a file manually.</small>
               </div>
             </div>
           </Panel>

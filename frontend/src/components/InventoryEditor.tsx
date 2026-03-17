@@ -86,13 +86,11 @@ export function InventoryEditor({
               className="summary-stat"
               label="Unique items"
               value={inventory?.unique_items ?? 0}
-              detail="Different ingredients currently tracked"
             />
             <StatCard
               className="summary-stat"
               label="Total quantity"
               value={inventory?.total_quantity ?? 0}
-              detail="Combined stack count across the whole bag"
             />
           </div>
         </header>
@@ -102,7 +100,6 @@ export function InventoryEditor({
             <label className="field grow">
               <div className="field-head">
                 <span>Find an ingredient</span>
-                <small>Start typing to match the known item list</small>
               </div>
               <input
                 list="ingredient-options"
@@ -116,21 +113,20 @@ export function InventoryEditor({
                 ))}
               </datalist>
             </label>
-            <label className="field quantity-field">
-              <div className="field-head">
-                <span>Quantity</span>
-                <small>Whole number</small>
-              </div>
-              <input
-                className="quick-qty-input"
-                type="number"
-                min={1}
-                step={1}
-                inputMode="numeric"
-                value={quickQty}
-                onChange={(event) => onQuickQtyChange(Math.max(1, Number(event.target.value) || 1))}
-              />
-            </label>
+              <label className="field quantity-field">
+                <div className="field-head">
+                  <span>Quantity</span>
+                </div>
+                <input
+                  className="quick-qty-input"
+                  type="number"
+                  min={1}
+                  step={1}
+                  inputMode="numeric"
+                  value={quickQty}
+                  onChange={(event) => onQuickQtyChange(Math.max(1, Number(event.target.value) || 1))}
+                />
+              </label>
             <button type="submit" className="button primary quick-add-button">
               Add
             </button>
@@ -156,22 +152,21 @@ export function InventoryEditor({
           </div>
         </section>
 
-        <section className="inventory-band inventory-band--table">
-          <div className="inventory-table-head">
-            <div className="inventory-table-copy">
-              <span className="inventory-band-label">Ingredient table</span>
-              <span>Toggle items on quickly, edit quantities, then save or remove the row.</span>
+          <section className="inventory-band inventory-band--table">
+            <div className="inventory-table-head">
+              <div className="inventory-table-copy">
+                <span className="inventory-band-label">Ingredient table</span>
+              </div>
+              <div className="inventory-table-tools">
+                <label className="owned-toggle">
+                  <input type="checkbox" checked={showOwnedOnly} onChange={(event) => onToggleOwnedOnly(event.target.checked)} />
+                  <span>Owned only</span>
+                </label>
+                <button type="button" className="button subtle table-utility-button" onClick={onClearInventory}>
+                  Clear
+                </button>
+              </div>
             </div>
-            <div className="inventory-table-tools">
-              <label className="owned-toggle">
-                <input type="checkbox" checked={showOwnedOnly} onChange={(event) => onToggleOwnedOnly(event.target.checked)} />
-                <span>Owned only</span>
-              </label>
-              <button type="button" className="button subtle table-utility-button" onClick={onClearInventory}>
-                Clear
-              </button>
-            </div>
-          </div>
           <div className="inventory-table-stats">
             <span>{filteredCatalogRows.length} visible after filters</span>
             <span>{inventory?.items.length ?? 0} currently owned</span>

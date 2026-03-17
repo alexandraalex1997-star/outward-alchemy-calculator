@@ -16,6 +16,7 @@ import {
   buildRecipeTargets,
   createStationFilterNote,
   deriveMetadataDefaults,
+  findOwnedItemsMissingCatalogRows,
   filterCatalogRows,
   filterDatabaseRecipes,
 } from "./lib/app-selectors";
@@ -365,6 +366,13 @@ export default function App() {
       return missingCategories.length ? [...current, ...missingCategories] : current;
     });
   }, [inventoryCategories]);
+
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    const missingOwnedRows = findOwnedItemsMissingCatalogRows(inventoryMap, allCatalogRows);
+    if (!missingOwnedRows.length || typeof console === "undefined") return;
+    console.warn("[outward-crafting-helper] Recognized owned items missing from inventory catalog rows:", missingOwnedRows);
+  }, [allCatalogRows, inventoryMap]);
 
   const recipeTargets = useMemo(() => {
     return buildRecipeTargets(metadata?.recipes);
@@ -979,16 +987,18 @@ export default function App() {
                     onChange={(event) => setShoppingText(event.target.value)}
                     placeholder={"Life Potion,3\nWarm Potion,2"}
                   />
-                  <button
-                    type="button"
-                    className="button primary shopping-build-button"
-                    onClick={() => {
-                      setShoppingRequested(true);
-                      void executeShoppingList();
-                    }}
-                  >
-                    Build list
-                  </button>
+                  <div className="inline-actions">
+                    <button
+                      type="button"
+                      className="button primary"
+                      onClick={() => {
+                        setShoppingRequested(true);
+                        void executeShoppingList();
+                      }}
+                    >
+                      Build list
+                    </button>
+                  </div>
                 </div>
                 <div className="info-strip">Targets are combined first. Stations and planner depth decide whether intermediate crafts can cover part of the gap.</div>
                 {shoppingResult ? (
@@ -1044,7 +1054,7 @@ export default function App() {
           {activeSection === "Recipe database" ? (
             <Panel title="Recipe database" description="Search and browse the full recipe rows bundled with the app." className="database-panel">
               <div className="database-view">
-                <div className="database-toolbar database-toolbar--with-debug">
+                <div className="database-toolbar">
                   <label className="field grow">
                     <span>Search recipe rows</span>
                     <input
@@ -1053,13 +1063,6 @@ export default function App() {
                       placeholder="Search result names, ingredients, effects, pages, or metadata..."
                     />
                   </label>
-                  <button
-                    type="button"
-                    className="button subtle database-debug-toggle"
-                    onClick={() => setDebugPanelExpanded((current) => !current)}
-                  >
-                    {debugPanelExpanded ? "Hide debug" : "Open debug"}
-                  </button>
                 </div>
                 <div className="database-filter-grid">
                   <div className="toolbar-categories">
