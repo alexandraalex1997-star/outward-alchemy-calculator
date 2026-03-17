@@ -7,6 +7,11 @@ type CatalogRow = {
   effects: string;
 };
 
+type OwnedCatalogMismatch = {
+  item: string;
+  qty: number;
+};
+
 export function buildInventoryMap(items: InventoryItem[] | undefined): Map<string, number> {
   const map = new Map<string, number>();
   (items ?? []).forEach((item) => map.set(item.item, item.qty));
@@ -48,6 +53,17 @@ export function buildCatalogRows(
     .sort((left, right) => left.item.localeCompare(right.item));
 
   return [...categoryRows, ...uncategorizedOwnedRows];
+}
+
+export function findOwnedItemsMissingCatalogRows(
+  inventoryMap: Map<string, number>,
+  rows: CatalogRow[],
+): OwnedCatalogMismatch[] {
+  const rowItems = new Set(rows.map((row) => row.item));
+  return [...inventoryMap.entries()]
+    .filter(([item, qty]) => qty > 0 && !rowItems.has(item))
+    .map(([item, qty]) => ({ item, qty }))
+    .sort((left, right) => left.item.localeCompare(right.item));
 }
 
 export function buildInventoryCategoryGroups(
